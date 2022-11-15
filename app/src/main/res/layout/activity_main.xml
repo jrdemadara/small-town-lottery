@@ -4,15 +4,173 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="#F7F7F7"
+    tools:context=".features.landing.LandingActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <ImageView
+        android:id="@+id/imageView6"
+        android:layout_width="match_parent"
+        android:layout_height="474dp"
+        android:scaleType="fitXY"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/background" />
+
+    <ImageView
+        android:id="@+id/imageView9"
+        android:layout_width="59dp"
+        android:layout_height="39dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/logo" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="15dp"
+        android:fontFamily="@font/nexa_regular"
+        android:text="v0.1.0"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/imageView8"
+            android:layout_width="230dp"
+            android:layout_height="252dp"
+            android:layout_marginStart="70dp"
+            android:layout_marginTop="130dp"
+            android:rotation="180"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/bg_landing_inverted" />
+
+        <ImageView
+            android:id="@+id/imageView7"
+            android:layout_width="230dp"
+            android:layout_height="252dp"
+            android:layout_marginTop="100dp"
+            android:layout_marginEnd="80dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/bg_landing" />
+
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="129dp"
+            android:layout_height="127dp"
+            android:layout_marginStart="-25dp"
+            android:layout_marginTop="90dp"
+            app:srcCompat="@drawable/landing_1" />
+
+        <ImageView
+            android:id="@+id/imageView4"
+            android:layout_width="113dp"
+            android:layout_height="103dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="240dp"
+            android:scaleType="fitCenter"
+            app:srcCompat="@drawable/landing_2" />
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="166dp"
+            android:layout_marginTop="280dp"
+            android:fontFamily="@font/nexa_bold"
+            android:text="₱ 20,000"
+            android:textColor="#000000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/textView5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="166dp"
+            android:layout_marginTop="300dp"
+            android:fontFamily="@font/nexa_regular"
+            android:text="TODAY"
+            android:textSize="9sp" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/frameLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="285dp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout"
+        tools:layout_editor_absoluteX="0dp">
+
+        <ImageView
+            android:id="@+id/imageView10"
+            android:layout_width="228dp"
+            android:layout_height="131dp"
+            android:layout_marginStart="50dp"
+            android:layout_marginTop="20dp"
+            app:srcCompat="@drawable/landing_round_1" />
+
+        <ImageView
+            android:id="@+id/imageView11"
+            android:layout_width="73dp"
+            android:layout_height="62dp"
+            android:layout_marginStart="300dp"
+            android:layout_marginTop="30dp"
+            app:srcCompat="@drawable/landing_round_2" />
+
+        <ImageView
+            android:id="@+id/imageView12"
+            android:layout_width="57dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="230dp"
+            android:layout_marginTop="200dp"
+            app:srcCompat="@drawable/landing_round_3" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="249dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="20dp"
+            android:fontFamily="@font/nexa_bold"
+            android:text="Hassle  free  lottery  betting"
+            android:textColor="#000000"
+            android:textSize="66sp" />
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/buttonGetStarted"
+        android:layout_width="350dp"
+        android:layout_height="63dp"
+        android:layout_marginStart="22dp"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="22dp"
+        android:fontFamily="@font/nexa_xbold"
+        android:text="GET STARTED"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.428"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout2" />
+
+    <ImageView
+        android:id="@+id/imageView5"
+        android:layout_width="40dp"
+        android:layout_height="29dp"
+        android:layout_marginStart="185dp"
+        android:layout_marginEnd="185dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout2"
+        app:srcCompat="@drawable/landing_3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
