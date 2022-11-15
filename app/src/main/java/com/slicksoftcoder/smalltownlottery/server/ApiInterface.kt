@@ -6,6 +6,7 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
 
+
 interface ApiInterface {
     @Headers("Content-Type:application/json")
     @POST("login")
@@ -16,8 +17,12 @@ interface ApiInterface {
     fun updateUserDevice(@QueryMap filter: HashMap<String, String>): Call<ResponseBody>
 
     @Headers("Content-Type:application/json")
-    @GET("draws")
+    @GET("updateDraw")
     fun updateDraws(): Call<List<DrawUpdateModel>>
+
+    @Headers("Content-Type:application/json")
+    @GET("updateUser")
+    fun updateUser(@Query("username") username: String): Call<List<UserUpdateModel>>
 //
 //    @Headers("Content-Type:application/json")
 //    @GET("operations")

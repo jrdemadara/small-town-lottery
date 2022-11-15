@@ -50,34 +50,6 @@ class SplashScreenActivity : AppCompatActivity() {
             }
         }
     }
-//    private fun updateUsers(){
-//        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-//        retrofit.updateUsers().enqueue(object : Callback<List<UserUpdateModel>?> {
-//            override fun onResponse(
-//                call: Call<List<UserUpdateModel>?>,
-//                response: Response<List<UserUpdateModel>?>
-//            ) {
-//                val list: List<UserUpdateModel?>?
-//                list = response.body()
-//                assert(list != null)
-//                if (list != null) {
-//                    for (x in list) {
-//                        println(x)
-//                        localDatabase.updateUsers(
-//                            x.serial,
-//                            x.agentSerial,
-//                            x.username,
-//                            x.password
-//                        )
-//                    }
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<UserUpdateModel>?>, t: Throwable) {
-//
-//            }
-//        })
-//    }
 
     private fun updateDraws(){
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)

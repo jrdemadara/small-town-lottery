@@ -2,8 +2,10 @@ package com.slicksoftcoder.smalltownlottery.server
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.slicksoftcoder.smalltownlottery.features.bet.BetDetailsModel
 
 class LocalDatabase (context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION){
@@ -27,6 +29,7 @@ class LocalDatabase (context: Context) :
             private const val HEADERS_SERIAL_COL = "serial"
             private const val HEADERS_AGENT_COL = "agent"
             private const val HEADERS_DRAW_DATE_COL = "draw_date"
+            private const val HEADERS_DRAW_TIME_COL = "draw_time"
             private const val HEADERS_TRANSACTION_CODE_COL = "transaction_code"
             private const val HEADERS_TOTAL_AMOUNT_COL = "total_amount"
             private const val HEADERS_DATE_PRINTED_COL = "date_printed"
@@ -74,6 +77,7 @@ class LocalDatabase (context: Context) :
                  + HEADERS_SERIAL_COL + " TEXT,"
                  + HEADERS_AGENT_COL + " TEXT,"
                  + HEADERS_DRAW_DATE_COL + " TEXT,"
+                 + HEADERS_DRAW_TIME_COL + " TEXT,"
                  + HEADERS_TRANSACTION_CODE_COL + " TEXT,"
                  + HEADERS_TOTAL_AMOUNT_COL + " TEXT,"
                  + HEADERS_DATE_PRINTED_COL + " DATETIME,"
@@ -127,9 +131,9 @@ class LocalDatabase (context: Context) :
      }
 
      /* Cloud Updates */
-     fun checkDeviceUser(): Boolean{
+     fun checkDeviceUser(deviceId: String?): Boolean{
          val db = this.readableDatabase
-         val selectQuery = "SELECT COUNT(*) FROM $TABLE_USERS"
+         val selectQuery = "SELECT $USER_SERIAL_COL FROM $TABLE_USERS"
          val cursor = db.rawQuery(selectQuery, null)
          val cursorCount = cursor.count
          cursor.close()
@@ -149,10 +153,11 @@ class LocalDatabase (context: Context) :
          db.close()
      }
 
-     fun updateUsers(serial: String?, agentSerial: String?, username: String?, password: String?) {
+     fun updateUsers(serial: String?, agentSerial: String?, username: String?, password: String?, deviceId: String?) {
          val db = this.writableDatabase
          val values = ContentValues()
          values.put(USER_SERIAL_COL, serial)
+         values.put(USER_DEVICE_COL, deviceId)
          values.put(USER_AGENT_SERIAL_COL, agentSerial)
          values.put(USER_USERNAME_COL, username)
          values.put(USER_PASSWORD_COL, password)
@@ -169,5 +174,66 @@ class LocalDatabase (context: Context) :
         values.put(DRAW_CUTOFF_COL, cutoff)
         db.insert(TABLE_DRAWS, null, values)
         db.close()
+    }
+
+    /* Save Bet */
+    fun insertBetHeader(serial: String?,agent: String?,drawDate: String?,drawTime: String?, transactionCode: String?, totalAmount: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(HEADERS_SERIAL_COL, serial)
+        values.put(HEADERS_AGENT_COL, agent)
+        values.put(HEADERS_DRAW_DATE_COL, drawDate)
+        values.put(HEADERS_DRAW_TIME_COL, drawTime)
+        values.put(HEADERS_TRANSACTION_CODE_COL, transactionCode)
+        values.put(HEADERS_TOTAL_AMOUNT_COL, totalAmount)
+        values.put(HEADERS_IS_VOID_COL, 0)
+        values.put(HEADERS_IS_DELETED_COL, 0)
+        db.insert(TABLE_BET_DETAILS, null, values)
+        db.close()
+    }
+
+    fun insertBetDetails(serial: String?,header: String?,betNumber: String?, amount: String?, win: String?, isRambolito: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(DETAILS_SERIAL_COL, serial)
+        values.put(DETAILS_HEADER_SERIAL_COL, header)
+        values.put(DETAILS_BET_NUMBER_COL, betNumber)
+        values.put(DETAILS_AMOUNT_COL, amount)
+        values.put(DETAILS_WIN_COL, win)
+        values.put(DETAILS_IS_RAMBOLITO_COL, isRambolito)
+        values.put(DETAILS_IS_UPLOADED_COL, 0)
+        db.insert(TABLE_BET_DETAILS, null, values)
+        db.close()
+    }
+
+    /* Retrieve Accomplishment For Upload */
+    fun retrieveBetDetails(headerSerial: String?): ArrayList<BetDetailsModel> {
+        val db = this.readableDatabase
+        val query = "SELECT *  FROM $TABLE_BET_DETAILS WHERE $DETAILS_HEADER_SERIAL_COL = '$headerSerial'"
+        val data: ArrayList<BetDetailsModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    BetDetailsModel(
+                        serial = cursor.getString(0),
+                        betNumber = cursor.getString(1),
+                        amount = cursor.getString(2),
+                        win = cursor.getString(3),
+                        isRambolito = cursor.getString(4),
+
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
     }
  }

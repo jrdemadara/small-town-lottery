@@ -1,5 +1,6 @@
 package com.slicksoftcoder.smalltownlottery.features.authenticate
 
+import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
@@ -11,7 +12,10 @@ import android.telephony.TelephonyManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import com.slicksoftcoder.smalltownlottery.R
+import com.slicksoftcoder.smalltownlottery.common.model.UserUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
@@ -52,6 +56,7 @@ class AuthenticateActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authenticate)
+        localDatabase = LocalDatabase(this)
         buttonLogin = findViewById(R.id.buttonLogin)
         editTextUsername = findViewById(R.id.editTextUsername)
         editTextPassword = findViewById(R.id.editTextPassword)
@@ -59,7 +64,15 @@ class AuthenticateActivity : AppCompatActivity() {
         textViewForgotPassword = findViewById(R.id.textViewForgotPassword)
         imageViewBoimetric = findViewById(R.id.imageViewBiometric)
         deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-        //checkNetworkConnection()
+        buttonLogin.setOnClickListener {
+            if (editTextUsername.text.isNotEmpty() && editTextPassword.text.isNotEmpty()){
+                checkNetworkConnection()
+            }else{
+                Toast.makeText(application, "Please fill the username and password.", Toast.LENGTH_SHORT).show()
+            }
+
+        }
+
         checkBiometricSupport()
 
 //        imageViewBoimetric.setOnClickListener {
@@ -81,9 +94,14 @@ class AuthenticateActivity : AppCompatActivity() {
         networkChecker.observe(this) { isConnected ->
             if (isConnected) {
                 //* Login Online
-                authenticateOnline()
+                val isExist: Boolean = localDatabase.checkDeviceUser(deviceId)
+                if (isExist){
+                    authenticateOnline(editTextUsername.text.toString(), editTextPassword.text.toString(),deviceId)
+                }else{
+                    updateUserDevice(editTextUsername.text.toString(), editTextPassword.text.toString(),deviceId)
+                }
             } else {
-                //* Login Online
+                //* Login Offline
             }
         }
     }
@@ -93,11 +111,12 @@ class AuthenticateActivity : AppCompatActivity() {
         val signInInfo = UserModel(username, password, deviceid)
         retIn.signin(signInInfo).enqueue(object : Callback<ResponseBody> {
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(this@AuthenticateActivity, t.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@AuthenticateActivity, "Something went wrong with the server response.", Toast.LENGTH_SHORT).show()
             }
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 LoadingScreen.displayLoadingWithText(this@AuthenticateActivity, "Logging in...", false)
                 if (response.code() == 200) {
+                    updateUsers()
                     switchActivity()
                 } else if (response.code() == 201) {
                     LoadingScreen.hideLoading()
@@ -107,8 +126,58 @@ class AuthenticateActivity : AppCompatActivity() {
         })
     }
 
-    private fun checkDeviceUser(){
-        val isExist: Boolean = localDatabase.checkDeviceUser()
+    private fun updateUserDevice(username: String, password: String, deviceid: String){
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        val filter = HashMap<String, String>()
+        filter["deviceid"] = deviceid
+        filter["username"] = username
+        filter["password"] = password
+        retrofit.updateUserDevice(filter).enqueue(object : Callback<ResponseBody?> {
+            @SuppressLint("SetTextI18n")
+            override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
+                if (response.code() == 200) {
+                    authenticateOnline(editTextUsername.text.toString(), editTextPassword.text.toString(), deviceid)
+                    updateUsers()
+                } else {
+                    Toast.makeText(application, "Login failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
+                Toast.makeText(application, "Something went wrong with the server response.", Toast.LENGTH_SHORT).show()
+            }
+
+        })
+    }
+
+    private fun updateUsers(){
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        retrofit.updateUser(editTextUsername.text.toString()).enqueue(object : Callback<List<UserUpdateModel>?> {
+            override fun onResponse(
+                call: Call<List<UserUpdateModel>?>,
+                response: Response<List<UserUpdateModel>?>
+            ) {
+                val list: List<UserUpdateModel?>?
+                list = response.body()
+                assert(list != null)
+                if (list != null) {
+                    for (x in list) {
+                        println(x)
+                        localDatabase.updateUsers(
+                            x.serial,
+                            x.agentSerial,
+                            x.username,
+                            x.password,
+                            x.deviceId
+                        )
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<List<UserUpdateModel>?>, t: Throwable) {
+                Toast.makeText(application, "Something went wrong with the server response.", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     fun vibratePhone() {

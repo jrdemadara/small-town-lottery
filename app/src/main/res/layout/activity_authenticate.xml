@@ -156,8 +156,9 @@
                 android:background="@drawable/ic_round_edittext"
                 android:ems="10"
                 android:fontFamily="@font/nexa_regular"
-                android:inputType="textPassword"
-                android:paddingStart="20dp" />
+                android:inputType="text"
+                android:paddingStart="20dp"
+                android:text="agent1" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -180,7 +181,8 @@
                 android:ems="10"
                 android:fontFamily="@font/nexa_regular"
                 android:inputType="textPassword"
-                android:paddingStart="20dp" />
+                android:paddingStart="20dp"
+                android:text="agent1" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
