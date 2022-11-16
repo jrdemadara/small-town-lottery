@@ -22,7 +22,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textViewDashTotalBet" />
 
     <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/materialToolbar"
+        android:id="@+id/materialToolbarDash"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
@@ -36,17 +36,6 @@
         app:logoScaleType="matrix"
         app:menu="@menu/toolbar" />
 
-    <ImageView
-        android:id="@+id/imageViewDashBet"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="80dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cardView9pm"
-        app:srcCompat="@drawable/big_bet" />
-
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="370dp"
@@ -57,7 +46,7 @@
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/materialToolbar">
+        app:layout_constraintTop_toBottomOf="@+id/materialToolbarDash">
 
         <TextView
             android:id="@+id/textView10"
@@ -181,12 +170,13 @@
             android:layout_marginStart="5dp"
             android:layout_marginEnd="12dp"
             android:clickable="true"
-            android:drawableTop="@drawable/menu_bet"
             android:drawablePadding="5dp"
             android:fontFamily="@font/nexa_regular"
             android:rotationX="1"
             android:text="Bet"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:drawableTopCompat="@drawable/menu_bet" />
 
         <TextView
             android:id="@+id/textViewDashMenuHistory"
@@ -194,25 +184,27 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:clickable="true"
-            android:drawableTop="@drawable/menu_history"
             android:drawablePadding="5dp"
             android:fontFamily="@font/nexa_regular"
             android:rotationX="1"
             android:text="History"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:drawableTopCompat="@drawable/menu_history" />
 
         <TextView
             android:id="@+id/textViewDashMenuTransaction"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:drawableTop="@drawable/menu_transaction"
             android:drawablePadding="5dp"
             android:fontFamily="@font/nexa_regular"
             android:rotationX="1"
             android:text="Transaction"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            app:drawableTopCompat="@drawable/menu_result" />
 
         <TextView
             android:id="@+id/textViewDashMenu"
@@ -221,12 +213,13 @@
             android:layout_marginStart="12dp"
             android:layout_marginEnd="5dp"
             android:clickable="true"
-            android:drawableTop="@drawable/menu"
             android:drawablePadding="5dp"
             android:fontFamily="@font/nexa_regular"
             android:rotationX="1"
             android:text="Menu"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:drawableTopCompat="@drawable/menu" />
     </LinearLayout>
 
     <TextView
@@ -531,16 +524,39 @@
             app:srcCompat="@drawable/cardview_3" />
     </androidx.cardview.widget.CardView>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:layout_width="match_parent"
-        android:layout_height="86dp"
-        android:background="@drawable/nav"
-        app:itemHorizontalTranslationEnabled="false"
-        app:itemPaddingTop="30dp"
-        app:labelVisibilityMode="labeled"
+    <FrameLayout
+        android:layout_width="411dp"
+        android:layout_height="150dp"
+        android:background="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/imageViewDashBet"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            app:srcCompat="@drawable/big_bet"
+            tools:ignore="SpeakableTextPresentCheck" />
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigationDash"
+            android:layout_width="match_parent"
+            android:layout_height="85dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/nav"
+            app:elevation="5dp"
+            app:itemBackground="@android:color/transparent"
+            app:itemHorizontalTranslationEnabled="false"
+            app:itemPaddingTop="30dp"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/bottom_nav">
+
+        </com.google.android.material.bottomnavigation.BottomNavigationView>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

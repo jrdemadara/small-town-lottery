@@ -10,8 +10,8 @@
     <item
         android:id="@+id/bet"/>
     <item
-        android:id="@+id/transaction"
-        android:icon="@drawable/transaction" />
+        android:id="@+id/result"
+        android:icon="@drawable/result" />
     <item
         android:id="@+id/settings"
         android:icon="@drawable/settings" />

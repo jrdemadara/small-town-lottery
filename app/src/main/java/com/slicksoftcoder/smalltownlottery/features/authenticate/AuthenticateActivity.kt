@@ -3,6 +3,7 @@ package com.slicksoftcoder.smalltownlottery.features.authenticate
 import android.annotation.SuppressLint
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.hardware.biometrics.BiometricPrompt
@@ -75,18 +76,15 @@ class AuthenticateActivity : AppCompatActivity() {
 
         checkBiometricSupport()
 
-//        imageViewBoimetric.setOnClickListener {
-//            val intent = Intent(this, DashboardActivity::class.java)
-//            startActivity(intent)
-//            finish()
-//            val biometricPrompt = BiometricPrompt.Builder(this)
-//                .setTitle("Login with Fingerprint")
-//                .setSubtitle("Place your finger on your device's \nfingerprint sensor.")
-//                .setNegativeButton("Login with Password" , this.mainExecutor, DialogInterface.OnClickListener { _, _ ->
-//                    notifyUser("Authentication Cancelled")
-//                }).build()
-//            biometricPrompt.authenticate(getCancellationSignal(),mainExecutor, authenticationCallback)
-//        }
+        imageViewBoimetric.setOnClickListener {
+            val biometricPrompt = BiometricPrompt.Builder(this)
+                .setTitle("Login with Fingerprint")
+                .setSubtitle("Place your finger on your device's \nfingerprint sensor.")
+                .setNegativeButton("Login with Password" , this.mainExecutor, DialogInterface.OnClickListener { _, _ ->
+                    notifyUser("Authentication Cancelled")
+                }).build()
+            biometricPrompt.authenticate(getCancellationSignal(),mainExecutor, authenticationCallback)
+        }
     }
 
     private fun checkNetworkConnection() {

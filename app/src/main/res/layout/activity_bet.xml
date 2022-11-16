@@ -224,7 +224,7 @@
         android:layout_marginEnd="30dp"
         android:layout_weight="1"
         android:fontFamily="@font/nexa_bold"
-        android:text="5 PM"
+        android:text="2 PM"
         android:textAlignment="textEnd"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"

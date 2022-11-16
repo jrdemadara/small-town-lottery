@@ -83,7 +83,7 @@ class BetActivity : AppCompatActivity() {
                 adapter?.addItems(list)
                 /* Update UI */
                 totalAmount += amount
-                textViewTotal.text =  formatter.format(totalAmount).toString()
+                textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
                 editTextBetNumber.setText("")
                 editTextBetAmount.setText("")
                 Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
@@ -123,13 +123,12 @@ class BetActivity : AppCompatActivity() {
                                 adapter?.addItems(list)
                                 /* Update UI */
                                 totalAmount += amount
-                                textViewTotal.text = formatter.format(totalAmount).toString()
+                                textViewTotal.text = formatter.format(totalAmount).toString()+".00"
                                 editTextBetNumber.setText("")
                                 editTextBetAmount.setText("")
                                 winAmount = 0.0
                                 isRambolito = 0
                                 Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
-                                dialog.dismiss()
                                 dialog.dismiss()
                             }else{
                                 if (amount >= 30){
@@ -142,13 +141,12 @@ class BetActivity : AppCompatActivity() {
                                     adapter?.addItems(list)
                                     /* Update UI */
                                     totalAmount += amount
-                                    textViewTotal.text = formatter.format(totalAmount).toString()
+                                    textViewTotal.text = formatter.format(totalAmount).toString()+".00"
                                     editTextBetNumber.setText("")
                                     editTextBetAmount.setText("")
                                     winAmount = 0.0
                                     isRambolito = 0
                                     Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
-                                    dialog.dismiss()
                                     dialog.dismiss()
                                 }else{
                                     Toast.makeText(applicationContext, "Amount for rambolito should not be less than 30.", Toast.LENGTH_LONG).show()
@@ -171,55 +169,68 @@ class BetActivity : AppCompatActivity() {
             }
         }
         buttonBetConfirm.setOnClickListener {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("Confirm")
-            builder.setMessage("Do you wish to continue?")
-            builder.setIcon(android.R.drawable.ic_dialog_alert)
-            builder.setPositiveButton("Yes"){ dialogInterface, _ ->
-                val agent = localDatabase.retrieveAgentSerial()
-                val draw = localDatabase.retrieveDrawSerial(drawTime)
-                val transCode: String = "B"+dateUtil.dateFormat()+dateUtil.currentTime()
-                val transCodeDash = transCode.replace("-","")
-                val transCodeCol = transCodeDash.replace(":","")
-                localDatabase.insertBetHeader(
-                    headerSerial.toString(),
-                    agent,
-                    dateUtil.dateFormat(),
-                    draw,
-                    transCodeCol,
-                    totalAmount.toString()
-                )
-                localDatabase.confirmBetDetails(headerSerial.toString())
-                showSuccess()
-                dialogInterface.dismiss()
+            if (totalAmount <= 0){
+                Toast.makeText(applicationContext, "Please place a bet first.", Toast.LENGTH_SHORT).show()
+            }else{
+                val builder = AlertDialog.Builder(this)
+                builder.setTitle("Confirm")
+                builder.setMessage("Do you wish to continue?")
+                builder.setIcon(R.drawable.ic_round_check_circle_24)
+                builder.setPositiveButton("Yes"){ dialogInterface, _ ->
+                    val agent = localDatabase.retrieveAgentSerial()
+                    val draw = localDatabase.retrieveDrawSerial(drawTime)
+                    val transCode: String = "B"+dateUtil.dateFormat()+dateUtil.currentTime()
+                    val transCodeDash = transCode.replace("-","")
+                    val transCodeCol = transCodeDash.replace(":","")
+                    localDatabase.insertBetHeader(
+                        headerSerial.toString(),
+                        agent,
+                        dateUtil.dateFormat(),
+                        draw,
+                        transCodeCol,
+                        totalAmount.toString()
+                    )
+                    localDatabase.confirmBetDetails(headerSerial.toString())
+                    showSuccess()
+                    dialogInterface.dismiss()
+                }
+                builder.setNeutralButton("Cancel"){ dialogInterface, _ ->
+                    dialogInterface.dismiss()
+                }
+                val alertDialog: AlertDialog = builder.create()
+                alertDialog.setCancelable(false)
+                alertDialog.show()
             }
-            builder.setNeutralButton("Cancel"){ dialogInterface, _ ->
-                dialogInterface.dismiss()
-            }
-            val alertDialog: AlertDialog = builder.create()
-            alertDialog.setCancelable(false)
-            alertDialog.show()
+
 
 
         }
         buttonBetCancel.setOnClickListener {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("Confirm")
-            builder.setMessage("Do you wish to cancel?")
-            builder.setIcon(android.R.drawable.ic_dialog_alert)
-            builder.setPositiveButton("Yes"){ dialogInterface, _ ->
+            if (totalAmount <= 0){
                 localDatabase.deleteBet(headerSerial.toString())
                 val intent = Intent(this, DashboardActivity ::class.java)
                 startActivity(intent)
                 finish()
-                dialogInterface.dismiss()
+            }else{
+                val builder = AlertDialog.Builder(this)
+                builder.setTitle("Cancel")
+                builder.setMessage("Are you sure you want to cancel?")
+                builder.setIcon(R.drawable.ic_round_cancel_24)
+                builder.setPositiveButton("Yes"){ dialogInterface, _ ->
+                    localDatabase.deleteBet(headerSerial.toString())
+                    val intent = Intent(this, DashboardActivity ::class.java)
+                    startActivity(intent)
+                    finish()
+                    dialogInterface.dismiss()
+                }
+                builder.setNeutralButton("No"){ dialogInterface, _ ->
+                    dialogInterface.dismiss()
+                }
+                val alertDialog: AlertDialog = builder.create()
+                alertDialog.setCancelable(false)
+                alertDialog.show()
             }
-            builder.setNeutralButton("Cancel"){ dialogInterface, _ ->
-                dialogInterface.dismiss()
-            }
-            val alertDialog: AlertDialog = builder.create()
-            alertDialog.setCancelable(false)
-            alertDialog.show()
+
 
         }
 
@@ -239,6 +250,19 @@ class BetActivity : AppCompatActivity() {
         val radioButton9pm: RadioButton = view.findViewById(R.id.radioButtonBet9PM)
         val radioButtonConfirm: Button = view.findViewById(R.id.buttonBetConfirmDraw)
         var draw: String = ""
+        if ("2 PM" == textViewTime.text){
+            radioButton2pm.isChecked = true
+            drawTime = "2 PM"
+            draw = "2 PM"
+        }else if("5 PM" == textViewTime.text){
+            radioButton5pm.isChecked = true
+            drawTime = "5 PM"
+            draw = "5 PM"
+        }else{
+            radioButton9pm.isChecked = true
+            drawTime = "9 PM"
+            draw = "9 PM"
+        }
         radioButton2pm.setOnClickListener {
             radioButton5pm.isChecked = false
             radioButton9pm.isChecked = false
@@ -282,7 +306,7 @@ class BetActivity : AppCompatActivity() {
             val intent = Intent(this, DashboardActivity ::class.java)
             startActivity(intent)
             finish()
-        }, 3000)
+        }, 1000)
 
     }
 
