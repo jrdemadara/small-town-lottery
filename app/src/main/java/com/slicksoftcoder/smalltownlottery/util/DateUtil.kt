@@ -1,5 +1,7 @@
 package com.slicksoftcoder.smalltownlottery.util
 
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -46,6 +48,22 @@ class DateUtil () {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         formatDate = currentDate.format(formatter)
         return formatDate
+    }
+
+    fun currentDateShort(): String{
+        val formatDate: String
+        val currentDate = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("MMM-dd-yyyy")
+        formatDate = currentDate.format(formatter)
+        return formatDate
+    }
+
+    fun currentTime(): String{
+        val formatTime: String
+        val currentDate = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        formatTime = currentDate.format(formatter)
+        return formatTime
     }
 
 }

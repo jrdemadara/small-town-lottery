@@ -46,6 +46,7 @@ class LocalDatabase (context: Context) :
             private const val DETAILS_AMOUNT_COL = "amount"
             private const val DETAILS_WIN_COL = "win"
             private const val DETAILS_IS_RAMBOLITO_COL = "is_rambolito"
+            private const val DETAILS_BET_STATUS_COL = "bet_status"
             private const val DETAILS_IS_UPLOADED_COL = "is_uploaded"
             private const val DETAILS_DATE_UPLOADED_COL = "date_uploaded"
             /* Table Draw */
@@ -96,6 +97,7 @@ class LocalDatabase (context: Context) :
                  + DETAILS_AMOUNT_COL + " TEXT,"
                  + DETAILS_WIN_COL + " TEXT,"
                  + DETAILS_IS_RAMBOLITO_COL + " INTEGER,"
+                 + DETAILS_BET_STATUS_COL + " TEXT,"
                  + DETAILS_IS_UPLOADED_COL + " INTEGER,"
                  + DETAILS_DATE_UPLOADED_COL + " DATETIME)")
 
@@ -130,7 +132,7 @@ class LocalDatabase (context: Context) :
          onCreate(db)
      }
 
-     /* Cloud Updates */
+     /* Cloud Updates Transaction */
      fun checkDeviceUser(deviceId: String?): Boolean{
          val db = this.readableDatabase
          val selectQuery = "SELECT $USER_SERIAL_COL FROM $TABLE_USERS"
@@ -176,7 +178,35 @@ class LocalDatabase (context: Context) :
         db.close()
     }
 
-    /* Save Bet */
+    /* User Data Transactions */
+    fun retrieveAgentSerial(): String {
+        var data: String = String()
+        val selectQuery = "SELECT agent_serial FROM $TABLE_USERS LIMIT 1"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    /* Draw Data Transactions */
+    fun retrieveDrawSerial(drawTime: String?): String {
+        var data: String = String()
+        val selectQuery = "SELECT serial FROM $TABLE_DRAWS WHERE $DRAW_DRAW_NAME_COL = '$drawTime' LIMIT 1"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    /* Bet Transactions */
     fun insertBetHeader(serial: String?,agent: String?,drawDate: String?,drawTime: String?, transactionCode: String?, totalAmount: String?) {
         val db = this.writableDatabase
         val values = ContentValues()
@@ -188,7 +218,7 @@ class LocalDatabase (context: Context) :
         values.put(HEADERS_TOTAL_AMOUNT_COL, totalAmount)
         values.put(HEADERS_IS_VOID_COL, 0)
         values.put(HEADERS_IS_DELETED_COL, 0)
-        db.insert(TABLE_BET_DETAILS, null, values)
+        db.insert(TABLE_BET_HEADERS, null, values)
         db.close()
     }
 
@@ -201,12 +231,33 @@ class LocalDatabase (context: Context) :
         values.put(DETAILS_AMOUNT_COL, amount)
         values.put(DETAILS_WIN_COL, win)
         values.put(DETAILS_IS_RAMBOLITO_COL, isRambolito)
+        values.put(DETAILS_BET_STATUS_COL, "CANCELLED")
         values.put(DETAILS_IS_UPLOADED_COL, 0)
         db.insert(TABLE_BET_DETAILS, null, values)
         db.close()
     }
 
-    /* Retrieve Accomplishment For Upload */
+    fun confirmBetDetails(headerSerial: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(DETAILS_BET_STATUS_COL, "CONFIRMED")
+        db.update(TABLE_BET_DETAILS, values, "$DETAILS_HEADER_SERIAL_COL = ?", arrayOf(headerSerial))
+        db.close()
+    }
+
+    fun deleteCanceledBet() {
+        val db = this.writableDatabase
+        db.delete(TABLE_BET_DETAILS, "$DETAILS_BET_STATUS_COL = ?", arrayOf("CANCELLED"))
+        db.close()
+    }
+
+    fun deleteBet(headerSerial: String?) {
+        val db = this.writableDatabase
+        db.delete(TABLE_BET_HEADERS, "$HEADERS_SERIAL_COL = ?", arrayOf(headerSerial))
+        db.delete(TABLE_BET_DETAILS, "$DETAILS_HEADER_SERIAL_COL = ?", arrayOf(headerSerial))
+        db.close()
+    }
+
     fun retrieveBetDetails(headerSerial: String?): ArrayList<BetDetailsModel> {
         val db = this.readableDatabase
         val query = "SELECT *  FROM $TABLE_BET_DETAILS WHERE $DETAILS_HEADER_SERIAL_COL = '$headerSerial'"
@@ -224,10 +275,10 @@ class LocalDatabase (context: Context) :
                 data.add(
                     BetDetailsModel(
                         serial = cursor.getString(0),
-                        betNumber = cursor.getString(1),
-                        amount = cursor.getString(2),
-                        win = cursor.getString(3),
-                        isRambolito = cursor.getString(4),
+                        betNumber = cursor.getString(2),
+                        amount = cursor.getString(3),
+                        win = cursor.getString(4),
+                        isRambolito = cursor.getString(5),
 
                     )
                 )

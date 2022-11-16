@@ -151,6 +151,7 @@ class AuthenticateActivity : AppCompatActivity() {
     }
 
     private fun updateUsers(){
+        localDatabase.truncateUsers()
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retrofit.updateUser(editTextUsername.text.toString()).enqueue(object : Callback<List<UserUpdateModel>?> {
             override fun onResponse(

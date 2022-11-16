@@ -14,8 +14,8 @@
         android:layout_marginStart="15dp"
         android:layout_marginTop="15dp"
         android:layout_weight="1"
-        android:fontFamily="@font/nexa_xbold"
-        android:text="100.00"
+        android:fontFamily="@font/nexa_heavy"
+        android:text="0"
         android:textColor="#000000"
         android:textSize="48sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -66,55 +66,47 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:layout_marginEnd="130dp"
+            android:layout_marginEnd="80dp"
             android:layout_weight="1"
             android:fontFamily="@font/nexa_bold"
             android:text="Total Bet"
             android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/textViewBetDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:id="@+id/imageViewStatus"
+            android:layout_width="12dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="100dp"
             android:layout_weight="1"
-            android:fontFamily="@font/nexa_bold"
-            android:text="NOV 13 2022"
-            android:textAlignment="textEnd"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/textViewBetTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:fontFamily="@font/nexa_bold"
-            android:text="5 PM"
-            android:textAlignment="textEnd"
-            android:textSize="16sp" />
+            app:srcCompat="@drawable/online" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewBets"
         android:layout_width="match_parent"
-        android:layout_height="428dp"
+        android:layout_height="420dp"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/buttonBetConfirm"
+        android:padding="5dp"
+        android:scrollbars="vertical"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView9"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toBottomOf="@+id/textView9" />
 
     <Button
         android:id="@+id/buttonBetConfirm"
-        android:layout_width="370dp"
+        android:layout_width="160dp"
         android:layout_height="55dp"
+        android:layout_marginStart="25dp"
+        android:layout_marginEnd="10dp"
         android:layout_marginBottom="10dp"
-        android:fontFamily="@font/nexa_bold"
-        android:text="Confirm Bet"
+        android:fontFamily="@font/nexa_regular"
+        android:text="Confirm"
         app:icon="@drawable/ic_baseline_done_24"
+        app:iconGravity="textStart"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/buttonBetCancel"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
@@ -165,6 +157,7 @@
             android:hint="Bet No."
             android:inputType="textPersonName|textCapWords|textCapCharacters"
             android:padding="10dp"
+            android:textAllCaps="true"
             tools:ignore="TouchTargetSizeCheck" />
 
         <EditText
@@ -190,8 +183,51 @@
         android:fontFamily="@font/nexa_regular"
         android:text="Add Bet"
         app:icon="@drawable/ic_baseline_add_24"
+        app:iconGravity="textStart"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
+
+    <Button
+        android:id="@+id/buttonBetCancel"
+        android:layout_width="160dp"
+        android:layout_height="55dp"
+        android:layout_marginEnd="25dp"
+        android:layout_marginBottom="10dp"
+        android:backgroundTint="#F1AB55"
+        android:fontFamily="@font/nexa_regular"
+        android:text="Cancel"
+        app:icon="@drawable/ic_round_close_24"
+        app:iconGravity="textStart"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewBetDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="30dp"
+        android:layout_weight="1"
+        android:fontFamily="@font/nexa_bold"
+        android:text="NOV 13 2022"
+        android:textAlignment="textEnd"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+    <TextView
+        android:id="@+id/textViewBetTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="30dp"
+        android:layout_weight="1"
+        android:fontFamily="@font/nexa_bold"
+        android:text="5 PM"
+        android:textAlignment="textEnd"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewBetDate" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

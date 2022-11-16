@@ -1,5 +1,7 @@
 package com.slicksoftcoder.smalltownlottery.features.bet
 
+import android.icu.text.DecimalFormat
+import android.icu.text.NumberFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,9 +31,7 @@ class BetAdapter : RecyclerView.Adapter<BetAdapter.ViewHolder>()  {
 
         fun bindView(betDetailsModel: BetDetailsModel){
             betNUmber.text= betDetailsModel.betNumber
-            win.text = betDetailsModel.win
             amount.text = betDetailsModel.amount
-            type.text = betDetailsModel.isRambolito
         }
     }
 
@@ -42,12 +42,21 @@ class BetAdapter : RecyclerView.Adapter<BetAdapter.ViewHolder>()  {
 
     override fun onBindViewHolder(holder:ViewHolder, position: Int) {
         val mPosition = mList[position]
+        val formatter: NumberFormat = DecimalFormat("#,###")
         holder.bindView(mPosition)
         holder.itemView.setOnClickListener{onClickItem?.invoke(mPosition)}
-        holder.betNUmber.text = mPosition.betNumber
-        holder.win.text = mPosition.win
+        holder.win.text = formatter.format(mPosition.win.toDouble()).toString()
         holder.amount.text = mPosition.amount
-        holder.type.text = mPosition.isRambolito
+        if(mPosition.isRambolito == "0"){
+            holder.betNUmber.text = "#" + mPosition.betNumber
+            holder.type.text = "RAMBOLITO"
+        }else if (mPosition.isRambolito == "1"){
+            holder.betNUmber.text = "#" + mPosition.betNumber + "-R"
+            holder.type.text = "REGULAR"
+        }else{
+            holder.betNUmber.text = "#" + mPosition.betNumber
+            holder.type.text = "NO WIN"
+        }
     }
 
     override fun getItemCount(): Int {

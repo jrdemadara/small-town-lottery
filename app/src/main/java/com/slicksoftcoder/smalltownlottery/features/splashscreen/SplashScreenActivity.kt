@@ -47,6 +47,7 @@ class SplashScreenActivity : AppCompatActivity() {
             if (isConnected) {
                 localDatabase.truncateDraws()
                 updateDraws()
+                localDatabase.deleteCanceledBet()
             }
         }
     }
