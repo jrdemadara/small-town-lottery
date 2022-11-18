@@ -24,11 +24,11 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.ViewHolder>()  {
     }
 
     class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
-         val drawDate: TextView = itemView.findViewById(R.id.textViewHistoryDate)
-         val drawTime: TextView = itemView.findViewById(R.id.textViewHistoryDraw)
-         val transactionCode: TextView = itemView.findViewById(R.id.textViewHistoryTranscode)
-         val totalAmount: TextView = itemView.findViewById(R.id.textViewHistoryAmount)
-         var isVoid: TextView = itemView.findViewById(R.id.textViewHistoryStatus)
+         val drawDate: TextView = itemView.findViewById(R.id.textViewHistoryBetDate)
+         val drawTime: TextView = itemView.findViewById(R.id.textViewHistoryBetDraw)
+         val transactionCode: TextView = itemView.findViewById(R.id.textViewHistoryBetTranscode)
+         val totalAmount: TextView = itemView.findViewById(R.id.textViewHistoryBetTotalAmount)
+         var isVoid: TextView = itemView.findViewById(R.id.textViewHistoryBetStatus)
 
         fun bindView(historyModel: HistoryModel){
             drawDate.text= historyModel.drawDate
@@ -48,7 +48,11 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.ViewHolder>()  {
         val mPosition = mList[position]
         val formatter: NumberFormat = DecimalFormat("#,###")
         holder.bindView(mPosition)
-        holder.itemView.setOnClickListener{onClickItem?.invoke(mPosition)}
+        holder.itemView.setOnClickListener{
+
+            onClickItem?.invoke(mPosition)
+        }
+
         holder.transactionCode.text = mPosition.transactionCode
         holder.drawDate.text = mPosition.drawDate
         holder.drawTime.text = mPosition.drawTime

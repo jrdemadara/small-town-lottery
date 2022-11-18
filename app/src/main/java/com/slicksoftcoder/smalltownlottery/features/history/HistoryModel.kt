@@ -1,6 +1,7 @@
 package com.slicksoftcoder.smalltownlottery.features.history
 
 data class HistoryModel(
+    val headerSerial: String,
     val drawDate: String,
     val drawTime: String,
     val transactionCode: String,

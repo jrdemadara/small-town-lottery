@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.slicksoftcoder.smalltownlottery.features.bet.BetDetailsModel
+import com.slicksoftcoder.smalltownlottery.features.history.HistoryBetModel
 import com.slicksoftcoder.smalltownlottery.features.history.HistoryModel
 
 class LocalDatabase (context: Context) :
@@ -184,7 +185,7 @@ class LocalDatabase (context: Context) :
     /* User Data Transactions */
     fun retrieveAgentSerial(): String {
         var data: String = String()
-        val selectQuery = "SELECT agent_serial FROM $TABLE_USERS LIMIT 1"
+        val selectQuery = "SELECT $USER_AGENT_SERIAL_COL FROM $TABLE_USERS LIMIT 1"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {
@@ -268,6 +269,14 @@ class LocalDatabase (context: Context) :
         db.close()
     }
 
+    fun voidBet(headerSerial: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(HEADERS_IS_VOID_COL, 1)
+        db.update(TABLE_BET_HEADERS, values, "$HEADERS_SERIAL_COL = ?", arrayOf(headerSerial))
+        db.close()
+    }
+
     fun retrieveBetDetails(headerSerial: String?): ArrayList<BetDetailsModel> {
         val db = this.readableDatabase
         val query = "SELECT *  FROM $TABLE_BET_DETAILS WHERE $DETAILS_HEADER_SERIAL_COL = '$headerSerial'"
@@ -301,7 +310,9 @@ class LocalDatabase (context: Context) :
     /* History Transactions */
     fun retrieveHistory(): ArrayList<HistoryModel> {
         val db = this.readableDatabase
-        val query = "SELECT draw_date, draw_time, transaction_code, total_amount, is_void FROM $TABLE_BET_HEADERS WHERE $HEADERS_DATE_CREATED_COL = DATE('now') AND $HEADERS_IS_UPLOADED_COL = '0' AND $HEADERS_IS_DELETED_COL = '0' AND $HEADERS_IS_VOID_COL = '0'"
+        val query = "SELECT t1.serial, t1.draw_date, t2.draw_name, t1.transaction_code, t1.total_amount, t1.is_void FROM $TABLE_BET_HEADERS t1\n" +
+                "INNER JOIN draws t2 ON t1.draw_time = t2.serial\n" +
+                "WHERE $HEADERS_DATE_CREATED_COL > date('now') AND $HEADERS_IS_UPLOADED_COL = 0 AND $HEADERS_IS_DELETED_COL = 0 ORDER BY $HEADERS_DATE_CREATED_COL DESC"
         val data: ArrayList<HistoryModel> = ArrayList()
         val cursor: Cursor?
         try {
@@ -315,11 +326,12 @@ class LocalDatabase (context: Context) :
             do {
                 data.add(
                     HistoryModel(
-                        drawDate = cursor.getString(0),
-                        drawTime = cursor.getString(1),
-                        transactionCode = cursor.getString(2),
-                        totalAmount = cursor.getString(3),
-                        isVoid = cursor.getString(4),
+                        headerSerial = cursor.getString(0),
+                        drawDate = cursor.getString(1),
+                        drawTime = cursor.getString(2),
+                        transactionCode = cursor.getString(3),
+                        totalAmount = cursor.getString(4),
+                        isVoid = cursor.getString(5),
 
                         )
                 )
@@ -328,4 +340,60 @@ class LocalDatabase (context: Context) :
         cursor.close()
         return data
     }
+
+    fun retrieveHistoryBetDetails(headerSerial: String?): ArrayList<HistoryBetModel> {
+        val db = this.readableDatabase
+        val query = "SELECT *  FROM $TABLE_BET_DETAILS WHERE $DETAILS_HEADER_SERIAL_COL = '$headerSerial'"
+        val data: ArrayList<HistoryBetModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    HistoryBetModel(
+                        serial = cursor.getString(0),
+                        headerSerial = cursor.getString(1),
+                        betNumber = cursor.getString(2),
+                        amount = cursor.getString(3),
+                        win = cursor.getString(4),
+                        isRambolito = cursor.getString(5),
+                        )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    /* Bet Result */
+    fun insertResult(serial: String?,drawSerial: String?,drawDate: String?,winningNumber: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(RESULT_SERIAL_COL, serial)
+        values.put(RESULT_DRAW_SERIAL_COL, drawSerial)
+        values.put(RESULT_DRAW_DATE_COL, drawDate)
+        values.put(RESULT_WINNING_NUMBER_COL, winningNumber)
+        db.insert(TABLE_RESULTS, null, values)
+        db.close()
+    }
+
+    fun retrieveResult(drawTime: String?): String {
+        var data: String = String()
+        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL > DATE('now') AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
  }

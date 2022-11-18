@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/ic_middle_popup_background"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textViewResultTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/nexa_bold"
+        android:text="Add Result"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        android:textSize="16dp" />
+
+    <View
+        android:id="@+id/divider4"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:background="?android:attr/listDivider" />
+
+    <EditText
+        android:id="@+id/editTextResultNumber"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/ic_round_edittext"
+        android:ems="10"
+        android:fontFamily="@font/nexa_regular"
+        android:hint="Result"
+        android:inputType="textPersonName|textCapWords|textCapCharacters"
+        android:padding="10dp"
+        android:textAllCaps="true"
+        tools:ignore="TouchTargetSizeCheck" />
+
+    <View
+        android:id="@+id/divider3"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+
+    <Button
+        android:id="@+id/buttonResultConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:layout_weight="1"
+        android:background="@drawable/ic_round_button"
+        android:fontFamily="@font/nexa_regular"
+        android:text="Confirm"
+        android:textAllCaps="false"
+        android:textSize="16dp"
+        app:backgroundTint="@color/black"
+        app:rippleColor="#E40E3F" />
+
+
+</LinearLayout>

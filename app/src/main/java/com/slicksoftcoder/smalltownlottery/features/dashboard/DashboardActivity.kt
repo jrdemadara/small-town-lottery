@@ -1,12 +1,14 @@
 package com.slicksoftcoder.smalltownlottery.features.dashboard
 
 import android.content.Intent
+import android.graphics.Color
 import android.icu.text.DecimalFormat
 import android.icu.text.NumberFormat
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.cardview.widget.CardView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -51,6 +53,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var textView5pmTotalWin: TextView
     private lateinit var textView9pmTotalWin: TextView
     private lateinit var imageViewBet: ImageView
+    private lateinit var agentSerial: String
     val formatter: NumberFormat = DecimalFormat("#,###")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,7 +84,7 @@ class DashboardActivity : AppCompatActivity() {
         textView9pmTotalWin = findViewById(R.id.textViewDash9pmTotalWin)
         imageViewBet = findViewById(R.id.imageViewDashBet)
         textViewDate.text = dateUtil.currentDateShort().replace("-", " ").uppercase(Locale.ROOT)
-
+        agentSerial = localDatabase.retrieveAgentSerial()
         middleNavigation()
         bottomNavigation()
         retrievePNL()
@@ -158,7 +161,7 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun retrievePNL() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-        retrofit.getPNL(dateUtil.dateFormat(),localDatabase.retrieveAgentSerial()).enqueue(object :
+        retrofit.getPNL(dateUtil.dateFormat(),agentSerial).enqueue(object :
             Callback<List<PnlModel>?> {
             override fun onResponse(
                 call: Call<List<PnlModel>?>,
@@ -169,6 +172,12 @@ class DashboardActivity : AppCompatActivity() {
                     textViewTotalBet.text = formatter.format(it.totalBet.toDouble()).toString()+".00"
                     textViewTotalHits.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
                     textViewPNL.text = formatter.format(it.pnl.toDouble()).toString()+".00"
+                    if (it.pnl.contains("-")){
+                        textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
+                    }else{
+                        textViewPNL.setTextColor(Color.parseColor("#41B134"))
+                    }
+
 
                 }
             }
@@ -181,20 +190,26 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun retrieveDraw2() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-        retrofit.get2pmDraw(dateUtil.dateFormat(),localDatabase.retrieveAgentSerial(),localDatabase.retrieveDrawSerial("2 PM")).enqueue(object :
-            Callback<List<DrawModel>?> {
+        retrofit.get2pmDraw(dateUtil.dateFormat(),agentSerial,localDatabase.retrieveDrawSerial("2 PM")).enqueue(object :
+            Callback<List<Draw2pmModel>?> {
             override fun onResponse(
-                call: Call<List<DrawModel>?>,
-                response: Response<List<DrawModel>?>
+                call: Call<List<Draw2pmModel>?>,
+                response: Response<List<Draw2pmModel>?>
             ) {
                 val responseBody = response.body()!!
                 responseBody.forEach(){
                     textView2pmResult.text = it.result
                     textView2pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
+                    if (it.win.toDouble() > 1){
+                        textView2pmWinner.text = it.win.replace(".", "").replace("00", "") + " winners"
+                    }else{
+                        textView2pmWinner.text = it.win.replace(".", "").replace("00", "") + " winner"
+                    }
+
                 }
             }
 
-            override fun onFailure(call: Call<List<DrawModel>?>, t: Throwable) {
+            override fun onFailure(call: Call<List<Draw2pmModel>?>, t: Throwable) {
 
             }
         })
@@ -202,20 +217,25 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun retrieveDraw5() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-        retrofit.get5pmDraw("2022-11-15","7a1a5def-4222-40db-84d0-10461202d867",localDatabase.retrieveDrawSerial("5 PM")).enqueue(object :
-            Callback<List<DrawModel>?> {
+        retrofit.get5pmDraw(dateUtil.dateFormat(),agentSerial,localDatabase.retrieveDrawSerial("5 PM")).enqueue(object :
+            Callback<List<Draw5pmModel>?> {
             override fun onResponse(
-                call: Call<List<DrawModel>?>,
-                response: Response<List<DrawModel>?>
+                call: Call<List<Draw5pmModel>?>,
+                response: Response<List<Draw5pmModel>?>
             ) {
                 val responseBody = response.body()!!
                 responseBody.forEach(){
                     textView5pmResult.text = it.result
                     textView5pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
+                    if (it.win.toDouble() > 1){
+                        textView5pmWinner.text = it.win.replace(".", "").replace("00", "") + " winners"
+                    }else{
+                        textView5pmWinner.text = it.win.replace(".", "").replace("00", "") + " winner"
+                    }
                 }
             }
 
-            override fun onFailure(call: Call<List<DrawModel>?>, t: Throwable) {
+            override fun onFailure(call: Call<List<Draw5pmModel>?>, t: Throwable) {
 
             }
         })
@@ -223,20 +243,25 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun retrieveDraw9() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-        retrofit.get9pmDraw("2022-11-15","7a1a5def-4222-40db-84d0-10461202d867",localDatabase.retrieveDrawSerial("9 PM")).enqueue(object :
-            Callback<List<DrawModel>?> {
+        retrofit.get9pmDraw(dateUtil.dateFormat(),agentSerial,localDatabase.retrieveDrawSerial("9 PM")).enqueue(object :
+            Callback<List<Draw9pmModel>?> {
             override fun onResponse(
-                call: Call<List<DrawModel>?>,
-                response: Response<List<DrawModel>?>
+                call: Call<List<Draw9pmModel>?>,
+                response: Response<List<Draw9pmModel>?>
             ) {
                 val responseBody = response.body()!!
                 responseBody.forEach(){
                     textView9pmResult.text = it.result
                     textView9pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
+                    if (it.win.toDouble() > 1){
+                        textView9pmWinner.text = it.win.replace(".", "").replace("00", "") + " winners"
+                    }else{
+                        textView9pmWinner.text = it.win.replace(".", "").replace("00", "") + " winner"
+                    }
                 }
             }
 
-            override fun onFailure(call: Call<List<DrawModel>?>, t: Throwable) {
+            override fun onFailure(call: Call<List<Draw9pmModel>?>, t: Throwable) {
 
             }
         })
