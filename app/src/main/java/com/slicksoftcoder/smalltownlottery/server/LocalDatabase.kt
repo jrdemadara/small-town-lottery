@@ -6,6 +6,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.slicksoftcoder.smalltownlottery.features.bet.BetDetailsModel
+import com.slicksoftcoder.smalltownlottery.features.history.HistoryModel
 
 class LocalDatabase (context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION){
@@ -39,6 +40,7 @@ class LocalDatabase (context: Context) :
             private const val HEADERS_DATE_DELETED_COL = "date_deleted"
             private const val HEADERS_IS_UPLOADED_COL = "is_uploaded"
             private const val HEADERS_DATE_UPLOADED_COL = "date_uploaded"
+            private const val HEADERS_DATE_CREATED_COL = "date_created"
             /* Table Details */
             private const val DETAILS_SERIAL_COL = "serial"
             private const val DETAILS_HEADER_SERIAL_COL = "header_serial"
@@ -87,7 +89,8 @@ class LocalDatabase (context: Context) :
                  + HEADERS_IS_DELETED_COL + " INTEGER,"
                  + HEADERS_DATE_DELETED_COL + " DATETIME,"
                  + HEADERS_IS_UPLOADED_COL + " INTEGER,"
-                 + HEADERS_DATE_UPLOADED_COL + " DATETIME)")
+                 + HEADERS_DATE_UPLOADED_COL + " DATETIME,"
+                 + HEADERS_DATE_CREATED_COL + " DATETIME DEFAULT CURRENT_TIMESTAMP)")
 
          val createDetailsTable = ("CREATE TABLE "
                  + TABLE_BET_DETAILS + " ("
@@ -218,6 +221,7 @@ class LocalDatabase (context: Context) :
         values.put(HEADERS_TOTAL_AMOUNT_COL, totalAmount)
         values.put(HEADERS_IS_VOID_COL, 0)
         values.put(HEADERS_IS_DELETED_COL, 0)
+        values.put(HEADERS_IS_UPLOADED_COL, 0)
         db.insert(TABLE_BET_HEADERS, null, values)
         db.close()
     }
@@ -258,6 +262,12 @@ class LocalDatabase (context: Context) :
         db.close()
     }
 
+    fun deleteBetDetail(serial: String?) {
+        val db = this.writableDatabase
+        db.delete(TABLE_BET_DETAILS, "$DETAILS_SERIAL_COL = ?", arrayOf(serial))
+        db.close()
+    }
+
     fun retrieveBetDetails(headerSerial: String?): ArrayList<BetDetailsModel> {
         val db = this.readableDatabase
         val query = "SELECT *  FROM $TABLE_BET_DETAILS WHERE $DETAILS_HEADER_SERIAL_COL = '$headerSerial'"
@@ -281,6 +291,37 @@ class LocalDatabase (context: Context) :
                         isRambolito = cursor.getString(5),
 
                     )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    /* History Transactions */
+    fun retrieveHistory(): ArrayList<HistoryModel> {
+        val db = this.readableDatabase
+        val query = "SELECT draw_date, draw_time, transaction_code, total_amount, is_void FROM $TABLE_BET_HEADERS WHERE $HEADERS_DATE_CREATED_COL = DATE('now') AND $HEADERS_IS_UPLOADED_COL = '0' AND $HEADERS_IS_DELETED_COL = '0' AND $HEADERS_IS_VOID_COL = '0'"
+        val data: ArrayList<HistoryModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    HistoryModel(
+                        drawDate = cursor.getString(0),
+                        drawTime = cursor.getString(1),
+                        transactionCode = cursor.getString(2),
+                        totalAmount = cursor.getString(3),
+                        isVoid = cursor.getString(4),
+
+                        )
                 )
             } while (cursor.moveToNext())
         }

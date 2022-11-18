@@ -78,8 +78,8 @@ class BetActivity : AppCompatActivity() {
                 winAmount =  (amount/5) * 2500
                 /* Save Bet */
                 localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString().uppercase(Locale.ROOT),editTextBetAmount.text.toString(), winAmount.toString(), "2")
-                val list = localDatabase.retrieveBetDetails(headerSerial.toString())
                 /* Retrieve Bet */
+                val list = localDatabase.retrieveBetDetails(headerSerial.toString())
                 adapter?.addItems(list)
                 /* Update UI */
                 totalAmount += amount
@@ -167,7 +167,52 @@ class BetActivity : AppCompatActivity() {
 
                 }
             }
+            buttonBetAdd.setText("Add Bet")
         }
+
+            adapter?.setOnClickItem {
+                val dialog = Dialog(this)
+                val view = layoutInflater.inflate(R.layout.bet_action_dialog, null)
+                dialog.setCancelable(false)
+                dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                dialog.window?.setGravity(Gravity.CENTER)
+                dialog.setContentView(view)
+                dialog.show()
+                val radioButtonBetActionEdit: RadioButton = view.findViewById(R.id.radioButtonBetActionEdit)
+                val radioButtonBetActionDelete: RadioButton = view.findViewById(R.id.radioButtonBetActionDelete)
+                val buttonBetActionConfirm: Button = view.findViewById(R.id.buttonBetActionConfirm)
+                var action = ""
+                val serial = it.serial
+                val betNumber = it.betNumber
+                val amount = it.amount
+                radioButtonBetActionEdit.setOnClickListener {
+                    action = "edit"
+                }
+                radioButtonBetActionDelete.setOnClickListener {
+                    action = "delete"
+                }
+                buttonBetActionConfirm.setOnClickListener{
+                    if (action == "edit"){
+                        editTextBetNumber.setText(betNumber)
+                        editTextBetAmount.setText(amount)
+                        buttonBetAdd.setText("Edit Bet")
+                        localDatabase.deleteBetDetail(serial)
+                        totalAmount -= amount.toDouble()
+                        textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
+                        dialog.dismiss()
+                    }else{
+                        localDatabase.deleteBetDetail(serial)
+                        val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                        adapter?.addItems(list)
+                        totalAmount -= amount.toDouble()
+                        textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
+                        dialog.dismiss()
+                    }
+                }
+            }
+
+
         buttonBetConfirm.setOnClickListener {
             if (totalAmount <= 0){
                 Toast.makeText(applicationContext, "Please place a bet first.", Toast.LENGTH_SHORT).show()

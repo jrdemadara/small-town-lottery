@@ -36,7 +36,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var textViewPNL: TextView
     private lateinit var textViewMenuBet: TextView
     private lateinit var textViewMenuHistory: TextView
-    private lateinit var textViewMenuTransaction: TextView
+    private lateinit var textViewMenuResult: TextView
     private lateinit var textViewMenu: TextView
     private lateinit var cardView2pm: CardView
     private lateinit var cardView5pm: CardView
@@ -55,6 +55,7 @@ class DashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
+        localDatabase = LocalDatabase(this)
         bottomNavigationView = findViewById(R.id.bottomNavigationDash)
         toolbar = findViewById(R.id.materialToolbarDash)
         dateUtil = DateUtil()
@@ -64,7 +65,7 @@ class DashboardActivity : AppCompatActivity() {
         textViewPNL = findViewById(R.id.textViewDashPNL)
         textViewMenuBet = findViewById(R.id.textViewDashMenuBet)
         textViewMenuHistory = findViewById(R.id.textViewDashMenuHistory)
-        textViewMenuTransaction = findViewById(R.id.textViewDashMenuTransaction)
+        textViewMenuResult = findViewById(R.id.textViewDashMenuResult)
         textViewMenu = findViewById(R.id.textViewDashMenu)
         cardView2pm = findViewById(R.id.cardView2pm)
         cardView5pm = findViewById(R.id.cardView5pm)
@@ -79,20 +80,15 @@ class DashboardActivity : AppCompatActivity() {
         textView5pmTotalWin = findViewById(R.id.textViewDash5pmTotalWin)
         textView9pmTotalWin = findViewById(R.id.textViewDash9pmTotalWin)
         imageViewBet = findViewById(R.id.imageViewDashBet)
+        textViewDate.text = dateUtil.currentDateShort().replace("-", " ").uppercase(Locale.ROOT)
+
+        middleNavigation()
         bottomNavigation()
         retrievePNL()
         retrieveDraw2()
-        textViewDate.text = dateUtil.currentDateShort().replace("-", " ").uppercase(Locale.ROOT)
-        textViewMenuBet.setOnClickListener {
-            val intent = Intent(this, BetActivity ::class.java)
-            startActivity(intent)
-            finish()
-        }
-        imageViewBet.setOnClickListener {
-            val intent = Intent(this, BetActivity ::class.java)
-            startActivity(intent)
-            finish()
-        }
+        retrieveDraw5()
+        retrieveDraw9()
+
     }
 
     private fun bottomNavigation(){
@@ -135,10 +131,34 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun retrievePNL() {
+    private fun middleNavigation(){
+        textViewMenuBet.setOnClickListener {
+            val intent = Intent(this, BetActivity ::class.java)
+            startActivity(intent)
+            finish()
+        }
 
+        textViewMenuHistory.setOnClickListener {
+            val intent = Intent(this, HistoryActivity ::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        textViewMenuResult.setOnClickListener {
+            val intent = Intent(this, ResultActivity ::class.java)
+            startActivity(intent)
+            finish()
+        }
+        imageViewBet.setOnClickListener {
+            val intent = Intent(this, BetActivity ::class.java)
+            startActivity(intent)
+            finish()
+        }
+    }
+
+    private fun retrievePNL() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-        retrofit.getPNL("2022-11-15","7a1a5def-4222-40db-84d0-10461202d867").enqueue(object :
+        retrofit.getPNL(dateUtil.dateFormat(),localDatabase.retrieveAgentSerial()).enqueue(object :
             Callback<List<PnlModel>?> {
             override fun onResponse(
                 call: Call<List<PnlModel>?>,
@@ -161,7 +181,7 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun retrieveDraw2() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-        retrofit.getDraw("2022-11-15","7a1a5def-4222-40db-84d0-10461202d867","4b1fa592-5930-4157-b850-53348b34bebe").enqueue(object :
+        retrofit.get2pmDraw(dateUtil.dateFormat(),localDatabase.retrieveAgentSerial(),localDatabase.retrieveDrawSerial("2 PM")).enqueue(object :
             Callback<List<DrawModel>?> {
             override fun onResponse(
                 call: Call<List<DrawModel>?>,
@@ -182,7 +202,7 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun retrieveDraw5() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-        retrofit.getDraw("2022-11-15","7a1a5def-4222-40db-84d0-10461202d867","4b1fa592-5930-4157-b850-53348b34bebe").enqueue(object :
+        retrofit.get5pmDraw("2022-11-15","7a1a5def-4222-40db-84d0-10461202d867",localDatabase.retrieveDrawSerial("5 PM")).enqueue(object :
             Callback<List<DrawModel>?> {
             override fun onResponse(
                 call: Call<List<DrawModel>?>,
@@ -203,7 +223,7 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun retrieveDraw9() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-        retrofit.getDraw("2022-11-15","7a1a5def-4222-40db-84d0-10461202d867","4b1fa592-5930-4157-b850-53348b34bebe").enqueue(object :
+        retrofit.get9pmDraw("2022-11-15","7a1a5def-4222-40db-84d0-10461202d867",localDatabase.retrieveDrawSerial("9 PM")).enqueue(object :
             Callback<List<DrawModel>?> {
             override fun onResponse(
                 call: Call<List<DrawModel>?>,

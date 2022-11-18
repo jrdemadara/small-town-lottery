@@ -193,7 +193,7 @@
             app:drawableTopCompat="@drawable/menu_history" />
 
         <TextView
-            android:id="@+id/textViewDashMenuTransaction"
+            android:id="@+id/textViewDashMenuResult"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -202,7 +202,7 @@
             android:drawablePadding="5dp"
             android:fontFamily="@font/nexa_regular"
             android:rotationX="1"
-            android:text="Transaction"
+            android:text="Result"
             android:textAlignment="center"
             app:drawableTopCompat="@drawable/menu_result" />
 
@@ -303,7 +303,7 @@
                 android:layout_height="18dp"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
-                android:text="13,500"
+                android:text="0"
                 android:textAlignment="viewEnd"
                 android:textColor="#848484"
                 android:textSize="16sp"
@@ -359,7 +359,7 @@
                 android:layout_height="18dp"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
-                android:text="13,500"
+                android:text="0"
                 android:textAlignment="viewEnd"
                 android:textColor="#848484"
                 android:textSize="16sp"
@@ -456,7 +456,7 @@
                 android:layout_height="18dp"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
-                android:text="13,500"
+                android:text="0"
                 android:textAlignment="viewEnd"
                 android:textColor="#848484"
                 android:textSize="16sp"

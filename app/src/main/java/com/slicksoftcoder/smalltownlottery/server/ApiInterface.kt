@@ -31,8 +31,16 @@ interface ApiInterface {
     fun getPNL(@Query("date") date: String?, @Query("agent") agent: String?): Call<List<PnlModel>>
 
     @Headers("Content-Type:application/json")
-    @POST("draw")
-    fun getDraw(@Query("date") date: String?, @Query("agent") agent: String?, @Query("draw") draw: String?): Call<List<DrawModel>>
+    @POST("2pmdraw")
+    fun get2pmDraw(@Query("date") date: String?, @Query("agent") agent: String?, @Query("draw") draw: String?): Call<List<DrawModel>>
+
+    @Headers("Content-Type:application/json")
+    @POST("5pmdraw")
+    fun get5pmDraw(@Query("date") date: String?, @Query("agent") agent: String?, @Query("draw") draw: String?): Call<List<DrawModel>>
+
+    @Headers("Content-Type:application/json")
+    @POST("9pmdraw")
+    fun get9pmDraw(@Query("date") date: String?, @Query("agent") agent: String?, @Query("draw") draw: String?): Call<List<DrawModel>>
 //
 //    @Headers("Content-Type:application/json")
 //    @GET("operations")

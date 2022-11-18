@@ -49,10 +49,10 @@ class BetAdapter : RecyclerView.Adapter<BetAdapter.ViewHolder>()  {
         holder.amount.text = mPosition.amount
         if(mPosition.isRambolito == "0"){
             holder.betNUmber.text = "#" + mPosition.betNumber
-            holder.type.text = "RAMBOLITO"
+            holder.type.text = "REGULAR"
         }else if (mPosition.isRambolito == "1"){
             holder.betNUmber.text = "#" + mPosition.betNumber + "-R"
-            holder.type.text = "REGULAR"
+            holder.type.text = "RAMBOLITO"
         }else{
             holder.betNUmber.text = "#" + mPosition.betNumber
             holder.type.text = "NO WIN"

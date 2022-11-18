@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/ic_middle_popup_background"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:fontFamily="@font/nexa_bold"
+        android:text="Actions"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        android:textSize="16dp" />
+
+    <View
+        android:id="@+id/divider4"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:background="?android:attr/listDivider" />
+
+    <RadioButton
+        android:id="@+id/radioButtonBetActionEdit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#F1AB55"
+        android:buttonTint="#F1AB55"
+        android:drawableTint="#F1AB55"
+        android:fontFamily="@font/nexa_regular"
+        android:foregroundTint="#F1AB55"
+        android:text="Edit Bet"
+        android:textSize="16dp" />
+
+    <View
+        android:id="@+id/divider2"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+
+    <RadioButton
+        android:id="@+id/radioButtonBetActionDelete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#F1AB55"
+        android:buttonTint="#F15555"
+        android:drawableTint="#F1AB55"
+        android:fontFamily="@font/nexa_regular"
+        android:foregroundTint="#F1AB55"
+        android:text="Delete Bet"
+        android:textSize="16dp" />
+
+    <View
+        android:id="@+id/divider3"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+
+    <Button
+        android:id="@+id/buttonBetActionConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:layout_weight="1"
+        android:background="@drawable/ic_round_button"
+        android:fontFamily="@font/nexa_regular"
+        android:text="Confirm"
+        android:textAllCaps="false"
+        android:textSize="16dp"
+        app:backgroundTint="@color/black"
+        app:rippleColor="#E40E3F" />
+
+
+</LinearLayout>
