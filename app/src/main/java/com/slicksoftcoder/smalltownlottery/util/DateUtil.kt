@@ -66,4 +66,12 @@ class DateUtil () {
         return formatTime
     }
 
+    fun currentTimeComplete(): String{
+        val formatTime: String
+        val currentDate = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+        formatTime = currentDate.format(formatter)
+        return formatTime
+    }
+
 }

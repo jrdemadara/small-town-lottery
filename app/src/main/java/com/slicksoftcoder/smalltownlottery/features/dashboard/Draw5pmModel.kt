@@ -4,7 +4,9 @@ import java.sql.DataTruncation
 
 data class Draw5pmModel(
     val result: String,
+    val totalBet: String,
     val totalHit: String,
+    val pnl: String,
     val win: String
 
 )

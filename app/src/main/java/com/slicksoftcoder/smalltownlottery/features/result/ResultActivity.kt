@@ -49,8 +49,15 @@ class ResultActivity : AppCompatActivity() {
         cardView2 = findViewById(R.id.cardView2pmResult)
         cardView5 = findViewById(R.id.cardView5pmResult)
         cardView9 = findViewById(R.id.cardView9pmResult)
-        textViewResultDate.text = dateUtil.currentDateShort()
+        textViewResultDate.text = dateUtil.currentDateShort().replace("-", " ").uppercase(Locale.ROOT)
         textViewResultTime.text = dateUtil.currentTime()
+
+        val draw2Serial = localDatabase.retrieveDrawSerial("2 PM")
+        textViewResult2pmResult.text = localDatabase.retrieveResult(draw2Serial)
+        val draw5Serial = localDatabase.retrieveDrawSerial("5 PM")
+        textViewResult5pmResult.text = localDatabase.retrieveResult(draw5Serial)
+        val draw9Serial = localDatabase.retrieveDrawSerial("9 PM")
+        textViewResult9pmResult.text = localDatabase.retrieveResult(draw9Serial)
         result2pm()
         result5pm()
         result9pm()
@@ -79,7 +86,7 @@ class ResultActivity : AppCompatActivity() {
             buttonResultConfirm.setOnClickListener {
                 val drawSerial = localDatabase.retrieveDrawSerial("2 PM")
                 textViewResultTime.text = "Add Result (\"2 PM\")"
-                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString())
+                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
                 textViewResult2pmResult.text = localDatabase.retrieveResult(drawSerial)
                 dialog.dismiss()
@@ -104,7 +111,7 @@ class ResultActivity : AppCompatActivity() {
             buttonResultConfirm.setOnClickListener {
                 val drawSerial = localDatabase.retrieveDrawSerial("5 PM")
                 textViewResultTime.text = "Add Result (\"5 PM\")"
-                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString())
+                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
                 textViewResult5pmResult.text = localDatabase.retrieveResult(drawSerial)
                 dialog.dismiss()
@@ -129,7 +136,7 @@ class ResultActivity : AppCompatActivity() {
             buttonResultConfirm.setOnClickListener {
                 val drawSerial = localDatabase.retrieveDrawSerial("9 PM")
                 textViewResultTime.text = "Add Result (\"9 PM\")"
-                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString())
+                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
                 textViewResult9pmResult.text = localDatabase.retrieveResult(drawSerial)
                 dialog.dismiss()

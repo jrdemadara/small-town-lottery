@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearLayout4"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal|center_vertical"
+    android:background="@drawable/ic_middle_popup_background"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/imageView23"
+        android:layout_width="116dp"
+        android:layout_height="96dp"
+        android:layout_gravity="center_horizontal"
+        android:padding="10dp"
+        app:srcCompat="@drawable/cutoff" />
+
+    <TextView
+        android:id="@+id/textView12"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:fontFamily="@font/nexa_regular"
+        android:padding="10dp"
+        android:text="5 minutes to resume bet"
+        android:textColor="#000000"
+        android:textSize="20sp" />
+</LinearLayout>

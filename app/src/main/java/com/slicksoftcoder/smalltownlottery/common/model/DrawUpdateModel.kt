@@ -4,5 +4,6 @@ data class DrawUpdateModel(
     val serial: String,
     val drawName: String,
     val drawTime: String,
-    val cutoff: String
+    val cutoff: String,
+    val resume: String
 )

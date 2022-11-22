@@ -59,12 +59,13 @@
 
         <TextView
             android:id="@+id/textViewDashDate"
-            android:layout_width="wrap_content"
+            android:layout_width="180dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:fontFamily="@font/nexa_bold"
             android:text="NOV 13 2022"
             android:textAlignment="textEnd" />
+
     </LinearLayout>
 
     <TextView
@@ -94,19 +95,6 @@
         app:layout_constraintStart_toEndOf="@+id/textViewDashTotalBet"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout"
         app:srcCompat="@drawable/php" />
-
-    <ImageView
-        android:id="@+id/imageView18"
-        android:layout_width="56dp"
-        android:layout_height="8dp"
-        android:layout_gravity="center_vertical"
-        android:layout_marginTop="36dp"
-        android:layout_marginEnd="12dp"
-        android:layout_weight="1"
-        android:scaleType="fitEnd"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout"
-        app:srcCompat="@drawable/pager" />
 
     <TextView
         android:id="@+id/textViewDashTotalHits"
@@ -143,7 +131,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_marginTop="14dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="15dp"
         android:layout_weight="1"
         android:fontFamily="@font/nexa_heavy"
         android:text="PNL"
@@ -207,19 +195,19 @@
             app:drawableTopCompat="@drawable/menu_result" />
 
         <TextView
-            android:id="@+id/textViewDashMenu"
+            android:id="@+id/textViewDashTransmit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="5dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:drawablePadding="5dp"
             android:fontFamily="@font/nexa_regular"
             android:rotationX="1"
-            android:text="Menu"
+            android:text="Transmit"
             android:textAlignment="center"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            app:drawableTopCompat="@drawable/menu" />
+            app:drawableTopCompat="@drawable/menu_upload" />
     </LinearLayout>
 
     <TextView
@@ -558,5 +546,16 @@
 
         </com.google.android.material.bottomnavigation.BottomNavigationView>
     </FrameLayout>
+
+    <ImageView
+        android:id="@+id/imageViewDashStatus"
+        android:layout_width="77dp"
+        android:layout_height="19dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="10dp"
+        android:layout_weight="1"
+        android:scaleType="fitEnd"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

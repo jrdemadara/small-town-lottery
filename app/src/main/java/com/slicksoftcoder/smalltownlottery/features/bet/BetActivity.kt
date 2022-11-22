@@ -17,10 +17,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.slicksoftcoder.smalltownlottery.R
+import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
+import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
+import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
+import com.slicksoftcoder.smalltownlottery.server.NodeServer
 import com.slicksoftcoder.smalltownlottery.util.DateUtil
 import com.slicksoftcoder.smalltownlottery.util.NetworkChecker
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.*
 import kotlin.properties.Delegates
 
@@ -75,7 +83,7 @@ class BetActivity : AppCompatActivity() {
             if ("NW" == editTextBetNumber.text.toString().uppercase(Locale.ROOT)){
                 val amount: Double = editTextBetAmount.text.toString().toDouble()
                 val serial: UUID = UUID.randomUUID()
-                winAmount =  (amount/5) * 2500
+                winAmount = 2500 * (amount/5)
                 /* Save Bet */
                 localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString().uppercase(Locale.ROOT),editTextBetAmount.text.toString(), winAmount.toString(), "2")
                 /* Retrieve Bet */
@@ -115,7 +123,7 @@ class BetActivity : AppCompatActivity() {
                     buttonConfirm.setOnClickListener {
                         if (radioButtonRegular.isChecked || radioButtonRambolito.isChecked){
                             if (isRambolito == 0){
-                                winAmount =  (amount/5) * 2750
+                                winAmount =   2750 * (amount/5)
                                 /* Save Bet */
                                 localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
                                 val list = localDatabase.retrieveBetDetails(headerSerial.toString())
@@ -132,7 +140,7 @@ class BetActivity : AppCompatActivity() {
                                 dialog.dismiss()
                             }else{
                                 if (amount >= 30){
-                                    winAmount =  (amount/30) * 2750
+                                    winAmount =  2750 * (amount/30)
                                     editTextBetAmount.setTextColor(Color.parseColor("#000000"));
                                     /* Save Bet */
                                     localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
@@ -222,7 +230,7 @@ class BetActivity : AppCompatActivity() {
                 builder.setMessage("Do you wish to continue?")
                 builder.setIcon(R.drawable.ic_round_check_circle_24)
                 builder.setPositiveButton("Yes"){ dialogInterface, _ ->
-                    val agent = localDatabase.retrieveAgentSerial()
+                    val agent = localDatabase.retrieveAgent()
                     val draw = localDatabase.retrieveDrawSerial(drawTime)
                     val transCode: String = "B"+dateUtil.dateFormat()+dateUtil.currentTime()
                     val transCodeDash = transCode.replace("-","")
@@ -233,9 +241,12 @@ class BetActivity : AppCompatActivity() {
                         dateUtil.dateFormat(),
                         draw,
                         transCodeCol,
-                        totalAmount.toString()
+                        totalAmount.toString(),
+                        dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete()
                     )
                     localDatabase.confirmBetDetails(headerSerial.toString())
+                    transmitBetHeader(headerSerial.toString())
+                    transmitBetDetails(headerSerial.toString())
                     showSuccess()
                     dialogInterface.dismiss()
                 }
@@ -362,6 +373,66 @@ class BetActivity : AppCompatActivity() {
                 imageViewStatus.setImageResource(R.drawable.online)
             } else {
                 imageViewStatus.setImageResource(R.drawable.offline)
+            }
+        }
+    }
+
+    private fun transmitBetHeader(headerSerial: String){
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        val data = localDatabase.transmitBetHeader(headerSerial)
+        val list: ArrayList<BetHeaderTransmitModel> = data
+        if (list.size > 0){
+            list.forEach{
+                val filter = HashMap<String, String>()
+                filter["serial"] = it.serial
+                filter["agent"] = it.agent
+                filter["drawdate"] = it.drawDate
+                filter["drawserial"] = it.drawSerial
+                filter["transcode"] = it.transactionCode
+                filter["totalamount"] = it.totalAmount
+                filter["datecreated"] = it.dateCreated
+                filter["dateprinted"] = it.datePrinted
+                filter["isvoid"] = it.isVoid
+                filter["editedby"] = it.editedBy
+                filter["dateedited"] = it.dateEdited
+                retrofit.transmitBetHeaders(filter).enqueue(object : Callback<ResponseBody?> {
+                    override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
+                        if (response.code() == 200) {
+                            localDatabase.updateBetHeaderTransmitted(headerSerial,dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 1)
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
+
+                    }
+                })
+            }
+        }
+    }
+    private fun transmitBetDetails(headerSerial: String){
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        val data = localDatabase.transmitBetDetail(headerSerial)
+        val list: ArrayList<BetDetailsTransmitModel> = data
+        if (list.size > 0){
+            list.forEach{
+                val filter = HashMap<String, String>()
+                filter["serial"] = it.serial
+                filter["headerserial"] = it.headerSerial
+                filter["betno"] = it.betNumber
+                filter["totalamount"] = it.amount
+                filter["win"] = it.win
+                filter["isrambolito"] = it.isRambolito
+                retrofit.transmitBetDetails(filter).enqueue(object : Callback<ResponseBody?> {
+                    override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
+                        if (response.code() == 200) {
+                            localDatabase.updateBetDetailTransmitted(it.serial,dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 1)
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
+
+                    }
+                })
             }
         }
     }

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:cardCornerRadius="5dp"
-    app:cardElevation="5dp"
+    app:cardElevation="2dp"
     app:cardUseCompatPadding="true">
 
     <FrameLayout
@@ -36,7 +36,7 @@
                 android:id="@+id/textViewHistoryBetDate"
                 android:layout_width="wrap_content"
                 android:layout_height="18dp"
-                android:fontFamily="@font/nexa_regular"
+                android:fontFamily="@font/nexa_bold"
                 android:text="NOV 18 2022"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -48,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="18dp"
                 android:layout_marginStart="5dp"
-                android:fontFamily="@font/nexa_regular"
+                android:fontFamily="@font/nexa_bold"
                 android:text="2 PM"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="parent"

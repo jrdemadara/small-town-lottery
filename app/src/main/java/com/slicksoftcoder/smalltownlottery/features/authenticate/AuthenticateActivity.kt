@@ -1,23 +1,31 @@
 package com.slicksoftcoder.smalltownlottery.features.authenticate
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.hardware.biometrics.BiometricPrompt
 import android.os.*
 import android.provider.Settings
 import android.telephony.TelephonyManager
+import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.UserUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
+import com.slicksoftcoder.smalltownlottery.features.landing.LandingActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
@@ -27,18 +35,25 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
+import kotlin.collections.HashMap
 
 
 class AuthenticateActivity : AppCompatActivity() {
     private lateinit var networkChecker: NetworkChecker
     private lateinit var localDatabase: LocalDatabase
+    private lateinit var sharedPreferences: SharedPreferences
+    private var prefname = "USERPREF"
+    private var prefusername = "USERNAME"
+    private var prefpassword = "PASSWORD"
+    private var prefdeviceid = "DEVICEID"
     private lateinit var buttonLogin: Button
     private lateinit var editTextUsername: EditText
     private lateinit var editTextPassword: EditText
-    private lateinit var textViewUserInitial: TextView
+    private lateinit var remember: CheckBox
     private lateinit var textViewForgotPassword: TextView
     private lateinit var imageViewBoimetric : ImageView
-    private lateinit var deviceId: String
+    private lateinit var device: String
     private var cancellationSignal : CancellationSignal? = null
     private val authenticationCallback : BiometricPrompt.AuthenticationCallback
         get() =
@@ -52,28 +67,49 @@ class AuthenticateActivity : AppCompatActivity() {
                     notifyUser("Authentication Succeeded")
                     switchActivity()
                 }
-
             }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authenticate)
         localDatabase = LocalDatabase(this)
+        sharedPreferences = getSharedPreferences(prefname, MODE_PRIVATE)
+        val prefusername = sharedPreferences.getString(prefusername, null)
+        val prefpassword = sharedPreferences.getString(prefpassword, null)
+        device = sharedPreferences.getString(prefdeviceid, null).toString()
         buttonLogin = findViewById(R.id.buttonLogin)
         editTextUsername = findViewById(R.id.editTextUsername)
         editTextPassword = findViewById(R.id.editTextPassword)
-        textViewUserInitial = findViewById(R.id.textViewUserInitial)
+        remember = findViewById(R.id.checkBoxRemember)
         textViewForgotPassword = findViewById(R.id.textViewForgotPassword)
         imageViewBoimetric = findViewById(R.id.imageViewBiometric)
-        deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        val deviceId: UUID = UUID.randomUUID()
+        if (prefusername.toString().isBlank() || prefpassword.toString().isBlank()) {
+            remember.isChecked = false
+        } else {
+            editTextUsername.setText(prefusername)
+            editTextPassword.setText(prefpassword)
+            remember.isChecked = true
+        }
         buttonLogin.setOnClickListener {
             if (editTextUsername.text.isNotEmpty() && editTextPassword.text.isNotEmpty()){
-                checkNetworkConnection()
+                if (remember.isChecked) {
+                    rememberMe(editTextUsername.text.toString(), editTextPassword.text.toString())
+                } else {
+                    clear()
+                }
+
+                if (device == "null"){
+                    rememberDeviceID(deviceId.toString())
+                    updateUserDevice(editTextUsername.text.toString(), editTextPassword.text.toString(),deviceId.toString())
+                }else{
+                    authenticateOnline(editTextUsername.text.toString(), editTextPassword.text.toString(),device)
+                }
             }else{
                 Toast.makeText(application, "Please fill the username and password.", Toast.LENGTH_SHORT).show()
+                vibratePhone()
             }
 
         }
-
         checkBiometricSupport()
 
         imageViewBoimetric.setOnClickListener {
@@ -87,41 +123,80 @@ class AuthenticateActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkNetworkConnection() {
-        networkChecker = NetworkChecker(application)
-        networkChecker.observe(this) { isConnected ->
-            if (isConnected) {
-                //* Login Online
-                val isExist: Boolean = localDatabase.checkDeviceUser(deviceId)
-                if (isExist){
-                    authenticateOnline(editTextUsername.text.toString(), editTextPassword.text.toString(),deviceId)
-                }else{
-                    updateUserDevice(editTextUsername.text.toString(), editTextPassword.text.toString(),deviceId)
-                }
-            } else {
-                //* Login Offline
-            }
-        }
+    private fun rememberMe(username: String?, password: String?) {
+        getSharedPreferences(prefname, MODE_PRIVATE)
+            .edit()
+            .putString(prefusername, username)
+            .putString(prefpassword, password)
+            .apply()
+    }
+
+    private fun rememberDeviceID(deviceid: String?) {
+        getSharedPreferences(prefname, MODE_PRIVATE)
+            .edit()
+            .putString(prefdeviceid, deviceid)
+            .apply()
+    }
+
+
+
+    private fun clear() {
+        val editor = sharedPreferences.edit()
+        editor.remove(prefusername)
+        editor.remove(prefpassword)
+        editor.apply()
     }
 
     private fun authenticateOnline(username: String, password: String, deviceid: String){
         val retIn = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         val signInInfo = UserModel(username, password, deviceid)
         retIn.signin(signInInfo).enqueue(object : Callback<ResponseBody> {
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(this@AuthenticateActivity, "Something went wrong with the server response.", Toast.LENGTH_SHORT).show()
-            }
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                LoadingScreen.displayLoadingWithText(this@AuthenticateActivity, "Logging in...", false)
+                LoadingScreen.displayLoadingWithText(applicationContext, "Logging in...", false)
                 if (response.code() == 200) {
+                    rememberMe(editTextUsername.text.toString(), editTextPassword.text.toString())
                     updateUsers()
                     switchActivity()
                 } else if (response.code() == 201) {
                     LoadingScreen.hideLoading()
                     vibratePhone()
+                    loginFailed()
                 }
             }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                authenticateOffline()
+            }
         })
+    }
+
+    private fun loginFailed(){
+        val dialog = Dialog(this)
+        val view = layoutInflater.inflate(R.layout.login_failed_dialog, null)
+        dialog.setCancelable(true)
+        dialog.window?.attributes?.windowAnimations = R.style.TopDialogAnimation
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setGravity(Gravity.TOP)
+        dialog.setContentView(view)
+        dialog.show()
+        Handler(Looper.getMainLooper()).postDelayed({
+            dialog.dismiss()
+        }, 3000)
+    }
+
+    private fun authenticateOffline(){
+        if (remember.isChecked) {
+            rememberMe(editTextUsername.text.toString(), editTextPassword.text.toString())
+        } else {
+            clear()
+        }
+        val isExist: Boolean = localDatabase.authenticate(editTextUsername.text.toString(), editTextPassword.text.toString(), device)
+        if (isExist){
+            switchActivity()
+        }else{
+           vibratePhone()
+            loginFailed()
+        }
     }
 
     private fun updateUserDevice(username: String, password: String, deviceid: String){

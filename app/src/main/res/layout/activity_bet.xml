@@ -77,8 +77,7 @@
             android:layout_width="12dp"
             android:layout_height="match_parent"
             android:layout_marginStart="100dp"
-            android:layout_weight="1"
-            app:srcCompat="@drawable/online" />
+            android:layout_weight="1" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

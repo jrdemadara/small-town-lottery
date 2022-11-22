@@ -43,32 +43,16 @@ interface ApiInterface {
     @Headers("Content-Type:application/json")
     @POST("9pmdraw")
     fun get9pmDraw(@Query("date") date: String?, @Query("agent") agent: String?, @Query("draw") draw: String?): Call<List<Draw9pmModel>>
-//
-//    @Headers("Content-Type:application/json")
-//    @GET("operations")
-//    fun getOperations(): Call<List<OperationData>>
-//
-//    @Headers("Content-Type:application/json")
-//    @GET("weeks")
-//    fun getWeeks(): Call<List<WeeksData>>
-//
-//    @Headers("Content-Type:application/json")
-//    @GET("status")
-//    fun getStatus(): Call<List<StatusData>>
-//
-//    @Headers("Content-Type:application/json")
-//    @GET("lines")
-//    fun getLines(): Call<List<LineData>>
-//
-//    @Headers("Content-Type:application/json")
-//    @GET("designation")
-//    fun getDesignation(): Call<List<DesignationData>>
-//
-//    @Headers("Content-Type:application/json")
-//    @POST("monitoring")
-//    fun transmitMonitoring(@QueryMap filter: HashMap<String, String>): Call<ResponseBody>
-//
-//    @Headers("Content-Type:application/json")
-//    @POST("accomplishment")
-//    fun transmitAccomplishment(@QueryMap filter: HashMap<String, String>): Call<ResponseBody>
+
+    @Headers("Content-Type:application/json")
+    @POST("transmitheader")
+    fun transmitBetHeaders(@QueryMap filter: HashMap<String, String>): Call<ResponseBody>
+
+    @Headers("Content-Type:application/json")
+    @POST("transmitdetails")
+    fun transmitBetDetails(@QueryMap filter: HashMap<String, String>): Call<ResponseBody>
+
+    @Headers("Content-Type:application/json")
+    @PATCH("voidbet")
+    fun voidBetHeader(@Query("headerserial") headerSerial: String?, @Query("isvoid") void: Int?): Call<ResponseBody>
 }

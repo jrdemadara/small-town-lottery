@@ -69,7 +69,8 @@ class SplashScreenActivity : AppCompatActivity() {
                             x.serial,
                             x.drawName,
                             x.drawTime,
-                            x.cutoff
+                            x.cutoff,
+                            x.resume
                         )
                     }
                 }

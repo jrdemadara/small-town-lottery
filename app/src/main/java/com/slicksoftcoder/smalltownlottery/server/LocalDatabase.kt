@@ -5,7 +5,13 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
+import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
 import com.slicksoftcoder.smalltownlottery.features.bet.BetDetailsModel
+import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw2pmModel
+import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw5pmModel
+import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw9pmModel
+import com.slicksoftcoder.smalltownlottery.features.dashboard.PnlModel
 import com.slicksoftcoder.smalltownlottery.features.history.HistoryBetModel
 import com.slicksoftcoder.smalltownlottery.features.history.HistoryModel
 
@@ -57,6 +63,7 @@ class LocalDatabase (context: Context) :
             private const val DRAW_DRAW_NAME_COL = "draw_name"
             private const val DRAW_DRAW_TIME_COL = "draw_time"
             private const val DRAW_CUTOFF_COL = "cutoff"
+            private const val DRAW_RESUME_COL = "resume"
             /* Table Result */
             private const val RESULT_SERIAL_COL = "serial"
             private const val RESULT_DRAW_SERIAL_COL = "draw_serial"
@@ -71,14 +78,14 @@ class LocalDatabase (context: Context) :
          val createUserTable = ("CREATE TABLE "
                  + TABLE_USERS + " ("
                  + USER_DEVICE_COL + " TEXT,"
-                 + USER_SERIAL_COL + " TEXT,"
+                 + USER_SERIAL_COL + " TEXT PRIMARY KEY NOT NULL,"
                  + USER_AGENT_SERIAL_COL + " TEXT,"
                  + USER_USERNAME_COL + " TEXT,"
                  + USER_PASSWORD_COL + " TEXT)")
 
          val createHeaderTable = ("CREATE TABLE "
                  + TABLE_BET_HEADERS + " ("
-                 + HEADERS_SERIAL_COL + " TEXT,"
+                 + HEADERS_SERIAL_COL + " TEXT PRIMARY KEY NOT NULL,"
                  + HEADERS_AGENT_COL + " TEXT,"
                  + HEADERS_DRAW_DATE_COL + " TEXT,"
                  + HEADERS_DRAW_TIME_COL + " TEXT,"
@@ -91,11 +98,11 @@ class LocalDatabase (context: Context) :
                  + HEADERS_DATE_DELETED_COL + " DATETIME,"
                  + HEADERS_IS_UPLOADED_COL + " INTEGER,"
                  + HEADERS_DATE_UPLOADED_COL + " DATETIME,"
-                 + HEADERS_DATE_CREATED_COL + " DATETIME DEFAULT CURRENT_TIMESTAMP)")
+                 + HEADERS_DATE_CREATED_COL + " DATETIME)")
 
          val createDetailsTable = ("CREATE TABLE "
                  + TABLE_BET_DETAILS + " ("
-                 + DETAILS_SERIAL_COL + " TEXT,"
+                 + DETAILS_SERIAL_COL + " TEXT PRIMARY KEY NOT NULL,"
                  + DETAILS_HEADER_SERIAL_COL + " TEXT,"
                  + DETAILS_BET_NUMBER_COL + " TEXT,"
                  + DETAILS_AMOUNT_COL + " TEXT,"
@@ -107,10 +114,11 @@ class LocalDatabase (context: Context) :
 
          val createDrawsTable = ("CREATE TABLE "
                  + TABLE_DRAWS + " ("
-                 + DRAW_SERIAL_COL + " TEXT, "
+                 + DRAW_SERIAL_COL + " TEXT PRIMARY KEY NOT NULL, "
                  + DRAW_DRAW_NAME_COL + " TEXT, "
                  + DRAW_DRAW_TIME_COL + " TEXT, "
-                 + DRAW_CUTOFF_COL + " TEXT)")
+                 + DRAW_CUTOFF_COL + " TEXT, "
+                 + DRAW_RESUME_COL + " TEXT)")
 
          val createResultsTable = ("CREATE TABLE "
                  + TABLE_RESULTS + " ("
@@ -118,7 +126,7 @@ class LocalDatabase (context: Context) :
                  + RESULT_DRAW_SERIAL_COL + " TEXT,"
                  + RESULT_DRAW_DATE_COL + " TEXT,"
                  + RESULT_WINNING_NUMBER_COL + " TEXT,"
-                 + RESULT_DATE_CREATED_COL + " DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                 + RESULT_DATE_CREATED_COL + " DATETIME,"
                  + RESULT_DATE_DELETED_COL + " DATETIME,"
                  + RESULT_DATE_EDITED_COL + " DATETIME)")
 
@@ -171,21 +179,36 @@ class LocalDatabase (context: Context) :
          db.close()
      }
 
-    fun updateDraws(serial: String?, drawName: String?, drawTime: String?, cutoff: String?) {
+    fun updateDraws(serial: String?, drawName: String?, drawTime: String?, cutoff: String?, resume: String?) {
         val db = this.writableDatabase
         val values = ContentValues()
         values.put(DRAW_SERIAL_COL, serial)
         values.put(DRAW_DRAW_NAME_COL, drawName)
         values.put(DRAW_DRAW_TIME_COL, drawTime)
         values.put(DRAW_CUTOFF_COL, cutoff)
+        values.put(DRAW_RESUME_COL, resume)
         db.insert(TABLE_DRAWS, null, values)
         db.close()
     }
 
     /* User Data Transactions */
-    fun retrieveAgentSerial(): String {
+
+    fun authenticate(username: String, password: String, deviceId: String?): Boolean {
+        val columns = arrayOf(USER_SERIAL_COL)
+        val db = this.readableDatabase
+        val selection = "$USER_USERNAME_COL = ? AND $USER_PASSWORD_COL = ? AND $USER_DEVICE_COL = ?"
+        // selection arguments
+        val selectionArgs = arrayOf(username, password, deviceId)
+        val cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+    }
+
+    fun retrieveAgent(): String {
         var data: String = String()
-        val selectQuery = "SELECT $USER_AGENT_SERIAL_COL FROM $TABLE_USERS LIMIT 1"
+        val selectQuery = "SELECT agent_serial FROM $TABLE_USERS"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {
@@ -211,7 +234,7 @@ class LocalDatabase (context: Context) :
     }
 
     /* Bet Transactions */
-    fun insertBetHeader(serial: String?,agent: String?,drawDate: String?,drawTime: String?, transactionCode: String?, totalAmount: String?) {
+    fun insertBetHeader(serial: String?,agent: String?,drawDate: String?,drawTime: String?, transactionCode: String?, totalAmount: String?, currentDateTime: String?) {
         val db = this.writableDatabase
         val values = ContentValues()
         values.put(HEADERS_SERIAL_COL, serial)
@@ -223,6 +246,9 @@ class LocalDatabase (context: Context) :
         values.put(HEADERS_IS_VOID_COL, 0)
         values.put(HEADERS_IS_DELETED_COL, 0)
         values.put(HEADERS_IS_UPLOADED_COL, 0)
+        values.put(HEADERS_DATE_PRINTED_COL, currentDateTime)
+        values.put(HEADERS_DATE_EDITED_COL, currentDateTime)
+        values.put(HEADERS_DATE_CREATED_COL, currentDateTime)
         db.insert(TABLE_BET_HEADERS, null, values)
         db.close()
     }
@@ -269,10 +295,10 @@ class LocalDatabase (context: Context) :
         db.close()
     }
 
-    fun voidBet(headerSerial: String?) {
+    fun voidBet(headerSerial: String?, voidStatus: Int?) {
         val db = this.writableDatabase
         val values = ContentValues()
-        values.put(HEADERS_IS_VOID_COL, 1)
+        values.put(HEADERS_IS_VOID_COL, voidStatus)
         db.update(TABLE_BET_HEADERS, values, "$HEADERS_SERIAL_COL = ?", arrayOf(headerSerial))
         db.close()
     }
@@ -312,7 +338,7 @@ class LocalDatabase (context: Context) :
         val db = this.readableDatabase
         val query = "SELECT t1.serial, t1.draw_date, t2.draw_name, t1.transaction_code, t1.total_amount, t1.is_void FROM $TABLE_BET_HEADERS t1\n" +
                 "INNER JOIN draws t2 ON t1.draw_time = t2.serial\n" +
-                "WHERE $HEADERS_DATE_CREATED_COL > date('now') AND $HEADERS_IS_UPLOADED_COL = 0 AND $HEADERS_IS_DELETED_COL = 0 ORDER BY $HEADERS_DATE_CREATED_COL DESC"
+                "WHERE $HEADERS_DATE_CREATED_COL > date('now') AND $HEADERS_IS_DELETED_COL = 0 ORDER BY $HEADERS_DATE_CREATED_COL DESC"
         val data: ArrayList<HistoryModel> = ArrayList()
         val cursor: Cursor?
         try {
@@ -372,13 +398,14 @@ class LocalDatabase (context: Context) :
     }
 
     /* Bet Result */
-    fun insertResult(serial: String?,drawSerial: String?,drawDate: String?,winningNumber: String?) {
+    fun insertResult(serial: String?,drawSerial: String?,drawDate: String?,winningNumber: String?, currentDateTime: String?) {
         val db = this.writableDatabase
         val values = ContentValues()
         values.put(RESULT_SERIAL_COL, serial)
         values.put(RESULT_DRAW_SERIAL_COL, drawSerial)
         values.put(RESULT_DRAW_DATE_COL, drawDate)
         values.put(RESULT_WINNING_NUMBER_COL, winningNumber)
+        values.put(RESULT_DATE_CREATED_COL, currentDateTime)
         db.insert(TABLE_RESULTS, null, values)
         db.close()
     }
@@ -393,6 +420,639 @@ class LocalDatabase (context: Context) :
         }
         cursor.close()
         db.close()
+        return data
+    }
+
+    /* Bet Transmit Transactions */
+
+    fun transmitBetHeaders(): ArrayList<BetHeaderTransmitModel> {
+        val db = this.readableDatabase
+        val query = "SELECT *  FROM $TABLE_BET_HEADERS WHERE $HEADERS_IS_UPLOADED_COL = '0'"
+        val data: ArrayList<BetHeaderTransmitModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    BetHeaderTransmitModel(
+                        serial = cursor.getString(0),
+                        agent = cursor.getString(1),
+                        drawDate = cursor.getString(2),
+                        drawSerial = cursor.getString(3),
+                        transactionCode = cursor.getString(4),
+                        totalAmount = cursor.getString(5),
+                        dateCreated = cursor.getString(13),
+                        datePrinted = cursor.getString(6),
+                        isVoid = cursor.getString(7),
+                        editedBy = cursor.getString(1),
+                        dateEdited = cursor.getString(8),
+                        )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    fun transmitBetDetails(): ArrayList<BetDetailsTransmitModel> {
+        val db = this.readableDatabase
+        val query = "SELECT *  FROM $TABLE_BET_DETAILS WHERE $DETAILS_BET_STATUS_COL = 'CONFIRMED' AND $DETAILS_IS_UPLOADED_COL = '0'"
+        val data: ArrayList<BetDetailsTransmitModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    BetDetailsTransmitModel(
+                        serial = cursor.getString(0),
+                        headerSerial = cursor.getString(1),
+                        betNumber = cursor.getString(2),
+                        amount = cursor.getString(3),
+                        win = cursor.getString(4),
+                        isRambolito = cursor.getString(5),
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    fun transmitBetHeader(headerSerial: String?): ArrayList<BetHeaderTransmitModel> {
+        val db = this.readableDatabase
+        val query = "SELECT *  FROM $TABLE_BET_HEADERS WHERE $HEADERS_SERIAL_COL = '$headerSerial'"
+        val data: ArrayList<BetHeaderTransmitModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    BetHeaderTransmitModel(
+                        serial = cursor.getString(0),
+                        agent = cursor.getString(1),
+                        drawDate = cursor.getString(2),
+                        drawSerial = cursor.getString(3),
+                        transactionCode = cursor.getString(4),
+                        totalAmount = cursor.getString(5),
+                        dateCreated = cursor.getString(13),
+                        datePrinted = cursor.getString(6),
+                        isVoid = cursor.getString(7),
+                        editedBy = cursor.getString(1),
+                        dateEdited = cursor.getString(8),
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    fun transmitBetDetail(headerSerial: String?): ArrayList<BetDetailsTransmitModel> {
+        val db = this.readableDatabase
+        val query = "SELECT * FROM $TABLE_BET_DETAILS WHERE $DETAILS_BET_STATUS_COL = 'CONFIRMED' AND $DETAILS_HEADER_SERIAL_COL = '$headerSerial'"
+        val data: ArrayList<BetDetailsTransmitModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    BetDetailsTransmitModel(
+                        serial = cursor.getString(0),
+                        headerSerial = cursor.getString(1),
+                        betNumber = cursor.getString(2),
+                        amount = cursor.getString(3),
+                        win = cursor.getString(4),
+                        isRambolito = cursor.getString(5),
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    fun updateBetHeaderTransmitted(headerSerial: String?, date: String, status: Int) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(HEADERS_IS_UPLOADED_COL, status)
+        values.put(HEADERS_DATE_UPLOADED_COL, date)
+        db.update(TABLE_BET_HEADERS, values, "$HEADERS_SERIAL_COL = ?", arrayOf(headerSerial))
+        db.close()
+    }
+
+    fun updateBetDetailsTransmitted(headerSerial: String?, date: String, status: Int) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(DETAILS_IS_UPLOADED_COL, status)
+        values.put(DETAILS_DATE_UPLOADED_COL, date)
+        db.update(TABLE_BET_DETAILS, values, "$DETAILS_HEADER_SERIAL_COL = ?", arrayOf(headerSerial))
+        db.close()
+    }
+
+    fun updateBetDetailTransmitted(detailSerial: String?, date: String, status: Int) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(DETAILS_IS_UPLOADED_COL, status)
+        values.put(DETAILS_DATE_UPLOADED_COL, date)
+        db.update(TABLE_BET_DETAILS, values, "$DETAILS_SERIAL_COL = ?", arrayOf(detailSerial))
+        db.close()
+    }
+
+    /* Cutoff|Resume Transactions */
+    fun retrieveDrawCutOff(drawName: String?): String {
+        var data: String = String()
+        val selectQuery = "SELECT $DRAW_CUTOFF_COL FROM $TABLE_DRAWS WHERE $DRAW_DRAW_NAME_COL = '$drawName'"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieveDrawResume(drawName: String?): String {
+        var data: String = String()
+        val selectQuery = "SELECT $DRAW_RESUME_COL FROM $TABLE_DRAWS WHERE $DRAW_DRAW_NAME_COL = '$drawName'"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    /* PNL Transactions */
+    fun retrievePNL(drawDate: String?): ArrayList<PnlModel> {
+        val db = this.readableDatabase
+        val query = "SELECT t1.draw_date 'DATE',\n" +
+                "\n" +
+                "(SELECT SUM(e1.amount) FROM bet_details e1 INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial \n" +
+                "WHERE f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent) 'totalBet',\n" +
+                "\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial ) 'totalHit',\n" +
+                "\n" +
+                "(SELECT SUM(e1.amount) FROM bet_details e1 INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial \n" +
+                "WHERE f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent)\n" +
+                "-  \n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial)) 'pnl'\n" +
+                "\n" +
+                "\n" +
+                "FROM bet_headers t1\n" +
+                "INNER JOIN users t4 ON t1.agent = t4.agent_serial\n" +
+                "INNER JOIN draws t3 ON t1.draw_time = t3.serial\n" +
+                "INNER JOIN result t6 ON t1.draw_time = t6.draw_serial\n" +
+                "INNER JOIN bet_details t2 ON t1.serial = t2.header_serial\n" +
+                "WHERE t1.draw_date = '2022-11-21'\n" +
+                "GROUP BY t1.draw_date"
+        val data: ArrayList<PnlModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    PnlModel(
+                        totalBet = cursor.getString(1),
+                        totalHit = cursor.getString(2),
+                        pnl = cursor.getString(3),
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    fun retrieve2pmResult(drawDate: String?, drawTime: String?): ArrayList<Draw2pmModel> {
+        val db = this.readableDatabase
+        val query = "SELECT t1.draw_date 'DATE', t4.username 'AGENT', t3.draw_name 'DRAW TIME', COALESCE(t6.winning_number,'TBA') 'result',\n" +
+                "\n" +
+                "(SELECT SUM(e1.amount) FROM bet_details e1 INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial \n" +
+                "WHERE f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent) 'totalBet',\n" +
+                "\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial ) 'totalHit',\n" +
+                "\n" +
+                "(SELECT SUM(e1.amount) FROM bet_details e1 INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial \n" +
+                "WHERE f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent)\n" +
+                "-  \n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial)) 'pnl',\n" +
+                "\n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial ) 'win'\n" +
+                "\n" +
+                "FROM bet_headers t1\n" +
+                "INNER JOIN users t4 ON t1.agent = t4.agent_serial\n" +
+                "INNER JOIN draws t3 ON t1.draw_time = t3.serial\n" +
+                "INNER JOIN result t6 ON t1.draw_time = t6.draw_serial\n" +
+                "INNER JOIN bet_details t2 ON t1.serial = t2.header_serial\n" +
+                "WHERE t1.draw_date = '$drawDate' AND t1.draw_time = '$drawTime'\n" +
+                "GROUP BY t1.draw_date"
+        val data: ArrayList<Draw2pmModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    Draw2pmModel(
+                        result = cursor.getString(0),
+                        totalBet = cursor.getString(1),
+                        totalHit = cursor.getString(2),
+                        pnl = cursor.getString(3),
+                        win = cursor.getString(4),
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    fun retrieve5pmResult(drawDate: String?, drawTime: String?): ArrayList<Draw5pmModel> {
+        val db = this.readableDatabase
+        val query = "SELECT t1.draw_date 'DATE', t4.username 'AGENT', t3.draw_name 'DRAW TIME', COALESCE(t6.winning_number,'TBA') 'result',\n" +
+                "\n" +
+                "(SELECT SUM(e1.amount) FROM bet_details e1 INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial \n" +
+                "WHERE f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent) 'totalBet',\n" +
+                "\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial ) 'totalHit',\n" +
+                "\n" +
+                "(SELECT SUM(e1.amount) FROM bet_details e1 INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial \n" +
+                "WHERE f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent)\n" +
+                "-  \n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial)) 'pnl',\n" +
+                "\n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial ) 'win'\n" +
+                "\n" +
+                "FROM bet_headers t1\n" +
+                "INNER JOIN users t4 ON t1.agent = t4.agent_serial\n" +
+                "INNER JOIN draws t3 ON t1.draw_time = t3.serial\n" +
+                "INNER JOIN result t6 ON t1.draw_time = t6.draw_serial\n" +
+                "INNER JOIN bet_details t2 ON t1.serial = t2.header_serial\n" +
+                "WHERE t1.draw_date = '$drawDate' AND t1.draw_time = '$drawTime'\n" +
+                "GROUP BY t1.draw_date"
+        val data: ArrayList<Draw5pmModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    Draw5pmModel(
+                        result = cursor.getString(0),
+                        totalBet = cursor.getString(1),
+                        totalHit = cursor.getString(2),
+                        pnl = cursor.getString(3),
+                        win = cursor.getString(4),
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    fun retrieve9pmResult(drawDate: String?, drawTime: String?): ArrayList<Draw9pmModel> {
+        val db = this.readableDatabase
+        val query = "SELECT t1.draw_date 'DATE', t4.username 'AGENT', t3.draw_name 'DRAW TIME', COALESCE(t6.winning_number,'TBA') 'result',\n" +
+                "\n" +
+                "(SELECT SUM(e1.amount) FROM bet_details e1 INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial \n" +
+                "WHERE f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent) 'totalBet',\n" +
+                "\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial ) 'totalHit',\n" +
+                "\n" +
+                "(SELECT SUM(e1.amount) FROM bet_details e1 INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial \n" +
+                "WHERE f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent)\n" +
+                "-  \n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT SUM(e1.win) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial)) 'pnl',\n" +
+                "\n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 0 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 1 AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00) \n" +
+                "+ \n" +
+                "(SELECT CASE WHEN\n" +
+                "e1.bet_number <> t6.winning_number\n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,1,1) || '%' AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,2,1) || '%' \n" +
+                "AND e1.bet_number NOT LIKE '%' || substr(t6.winning_number,3,1) || '%'\n" +
+                "THEN\n" +
+                "(COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number = t6.winning_number AND f1.draw_date = t1.draw_date \n" +
+                "AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent GROUP BY f1.transaction_code),0.00) \n" +
+                "+\n" +
+                "COALESCE((SELECT COUNT(e1.serial) FROM bet_details e1 LEFT JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.is_rambolito = 2 AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,1,1) || '%' AND f1.draw_date = t1.draw_date AND f1.draw_time = t1.draw_time AND f1.agent = t1.agent\n" +
+                "AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,2,1) || '%' AND e1.bet_number NOT LIKE '%' || SUBSTR(t6.winning_number,3,1) || '%'\n" +
+                "GROUP BY f1.transaction_code),0.00))\n" +
+                "ELSE 0 END\n" +
+                "FROM bet_details e1 INNER JOIN bet_headers f1 on e1.header_serial = f1.serial ) 'win'\n" +
+                "\n" +
+                "FROM bet_headers t1\n" +
+                "INNER JOIN users t4 ON t1.agent = t4.agent_serial\n" +
+                "INNER JOIN draws t3 ON t1.draw_time = t3.serial\n" +
+                "INNER JOIN result t6 ON t1.draw_time = t6.draw_serial\n" +
+                "INNER JOIN bet_details t2 ON t1.serial = t2.header_serial\n" +
+                "WHERE t1.draw_date = '$drawDate' AND t1.draw_time = '$drawTime'\n" +
+                "GROUP BY t1.draw_date"
+        val data: ArrayList<Draw9pmModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    Draw9pmModel(
+                        result = cursor.getString(0),
+                        totalBet = cursor.getString(1),
+                        totalHit = cursor.getString(2),
+                        pnl = cursor.getString(3),
+                        win = cursor.getString(4),
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
         return data
     }
 

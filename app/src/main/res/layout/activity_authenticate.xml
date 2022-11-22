@@ -124,18 +124,14 @@
                 android:layout_gravity="center_horizontal"
                 android:src="@drawable/user_bg" />
 
-            <TextView
-                android:id="@+id/textViewUserInitial"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="15dp"
-                android:elegantTextHeight="true"
-                android:fontFamily="@font/nexa_bold"
-                android:text="JD"
-                android:textAlignment="center"
-                android:textColor="#FFFFFF"
-                android:textSize="24sp" />
+            <ImageView
+                android:id="@+id/imageView18"
+                android:layout_width="39dp"
+                android:layout_height="42dp"
+                android:layout_gravity="center_horizontal|center_vertical"
+                app:srcCompat="@drawable/user"
+                app:tint="#FBFAFA" />
+
         </FrameLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -190,6 +186,14 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:orientation="vertical">
+
+            <CheckBox
+                android:id="@+id/checkBoxRemember"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:buttonTint="#F1AB55"
+                android:fontFamily="@font/nexa_regular"
+                android:text="Remember me" />
 
             <Button
                 android:id="@+id/buttonLogin"
