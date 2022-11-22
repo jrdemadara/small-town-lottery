@@ -20,6 +20,7 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import com.slicksoftcoder.smalltownlottery.R
@@ -108,18 +109,26 @@ class AuthenticateActivity : AppCompatActivity() {
                 Toast.makeText(application, "Please fill the username and password.", Toast.LENGTH_SHORT).show()
                 vibratePhone()
             }
-
         }
-        checkBiometricSupport()
+        checkBiometric()
+    }
 
-        imageViewBoimetric.setOnClickListener {
-            val biometricPrompt = BiometricPrompt.Builder(this)
-                .setTitle("Login with Fingerprint")
-                .setSubtitle("Place your finger on your device's \nfingerprint sensor.")
-                .setNegativeButton("Login with Password" , this.mainExecutor, DialogInterface.OnClickListener { _, _ ->
-                    notifyUser("Authentication Cancelled")
-                }).build()
-            biometricPrompt.authenticate(getCancellationSignal(),mainExecutor, authenticationCallback)
+    private fun checkBiometric(){
+        val isEnabled: Boolean = localDatabase.checkBiometric()
+        if (isEnabled){
+            imageViewBoimetric.isGone = false
+            checkBiometricSupport()
+            imageViewBoimetric.setOnClickListener {
+                val biometricPrompt = BiometricPrompt.Builder(this)
+                    .setTitle("Login with Fingerprint")
+                    .setSubtitle("Place your finger on your device's \nfingerprint sensor.")
+                    .setNegativeButton("Login with Password" , this.mainExecutor, DialogInterface.OnClickListener { _, _ ->
+                        notifyUser("Authentication Cancelled")
+                    }).build()
+                biometricPrompt.authenticate(getCancellationSignal(),mainExecutor, authenticationCallback)
+            }
+        }else{
+            imageViewBoimetric.isGone = true
         }
     }
 

@@ -27,12 +27,15 @@ class LocalDatabase (context: Context) :
             private const val TABLE_BET_DETAILS = "bet_details"
             private const val TABLE_DRAWS = "draws"
             private const val TABLE_RESULTS = "result"
+            private const val TABLE_CONFIG = "config"
             /* Table User */
             private const val USER_SERIAL_COL = "serial"
             private const val USER_AGENT_SERIAL_COL = "agent_serial"
             private const val USER_USERNAME_COL = "username"
             private const val USER_PASSWORD_COL = "password"
             private const val USER_DEVICE_COL = "device_id"
+            /* Table Config */
+            private const val CONFIG_BIOMETRIC_COL = "is_biometric"
             /* Table Headers */
             private const val HEADERS_SERIAL_COL = "serial"
             private const val HEADERS_AGENT_COL = "agent"
@@ -83,6 +86,10 @@ class LocalDatabase (context: Context) :
                  + USER_USERNAME_COL + " TEXT,"
                  + USER_PASSWORD_COL + " TEXT)")
 
+         val createConfigTable = ("CREATE TABLE "
+                 + TABLE_CONFIG + " ("
+                 + CONFIG_BIOMETRIC_COL + " INTEGER)")
+
          val createHeaderTable = ("CREATE TABLE "
                  + TABLE_BET_HEADERS + " ("
                  + HEADERS_SERIAL_COL + " TEXT PRIMARY KEY NOT NULL,"
@@ -132,10 +139,12 @@ class LocalDatabase (context: Context) :
 
 
          db?.execSQL(createUserTable)
+         db?.execSQL(createConfigTable)
          db?.execSQL(createHeaderTable)
          db?.execSQL(createDetailsTable)
          db?.execSQL(createDrawsTable)
          db?.execSQL(createResultsTable)
+         db?.execSQL("INSERT INTO $TABLE_CONFIG ($CONFIG_BIOMETRIC_COL) VALUES(0)")
      }
 
      override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
@@ -197,7 +206,6 @@ class LocalDatabase (context: Context) :
         val columns = arrayOf(USER_SERIAL_COL)
         val db = this.readableDatabase
         val selection = "$USER_USERNAME_COL = ? AND $USER_PASSWORD_COL = ? AND $USER_DEVICE_COL = ?"
-        // selection arguments
         val selectionArgs = arrayOf(username, password, deviceId)
         val cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null)
         val cursorCount = cursor.count
@@ -217,6 +225,27 @@ class LocalDatabase (context: Context) :
         cursor.close()
         db.close()
         return data
+    }
+
+    /* Device Config Transactions */
+    fun enableBiometric(enable: Int?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(CONFIG_BIOMETRIC_COL, enable)
+        db.update(TABLE_CONFIG, values, null, null)
+        db.close()
+    }
+
+    fun checkBiometric(): Boolean {
+        val columns = arrayOf(CONFIG_BIOMETRIC_COL)
+        val db = this.readableDatabase
+        val selection = "$CONFIG_BIOMETRIC_COL = 1"
+        val cursor = db.query(TABLE_CONFIG, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+
     }
 
     /* Draw Data Transactions */

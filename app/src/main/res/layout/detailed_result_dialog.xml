@@ -5,13 +5,22 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/ic_bottom_popup_background"
+    android:maxWidth="1000dp"
     android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/imageView28"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:src="@drawable/devider" />
 
     <TextView
         android:id="@+id/textViewDialogResultHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:fontFamily="@font/nexa_bold"
         android:text="Detailed 2pm Result"
         android:textAlignment="center"
@@ -23,153 +32,157 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="10dp"
+        android:layout_marginBottom="5dp"
         android:background="?android:attr/listDivider" />
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
-        android:paddingStart="10dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="10dp">
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:orientation="vertical">
 
-        <TextView
-
-            android:id="@+id/textViewDialogResult"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="300dp"
-            android:fontFamily="@font/nexa_xbold"
-            android:text="0"
-            android:textColor="#F1AB55"
-            android:textSize="28sp" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp">
+            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/textViewDialogResultHit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+
+                android:id="@+id/textViewDialogResult"
+                android:layout_width="300dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
-                android:text="34,200.00"
-                android:textColor="#F16868"
-                android:textSize="22sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:text="#867"
+                android:textColor="#F1AB55"
+                android:textSize="28sp" />
 
-            <TextView
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="8dp"
-                android:fontFamily="@font/nexa_regular"
-                android:text="TOTAL HITS"
-                android:textSize="12sp"
-                app:layout_constraintStart_toEndOf="@+id/textViewDialogResultHit"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_height="match_parent">
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <TextView
+                    android:id="@+id/textViewDialogResultWinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="18dp"
+                    android:fontFamily="@font/nexa_xbold"
+                    android:text="3"
+                    android:textSize="18sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="wrap_content"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="13dp"
+                    android:fontFamily="@font/nexa_regular"
+                    android:text="WINNERS"
+                    android:textSize="10sp"
+                    app:layout_constraintStart_toEndOf="@+id/textViewDialogResultWinner"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
+
+        <View
+            android:id="@+id/divider5"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="5dp"
+            android:background="?android:attr/listDivider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="280dp"
-            android:layout_marginTop="30dp">
-
-            <TextView
-                android:id="@+id/textViewDialogResultWinner"
-                android:layout_width="wrap_content"
-                android:layout_height="18dp"
-                android:fontFamily="@font/nexa_xbold"
-                android:text="3"
-                android:textSize="18sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="10dp"
-                android:fontFamily="@font/nexa_regular"
-                android:text="WINNERS"
-                android:textSize="10sp"
-                app:layout_constraintStart_toEndOf="@+id/textViewDialogResultWinner"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="74dp">
-
-            <TextView
-                android:id="@+id/textViewDialogResultPNL"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/nexa_xbold"
-                android:text="25,600.00"
-                android:textColor="#41B134"
-                android:textSize="22sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/textViewHistoryBetDraw"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="8dp"
-                android:fontFamily="@font/nexa_regular"
-                android:text="PNL"
-                android:textSize="12sp"
-                app:layout_constraintStart_toEndOf="@+id/textViewDialogResultPNL"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="167dp"
-            android:layout_height="wrap_content">
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/textViewDialogResultBet"
-                android:layout_width="wrap_content"
+                android:layout_width="300dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
                 android:text="1,000"
-                android:textAlignment="viewEnd"
-                android:textSize="28sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
+                android:textAlignment="viewStart"
+                android:textSize="22sp" />
 
             <TextView
                 android:id="@+id/textView30"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="14dp"
                 android:fontFamily="@font/nexa_regular"
                 android:text="TOTAL BET"
-                android:textSize="12sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/textViewDialogResultBet"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.111" />
+                android:textAlignment="viewStart"
+                android:textSize="12sp" />
+        </LinearLayout>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        <View
+            android:id="@+id/divider6"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:background="?android:attr/listDivider" />
 
-    </FrameLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textViewDialogResultHit"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:fontFamily="@font/nexa_xbold"
+                android:text="34,200.00"
+                android:textColor="@android:color/secondary_text_light"
+                android:textSize="22sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/nexa_regular"
+                android:text="TOTAL HITS"
+                android:textAlignment="viewStart"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/divider7"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:background="?android:attr/listDivider" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textViewDialogResultPNL"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:fontFamily="@font/nexa_xbold"
+                android:text="25,600.00"
+                android:textColor="#50D05C"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/textViewHistoryBetDraw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/nexa_regular"
+                android:text="PNL"
+                android:textAlignment="viewStart"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
 
 
 </LinearLayout>

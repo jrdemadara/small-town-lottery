@@ -75,6 +75,7 @@ class BetActivity : AppCompatActivity() {
         drawTime = ""
         checkNetworkConnection()
         selectDrawTime()
+        editTextBetNumber.requestFocus()
         textViewTime.setOnClickListener {
             selectDrawTime()
         }
@@ -94,6 +95,7 @@ class BetActivity : AppCompatActivity() {
                 textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
                 editTextBetNumber.setText("")
                 editTextBetAmount.setText("")
+                editTextBetNumber.requestFocus()
                 Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
             }else{
                 if (editTextBetNumber.text.isNotEmpty() && editTextBetAmount.text.isNotEmpty()){
@@ -134,6 +136,7 @@ class BetActivity : AppCompatActivity() {
                                 textViewTotal.text = formatter.format(totalAmount).toString()+".00"
                                 editTextBetNumber.setText("")
                                 editTextBetAmount.setText("")
+                                editTextBetNumber.requestFocus()
                                 winAmount = 0.0
                                 isRambolito = 0
                                 Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
@@ -152,6 +155,7 @@ class BetActivity : AppCompatActivity() {
                                     textViewTotal.text = formatter.format(totalAmount).toString()+".00"
                                     editTextBetNumber.setText("")
                                     editTextBetAmount.setText("")
+                                    editTextBetNumber.requestFocus()
                                     winAmount = 0.0
                                     isRambolito = 0
                                     Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
@@ -181,7 +185,7 @@ class BetActivity : AppCompatActivity() {
             adapter?.setOnClickItem {
                 val dialog = Dialog(this)
                 val view = layoutInflater.inflate(R.layout.bet_action_dialog, null)
-                dialog.setCancelable(false)
+                dialog.setCancelable(true)
                 dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                 dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 dialog.window?.setGravity(Gravity.CENTER)
@@ -209,12 +213,14 @@ class BetActivity : AppCompatActivity() {
                         totalAmount -= amount.toDouble()
                         textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
                         dialog.dismiss()
-                    }else{
+                    }else if(action == "delete"){
                         localDatabase.deleteBetDetail(serial)
                         val list = localDatabase.retrieveBetDetails(headerSerial.toString())
                         adapter?.addItems(list)
                         totalAmount -= amount.toDouble()
                         textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
+                        dialog.dismiss()
+                    }else{
                         dialog.dismiss()
                     }
                 }

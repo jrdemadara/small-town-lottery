@@ -157,6 +157,8 @@
             android:inputType="textPersonName|textCapWords|textCapCharacters"
             android:padding="10dp"
             android:textAllCaps="true"
+            android:textColorHighlight="#F1AB55"
+            android:textColorLink="#F1AB55"
             tools:ignore="TouchTargetSizeCheck" />
 
         <EditText

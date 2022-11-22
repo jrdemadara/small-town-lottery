@@ -118,7 +118,7 @@ class DashboardActivity : AppCompatActivity() {
             dialog.setCancelable(true)
             dialog.window?.attributes?.windowAnimations = R.style.BottomDialogAnimation
             dialog.window?.setLayout(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
             dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
