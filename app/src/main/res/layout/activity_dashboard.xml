@@ -403,7 +403,7 @@
             android:layout_marginStart="85dp"
             android:layout_marginTop="45dp"
             android:fontFamily="@font/nexa_regular"
-            android:text="0 winners"
+            android:text="0 winner"
             android:textColor="#848484"
             android:textSize="14sp" />
 

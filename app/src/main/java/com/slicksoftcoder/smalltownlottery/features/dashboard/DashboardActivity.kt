@@ -215,18 +215,15 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun retrieve2pmResultOffline() {
         val data = localDatabase.retrieve2pmResult(dateUtil.dateFormat())
-
         val list: ArrayList<Draw2pmModel> = data
         list.forEach {
             textView2pmResult.text = it.result
-            textView2pmWinner.text = it.win
+            textView2pmTotalWin.text = it.totalHit
             if (it.win > 1.toString()){
-                textView2pmTotalWin.text = it.totalHit + "winners"
+                textView2pmWinner.text = it.win + " winners"
             }else{
-                textView2pmTotalWin.text = it.totalHit + "winner"
+                textView2pmWinner.text = it.win + " winner"
             }
-
-
         }
     }
 
@@ -235,11 +232,11 @@ class DashboardActivity : AppCompatActivity() {
         val list: ArrayList<Draw5pmModel> = data
         list.forEach {
             textView5pmResult.text = it.result
-            textView5pmWinner.text = it.win
+            textView5pmTotalWin.text = it.totalHit
             if (it.win > 1.toString()){
-                textView5pmTotalWin.text = it.totalHit + "winners"
+                textView5pmWinner.text = it.win + " winners"
             }else{
-                textView9pmTotalWin.text = it.totalHit + "winner"
+                textView5pmWinner.text = it.win + " winner"
             }
         }
     }
@@ -249,11 +246,11 @@ class DashboardActivity : AppCompatActivity() {
         val list: ArrayList<Draw9pmModel> = data
         list.forEach {
             textView9pmResult.text = it.result
-            textView9pmWinner.text = it.win
+            textView9pmTotalWin.text = it.totalHit
             if (it.win > 1.toString()){
-                textView9pmTotalWin.text = it.totalHit + "winners"
+                textView9pmWinner.text = it.win + " winners"
             }else{
-                textView9pmTotalWin.text = it.totalHit + "winner"
+                textView9pmWinner.text = it.win + " winner"
             }
         }
     }
