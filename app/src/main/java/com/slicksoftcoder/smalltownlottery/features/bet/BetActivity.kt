@@ -81,23 +81,6 @@ class BetActivity : AppCompatActivity() {
         }
         val headerSerial: UUID = UUID.randomUUID()
         buttonBetAdd.setOnClickListener {
-            if ("NW" == editTextBetNumber.text.toString().uppercase(Locale.ROOT)){
-                val amount: Double = editTextBetAmount.text.toString().toDouble()
-                val serial: UUID = UUID.randomUUID()
-                winAmount = 2500 * (amount/5)
-                /* Save Bet */
-                localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString().uppercase(Locale.ROOT),editTextBetAmount.text.toString(), winAmount.toString(), "2")
-                /* Retrieve Bet */
-                val list = localDatabase.retrieveBetDetails(headerSerial.toString())
-                adapter?.addItems(list)
-                /* Update UI */
-                totalAmount += amount
-                textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
-                editTextBetNumber.setText("")
-                editTextBetAmount.setText("")
-                editTextBetNumber.requestFocus()
-                Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
-            }else{
                 if (editTextBetNumber.text.isNotEmpty() && editTextBetAmount.text.isNotEmpty()){
                     val dialog = Dialog(this)
                     val view = layoutInflater.inflate(R.layout.bet_option_dialog, null)
@@ -178,7 +161,7 @@ class BetActivity : AppCompatActivity() {
                 if (editTextBetNumber.text.equals("NW")){
 
                 }
-            }
+
             buttonBetAdd.setText("Add Bet")
         }
 
@@ -311,7 +294,7 @@ class BetActivity : AppCompatActivity() {
         val radioButton5pm: RadioButton = view.findViewById(R.id.radioButtonBet5PM)
         val radioButton9pm: RadioButton = view.findViewById(R.id.radioButtonBet9PM)
         val radioButtonConfirm: Button = view.findViewById(R.id.buttonBetConfirmDraw)
-        var draw: String = ""
+        var draw = ""
         if ("2 PM" == textViewTime.text){
             radioButton2pm.isChecked = true
             drawTime = "2 PM"
