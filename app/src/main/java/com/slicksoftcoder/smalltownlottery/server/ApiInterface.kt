@@ -21,6 +21,10 @@ interface ApiInterface {
     fun updateUserDevice(@QueryMap filter: HashMap<String, String>): Call<ResponseBody>
 
     @Headers("Content-Type:application/json")
+    @PATCH("updatePassword")
+    fun updatePassword(@Query("password") password: String?, @Query("agent") agent: String?): Call<ResponseBody>
+
+    @Headers("Content-Type:application/json")
     @GET("updateDraw")
     fun updateDraws(): Call<List<DrawUpdateModel>>
 

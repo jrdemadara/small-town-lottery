@@ -108,7 +108,10 @@ class DashboardActivity : AppCompatActivity() {
         bottomNavigation()
         checkNetworkConnection()
         retrievePNLOffline()
-        cardView2PM()
+        retrieve2pmResultOffline()
+        retrieve5pmResultOffline()
+        retrieve9pmResultOffline()
+//        cardView2PM()
     }
 
     private fun cardView2PM() {
@@ -131,8 +134,7 @@ class DashboardActivity : AppCompatActivity() {
             val textViewWinner: TextView = view.findViewById(R.id.textViewDialogResultWinner)
             val textViewResult: TextView = view.findViewById(R.id.textViewDialogResult)
             val textViewDrawTime: TextView = view.findViewById(R.id.textViewDialogResultHeader)
-            val drawTime = localDatabase.retrieveDrawSerial("2 PM")
-            val data = localDatabase.retrieve2pmResult(dateUtil.dateFormat(), drawTime)
+            val data = localDatabase.retrieve2pmResult(dateUtil.dateFormat())
             val list: ArrayList<Draw2pmModel> = data
             list.forEach {
                 textViewTotalBet.text = it.totalBet
@@ -193,26 +195,66 @@ class DashboardActivity : AppCompatActivity() {
     private fun retrievePNLOffline() {
         val data = localDatabase.retrievePNL(dateUtil.dateFormat())
         val list: ArrayList<PnlModel> = data
+        var totalBet = 0.0
+        var totalHit = 0.0
+        var pnl = 0.0
         list.forEach {
-            textViewTotalBet.text = formatter.format(it.totalBet.toDouble()).toString()+".00"
-            textViewTotalHits.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
-            textViewPNL.text = formatter.format(it.pnl.toDouble()).toString()+".00"
-            if (it.pnl.contains("-")){
-                textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
-            }else{
-                textViewPNL.setTextColor(Color.parseColor("#41B134"))
-            }
+            totalBet += it.totalBet.toDouble()
+            totalHit += it.totalHit.toDouble()
+            pnl += it.pnl.toDouble()
         }
+        if (pnl < 0){
+            textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
+        }else{
+            textViewPNL.setTextColor(Color.parseColor("#41B134"))
+        }
+        textViewTotalBet.text = formatter.format(totalBet).toString()+".00"
+        textViewTotalHits.text = formatter.format(totalHit).toString()+".00"
+        textViewPNL.text = formatter.format(pnl).toString()+".00"
     }
 
     private fun retrieve2pmResultOffline() {
-        var drawTime = localDatabase.retrieveDrawSerial("2 PM")
-        val data = localDatabase.retrieve2pmResult(dateUtil.dateFormat(), drawTime)
+        val data = localDatabase.retrieve2pmResult(dateUtil.dateFormat())
+
         val list: ArrayList<Draw2pmModel> = data
         list.forEach {
             textView2pmResult.text = it.result
             textView2pmWinner.text = it.win
-            textView2pmTotalWin.text = it.totalHit
+            if (it.win > 1.toString()){
+                textView2pmTotalWin.text = it.totalHit + "winners"
+            }else{
+                textView2pmTotalWin.text = it.totalHit + "winner"
+            }
+
+
+        }
+    }
+
+    private fun retrieve5pmResultOffline() {
+        val data = localDatabase.retrieve5pmResult(dateUtil.dateFormat())
+        val list: ArrayList<Draw5pmModel> = data
+        list.forEach {
+            textView5pmResult.text = it.result
+            textView5pmWinner.text = it.win
+            if (it.win > 1.toString()){
+                textView5pmTotalWin.text = it.totalHit + "winners"
+            }else{
+                textView9pmTotalWin.text = it.totalHit + "winner"
+            }
+        }
+    }
+
+    private fun retrieve9pmResultOffline() {
+        val data = localDatabase.retrieve9pmResult(dateUtil.dateFormat())
+        val list: ArrayList<Draw9pmModel> = data
+        list.forEach {
+            textView9pmResult.text = it.result
+            textView9pmWinner.text = it.win
+            if (it.win > 1.toString()){
+                textView9pmTotalWin.text = it.totalHit + "winners"
+            }else{
+                textView9pmTotalWin.text = it.totalHit + "winner"
+            }
         }
     }
 
