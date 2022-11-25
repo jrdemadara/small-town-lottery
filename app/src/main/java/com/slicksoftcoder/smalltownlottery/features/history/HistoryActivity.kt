@@ -136,12 +136,15 @@ class HistoryActivity : AppCompatActivity() {
         textViewHistoryBetDate.text = date
         textViewHistoryBetDraw.text = draw
         textViewHistoryBetTotalAmount.text = amount
-        if (0 == status.toInt()){
-            textViewHistoryBetStatus.text = "ACTIVE"
-            buttonHistoryBetVoid.text = "VOID"
-        }else{
-            textViewHistoryBetStatus.text = "VOID"
-            buttonHistoryBetVoid.text = "DEVOID"
+
+        if (status.isEmpty()){
+            if (0 == status.toInt()){
+                textViewHistoryBetStatus.text = "ACTIVE"
+                buttonHistoryBetVoid.text = "VOID"
+            }else{
+                textViewHistoryBetStatus.text = "VOID"
+                buttonHistoryBetVoid.text = "DEVOID"
+            }
         }
         buttonHistoryBetPrint.setOnClickListener {
             printReceipt(headerSerial, date,draw,betTime, transaction, formatter.format(amount.toDouble()).toString() + ".00")
@@ -170,16 +173,20 @@ class HistoryActivity : AppCompatActivity() {
             var totalAmount: String? = null
             var transaction: String? = null
             var status: String? = null
-            list.forEach {
-                betTime = it.betTime
-                drawDate = it.drawDate
-                drawTime = it.drawTime
-                headerSerial = it.headerSerial
-                totalAmount = it.totalAmount
-                transaction = it.transactionCode
-                status = it.isVoid
+            if (list.size > 0){
+                list.forEach {
+                    betTime = it.betTime
+                    drawDate = it.drawDate
+                    drawTime = it.drawTime
+                    headerSerial = it.headerSerial
+                    totalAmount = it.totalAmount
+                    transaction = it.transactionCode
+                    status = it.isVoid
+                }
+                dialogBets(headerSerial.toString(),transaction.toString(),drawDate.toString(),drawTime.toString(),totalAmount.toString(),status.toString(), betTime.toString())
+            }else{
+                resultStatus("Invalid Receipt", "Transaction number ${result.contents} is invalid.", 0)
             }
-            dialogBets(headerSerial.toString(),transaction.toString(),drawDate.toString(),drawTime.toString(),totalAmount.toString(),status.toString(), betTime.toString())
         }
     }
 

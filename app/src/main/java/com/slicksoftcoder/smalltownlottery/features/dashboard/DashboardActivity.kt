@@ -152,13 +152,24 @@ class DashboardActivity : AppCompatActivity() {
             Toast.makeText(this@DashboardActivity, "Cancelled", Toast.LENGTH_LONG).show()
             resultStatus("Scanner Cancelled", "QR Scanner has been cancelled", 0)
         } else {
-            Toast.makeText(
-                this@DashboardActivity,
-                "Scanned: " + result.contents,
-                Toast.LENGTH_LONG
-            ).show()
-
+            localDatabase.claimBet(result.contents)
+            showSuccess()
         }
+    }
+
+    private fun showSuccess(){
+        val dialog = Dialog(this)
+        val view = layoutInflater.inflate(R.layout.success_dialog, null)
+        dialog.setCancelable(true)
+        dialog.window?.setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setGravity(Gravity.CENTER)
+        dialog.setContentView(view)
+        dialog.show()
+        Handler(Looper.getMainLooper()).postDelayed({
+            dialog.dismiss()
+        }, 1000)
+
     }
 
     private fun cardView2PM() {

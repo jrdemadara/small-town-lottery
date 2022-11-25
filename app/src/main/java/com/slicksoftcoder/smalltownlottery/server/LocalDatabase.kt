@@ -52,6 +52,7 @@ class LocalDatabase (context: Context) :
             private const val HEADERS_IS_UPLOADED_COL = "is_uploaded"
             private const val HEADERS_DATE_UPLOADED_COL = "date_uploaded"
             private const val HEADERS_DATE_CREATED_COL = "date_created"
+            private const val HEADERS_IS_CLAIMED_COL = "is_claimed"
             /* Table Details */
             private const val DETAILS_SERIAL_COL = "serial"
             private const val DETAILS_HEADER_SERIAL_COL = "header_serial"
@@ -107,7 +108,8 @@ class LocalDatabase (context: Context) :
                  + HEADERS_DATE_DELETED_COL + " DATETIME,"
                  + HEADERS_IS_UPLOADED_COL + " INTEGER,"
                  + HEADERS_DATE_UPLOADED_COL + " DATETIME,"
-                 + HEADERS_DATE_CREATED_COL + " DATETIME)")
+                 + HEADERS_DATE_CREATED_COL + " DATETIME,"
+                 + HEADERS_IS_CLAIMED_COL + " INTEGER)")
 
          val createDetailsTable = ("CREATE TABLE "
                  + TABLE_BET_DETAILS + " ("
@@ -377,6 +379,7 @@ class LocalDatabase (context: Context) :
         values.put(HEADERS_DATE_PRINTED_COL, currentDateTime)
         values.put(HEADERS_DATE_EDITED_COL, currentDateTime)
         values.put(HEADERS_DATE_CREATED_COL, currentDateTime)
+        values.put(HEADERS_IS_CLAIMED_COL, 0)
         db.insert(TABLE_BET_HEADERS, null, values)
         db.close()
     }
@@ -428,6 +431,14 @@ class LocalDatabase (context: Context) :
         val values = ContentValues()
         values.put(HEADERS_IS_VOID_COL, voidStatus)
         db.update(TABLE_BET_HEADERS, values, "$HEADERS_SERIAL_COL = ?", arrayOf(headerSerial))
+        db.close()
+    }
+
+    fun claimBet(transactionCode: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(HEADERS_IS_CLAIMED_COL, 1)
+        db.update(TABLE_BET_HEADERS, values, "$HEADERS_TRANSACTION_CODE_COL = ?", arrayOf(transactionCode))
         db.close()
     }
 

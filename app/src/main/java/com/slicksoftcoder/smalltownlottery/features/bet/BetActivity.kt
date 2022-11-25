@@ -150,7 +150,6 @@ class BetActivity : AppCompatActivity() {
                                     editTextBetNumber.requestFocus()
                                     winAmount = 0.0
                                     isRambolito = 0
-                                    Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
                                     resultStatus("Success", "Bet has been added.", 0)
                                     dialog.dismiss()
                                 }else{
@@ -483,7 +482,7 @@ class BetActivity : AppCompatActivity() {
         var bets = ""
 
         list.forEach {
-            bets += "[L]${it.betNumber}[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
+            bets += "[L]${if (it.isRambolito == "0"){it.betNumber}else{it.betNumber+"-R"} }[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
         }
         checkPermissions()
         val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
