@@ -20,7 +20,8 @@
         android:id="@+id/textViewDialogResultHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
         android:fontFamily="@font/nexa_bold"
         android:text="Detailed 2pm Result"
         android:textAlignment="center"
@@ -32,7 +33,7 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="10dp"
-        android:layout_marginBottom="5dp"
+        android:layout_marginBottom="10dp"
         android:background="?android:attr/listDivider" />
 
     <LinearLayout
@@ -73,6 +74,7 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
+                    android:id="@+id/textViewDialogWinner"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
@@ -90,7 +92,8 @@
             android:id="@+id/divider5"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:background="?android:attr/listDivider" />
 
         <LinearLayout
@@ -106,6 +109,7 @@
                 android:fontFamily="@font/nexa_xbold"
                 android:text="1,000"
                 android:textAlignment="viewStart"
+                android:textColor="#348AB1"
                 android:textSize="22sp" />
 
             <TextView
@@ -122,8 +126,8 @@
             android:id="@+id/divider6"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:background="?android:attr/listDivider" />
 
         <LinearLayout
@@ -138,7 +142,7 @@
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
                 android:text="34,200.00"
-                android:textColor="@android:color/secondary_text_light"
+                android:textColor="#E20A2A"
                 android:textSize="22sp" />
 
             <TextView
@@ -154,13 +158,14 @@
             android:id="@+id/divider7"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:background="?android:attr/listDivider" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:orientation="horizontal">
 
             <TextView

@@ -50,6 +50,14 @@ class DateUtil () {
         return formatDate
     }
 
+    fun dateShort(): String{
+        val formatDate: String
+        val currentDate = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yy-MM")
+        formatDate = currentDate.format(formatter)
+        return formatDate
+    }
+
     fun currentDateShort(): String{
         val formatDate: String
         val currentDate = LocalDateTime.now()

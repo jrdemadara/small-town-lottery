@@ -5,5 +5,6 @@ data class UserUpdateModel(
     val agentSerial: String,
     val username: String,
     val password: String,
-    val deviceId: String
+    val deviceId: String,
+    val location: String
 )

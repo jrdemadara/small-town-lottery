@@ -1,7 +1,9 @@
 package com.slicksoftcoder.smalltownlottery.features.bet
 
+import android.Manifest
 import android.app.Dialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.icu.text.DecimalFormat
@@ -9,17 +11,24 @@ import android.icu.text.NumberFormat
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.DisplayMetrics
+import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.khairo.escposprinter.EscPosPrinter
+import com.khairo.escposprinter.connection.bluetooth.BluetoothPrintersConnections
+import com.khairo.escposprinter.textparser.PrinterTextParserImg
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
 import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
+import com.slicksoftcoder.smalltownlottery.features.landing.LandingActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
@@ -50,10 +59,10 @@ class BetActivity : AppCompatActivity() {
     private var totalAmount by Delegates.notNull<Double>()
     private var winAmount by Delegates.notNull<Double>()
     private lateinit var drawTime: String
+    private val formatter: NumberFormat = DecimalFormat("#,###")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bet)
-        val formatter: NumberFormat = DecimalFormat("#,###")
         dateUtil = DateUtil()
         localDatabase = LocalDatabase(this)
         recyclerView = findViewById(R.id.recyclerViewBets)
@@ -122,7 +131,7 @@ class BetActivity : AppCompatActivity() {
                                 editTextBetNumber.requestFocus()
                                 winAmount = 0.0
                                 isRambolito = 0
-                                Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
+                                resultStatus("Success", "Bet has been added.", 0)
                                 dialog.dismiss()
                             }else{
                                 if (amount >= 30){
@@ -142,24 +151,21 @@ class BetActivity : AppCompatActivity() {
                                     winAmount = 0.0
                                     isRambolito = 0
                                     Toast.makeText(applicationContext, "Bet has been added.", Toast.LENGTH_SHORT).show()
+                                    resultStatus("Success", "Bet has been added.", 0)
                                     dialog.dismiss()
                                 }else{
-                                    Toast.makeText(applicationContext, "Amount for rambolito should not be less than 30.", Toast.LENGTH_LONG).show()
+                                    resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
                                     editTextBetAmount.setTextColor(Color.parseColor("#F15555"));
                                     dialog.dismiss()
                                 }
                             }
                         }else{
-                            Toast.makeText(applicationContext, "Please select type.", Toast.LENGTH_SHORT).show()
+                            resultStatus("Warning", "Please select type.", 0)
                         }
 
                     }
                 }else{
-                    Toast.makeText(applicationContext, "Please fill the required fields.", Toast.LENGTH_SHORT).show()
-                }
-
-                if (editTextBetNumber.text.equals("NW")){
-
+                    resultStatus("Warning", "Please fill the required fields.", 0)
                 }
 
             buttonBetAdd.setText("Add Bet")
@@ -188,23 +194,27 @@ class BetActivity : AppCompatActivity() {
                     action = "delete"
                 }
                 buttonBetActionConfirm.setOnClickListener{
-                    if (action == "edit"){
-                        editTextBetNumber.setText(betNumber)
-                        editTextBetAmount.setText(amount)
-                        buttonBetAdd.setText("Edit Bet")
-                        localDatabase.deleteBetDetail(serial)
-                        totalAmount -= amount.toDouble()
-                        textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
-                        dialog.dismiss()
-                    }else if(action == "delete"){
-                        localDatabase.deleteBetDetail(serial)
-                        val list = localDatabase.retrieveBetDetails(headerSerial.toString())
-                        adapter?.addItems(list)
-                        totalAmount -= amount.toDouble()
-                        textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
-                        dialog.dismiss()
-                    }else{
-                        dialog.dismiss()
+                    when (action) {
+                        "edit" -> {
+                            editTextBetNumber.setText(betNumber)
+                            editTextBetAmount.setText(amount)
+                            buttonBetAdd.setText("Edit Bet")
+                            localDatabase.deleteBetDetail(serial)
+                            totalAmount -= amount.toDouble()
+                            textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
+                            dialog.dismiss()
+                        }
+                        "delete" -> {
+                            localDatabase.deleteBetDetail(serial)
+                            val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                            adapter?.addItems(list)
+                            totalAmount -= amount.toDouble()
+                            textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
+                            dialog.dismiss()
+                        }
+                        else -> {
+                            dialog.dismiss()
+                        }
                     }
                 }
             }
@@ -212,7 +222,7 @@ class BetActivity : AppCompatActivity() {
 
         buttonBetConfirm.setOnClickListener {
             if (totalAmount <= 0){
-                Toast.makeText(applicationContext, "Please place a bet first.", Toast.LENGTH_SHORT).show()
+                resultStatus("Warning", "Please place a bet first.", 0)
             }else{
                 val builder = AlertDialog.Builder(this)
                 builder.setTitle("Confirm")
@@ -221,7 +231,8 @@ class BetActivity : AppCompatActivity() {
                 builder.setPositiveButton("Yes"){ dialogInterface, _ ->
                     val agent = localDatabase.retrieveAgent()
                     val draw = localDatabase.retrieveDrawSerial(drawTime)
-                    val transCode: String = "B"+dateUtil.dateFormat()+dateUtil.currentTime()
+                    val transCode: String = "B"+dateUtil.dateShort()+dateUtil.currentTimeComplete()+ agent.take(2)
+                        .uppercase(Locale.ROOT)
                     val transCodeDash = transCode.replace("-","")
                     val transCodeCol = transCodeDash.replace(":","")
                     localDatabase.insertBetHeader(
@@ -236,8 +247,11 @@ class BetActivity : AppCompatActivity() {
                     localDatabase.confirmBetDetails(headerSerial.toString())
                     transmitBetHeader(headerSerial.toString())
                     transmitBetDetails(headerSerial.toString())
+                    printReceipt(headerSerial.toString(), dateUtil.dateFormat(), drawTime, dateUtil.currentTime(), transCodeCol, formatter.format(totalAmount).toString() + ".00")
                     showSuccess()
-                    dialogInterface.dismiss()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        dialogInterface.dismiss()
+                    }, 2000)
                 }
                 builder.setNeutralButton("Cancel"){ dialogInterface, _ ->
                     dialogInterface.dismiss()
@@ -331,7 +345,7 @@ class BetActivity : AppCompatActivity() {
                 textViewTime.text = draw
                 dialog.dismiss()
             }else{
-                Toast.makeText(applicationContext, "Please select draw time.", Toast.LENGTH_SHORT).show()
+                resultStatus("No Draw Time", "Please select draw time", 0)
             }
 
         }
@@ -425,5 +439,104 @@ class BetActivity : AppCompatActivity() {
             }
         }
     }
+
+    private val PERMISSIONS_STORAGE = arrayOf(
+        Manifest.permission.BLUETOOTH,
+        Manifest.permission.BLUETOOTH_SCAN,
+        Manifest.permission.BLUETOOTH_CONNECT,
+        Manifest.permission.BLUETOOTH_PRIVILEGED
+    )
+    private val PERMISSIONS_LOCATION = arrayOf(
+        Manifest.permission.BLUETOOTH,
+        Manifest.permission.BLUETOOTH_SCAN,
+        Manifest.permission.BLUETOOTH_CONNECT,
+        Manifest.permission.BLUETOOTH_PRIVILEGED
+    )
+
+    private fun checkPermissions() {
+        val permission1 =
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
+        val permission2 =
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
+
+        if (permission1 != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                this,
+                PERMISSIONS_STORAGE,
+                1
+            )
+        } else if (permission2 != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this,
+                PERMISSIONS_LOCATION,
+                1
+            )
+        }
+    }
+
+    private fun printReceipt(headerSerial: String , drawDate: String, drawTime:String, betTime: String, transCode: String, totalAmount: String){
+        val agent = localDatabase.retrieveAgentName()
+        val location = localDatabase.retrieveLocation()
+        val data = localDatabase.retrieveBetDetails(headerSerial)
+        val list: ArrayList<BetDetailsModel> = data
+        var bets = ""
+
+        list.forEach {
+            bets += "[L]${it.betNumber}[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
+        }
+        checkPermissions()
+        val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
+        printer
+                .printFormattedText("[C]<img>${PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
+                    R.drawable.recieptlogo, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
+                "[L]\n" +
+                        "[C]<u><font size='tall'>Small Town Lottery</font></u>\n" +
+                "[C]<u><font size='normal'>Just Explore SDT</font></u>\n" + "[L]\n"+
+                "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
+                "[L]<b>Area:</b>[R]<b>$location</b>\n" +
+                "[L]<b>Draw Date:</b>[R]<b>$drawDate</b>\n" +
+                "[L]<b>Bet Time:</b>[R]<b>$betTime</b>\n" +
+                "[L]<b>Draw Time:</b>[R]<b>$drawTime</b>\n" +
+                "[L]<b>Trans Code:[R]<font size='normal'>$transCode</font>\n" +
+                "[C]--------------------------------\n" +
+                "[L]BET[C]WIN[R]AMOUNT\n" +
+                "[C]--------------------------------\n" +
+                "$bets" +
+                "[C]--------------------------------\n" +
+                "[L]<b>TOTAL AMOUNT:</b>[R]<b>$totalAmount</b>\n" +
+                "[C]--------------------------------\n" +
+                "[C]<qrcode size='20'>$transCode</qrcode>\n" +
+                "[L]\n" +
+                "[C]Thank You! Bet Again!\n".trimIndent()
+            )
+    }
+
+    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){
+        val dialog = Dialog(this)
+        val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
+        dialog.setCancelable(true)
+        dialog.window?.attributes?.windowAnimations = R.style.TopDialogAnimation
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setGravity(Gravity.TOP)
+        dialog.setContentView(view)
+        dialog.show()
+        val textViewTitle: TextView = view.findViewById(R.id.textViewToastTitle)
+        val textViewDetails: TextView = view.findViewById(R.id.textViewToastDetails)
+        val imageView: ImageView = view.findViewById(R.id.imageViewToast)
+        textViewTitle.text = title
+        textViewDetails.text = detail
+        if (isSuccess == 0){
+            imageView.setImageResource(R.drawable.exclamation)
+        }else{
+            imageView.setImageResource(R.drawable.ic_round_check_circle_24)
+        }
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            dialog.dismiss()
+        }, 3000)
+    }
+
 
 }

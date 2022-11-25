@@ -34,6 +34,7 @@ class LocalDatabase (context: Context) :
             private const val USER_USERNAME_COL = "username"
             private const val USER_PASSWORD_COL = "password"
             private const val USER_DEVICE_COL = "device_id"
+            private const val USER_LOCATION_COL = "location"
             /* Table Config */
             private const val CONFIG_BIOMETRIC_COL = "is_biometric"
             /* Table Headers */
@@ -84,7 +85,8 @@ class LocalDatabase (context: Context) :
                  + USER_SERIAL_COL + " TEXT PRIMARY KEY NOT NULL,"
                  + USER_AGENT_SERIAL_COL + " TEXT,"
                  + USER_USERNAME_COL + " TEXT,"
-                 + USER_PASSWORD_COL + " TEXT)")
+                 + USER_PASSWORD_COL + " TEXT,"
+                 + USER_LOCATION_COL + " TEXT)")
 
          val createConfigTable = ("CREATE TABLE "
                  + TABLE_CONFIG + " ("
@@ -176,7 +178,13 @@ class LocalDatabase (context: Context) :
          db.close()
      }
 
-     fun updateUsers(serial: String?, agentSerial: String?, username: String?, password: String?, deviceId: String?) {
+    fun truncateResults() {
+        val db = this.writableDatabase
+        db.delete(TABLE_RESULTS, null, null)
+        db.close()
+    }
+
+     fun updateUsers(serial: String?, agentSerial: String?, username: String?, password: String?, deviceId: String?, location: String?) {
          val db = this.writableDatabase
          val values = ContentValues()
          values.put(USER_SERIAL_COL, serial)
@@ -184,6 +192,7 @@ class LocalDatabase (context: Context) :
          values.put(USER_AGENT_SERIAL_COL, agentSerial)
          values.put(USER_USERNAME_COL, username)
          values.put(USER_PASSWORD_COL, password)
+         values.put(USER_LOCATION_COL, location)
          db.insert(TABLE_USERS, null, values)
          db.close()
      }
@@ -197,6 +206,18 @@ class LocalDatabase (context: Context) :
         values.put(DRAW_CUTOFF_COL, cutoff)
         values.put(DRAW_RESUME_COL, resume)
         db.insert(TABLE_DRAWS, null, values)
+        db.close()
+    }
+
+    fun updateResults(serial: String?, drawSerial: String?, drawDate: String?, winningNumber: String?, dateCreated: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(RESULT_SERIAL_COL, serial)
+        values.put(RESULT_DRAW_SERIAL_COL, drawSerial)
+        values.put(RESULT_DRAW_DATE_COL, drawDate)
+        values.put(RESULT_WINNING_NUMBER_COL, winningNumber)
+        values.put(RESULT_DATE_CREATED_COL, dateCreated)
+        db.insert(TABLE_RESULTS, null, values)
         db.close()
     }
 
@@ -217,6 +238,32 @@ class LocalDatabase (context: Context) :
     fun retrieveAgent(): String {
         var data: String = String()
         val selectQuery = "SELECT agent_serial FROM $TABLE_USERS"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieveLocation(): String {
+        var data: String = String()
+        val selectQuery = "SELECT location FROM $TABLE_USERS"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieveAgentName(): String {
+        var data: String = String()
+        val selectQuery = "SELECT username FROM $TABLE_USERS"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {
@@ -262,9 +309,48 @@ class LocalDatabase (context: Context) :
     }
 
     /* Draw Data Transactions */
-    fun retrieveDrawSerial(drawTime: String?): String {
+    fun retrieveDrawSerial(drawName: String?): String {
         var data: String = String()
-        val selectQuery = "SELECT serial FROM $TABLE_DRAWS WHERE $DRAW_DRAW_NAME_COL = '$drawTime' LIMIT 1"
+        val selectQuery = "SELECT serial FROM $TABLE_DRAWS WHERE $DRAW_DRAW_NAME_COL = '$drawName' LIMIT 1"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieve2pmDrawSerial(): String {
+        var data: String = String()
+        val selectQuery = "SELECT serial FROM $TABLE_DRAWS WHERE $DRAW_DRAW_NAME_COL = '2 PM' LIMIT 1"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieve5pmDrawSerial(): String {
+        var data: String = String()
+        val selectQuery = "SELECT serial FROM $TABLE_DRAWS WHERE $DRAW_DRAW_NAME_COL = '5 PM' LIMIT 1"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieve9pmDrawSerial(): String {
+        var data: String = String()
+        val selectQuery = "SELECT serial FROM $TABLE_DRAWS WHERE $DRAW_DRAW_NAME_COL = '9 PM' LIMIT 1"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {
@@ -378,7 +464,7 @@ class LocalDatabase (context: Context) :
     /* History Transactions */
     fun retrieveHistory(): ArrayList<HistoryModel> {
         val db = this.readableDatabase
-        val query = "SELECT t1.serial, t1.draw_date, t2.draw_name, t1.transaction_code, t1.total_amount, t1.is_void FROM $TABLE_BET_HEADERS t1\n" +
+        val query = "SELECT t1.serial, t1.draw_date, t2.draw_name, t1.transaction_code, t1.total_amount, t1.is_void, time(t1.date_created) as bet_time FROM $TABLE_BET_HEADERS t1\n" +
                 "INNER JOIN draws t2 ON t1.draw_time = t2.serial\n" +
                 "WHERE $HEADERS_DATE_CREATED_COL > date('now') AND $HEADERS_IS_DELETED_COL = 0 ORDER BY $HEADERS_DATE_CREATED_COL DESC"
         val data: ArrayList<HistoryModel> = ArrayList()
@@ -400,6 +486,41 @@ class LocalDatabase (context: Context) :
                         transactionCode = cursor.getString(3),
                         totalAmount = cursor.getString(4),
                         isVoid = cursor.getString(5),
+                        betTime = cursor.getString(6),
+
+                        )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return data
+    }
+
+    fun retrieveHistoryByTranscode(transactionCode: String?): ArrayList<HistoryModel> {
+        val db = this.readableDatabase
+        val query = "SELECT t1.serial, t1.draw_date, t2.draw_name, t1.transaction_code, t1.total_amount, t1.is_void, time(t1.date_created) as bet_time FROM $TABLE_BET_HEADERS t1\n" +
+                "INNER JOIN draws t2 ON t1.draw_time = t2.serial\n" +
+                "WHERE $HEADERS_DATE_CREATED_COL > date('now') AND $HEADERS_TRANSACTION_CODE_COL = '$transactionCode'"
+        val data: ArrayList<HistoryModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query,  null)
+        }catch (e: Exception){
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
+        if (cursor.moveToFirst()) {
+            do {
+                data.add(
+                    HistoryModel(
+                        headerSerial = cursor.getString(0),
+                        drawDate = cursor.getString(1),
+                        drawTime = cursor.getString(2),
+                        transactionCode = cursor.getString(3),
+                        totalAmount = cursor.getString(4),
+                        isVoid = cursor.getString(5),
+                        betTime = cursor.getString(6),
 
                         )
                 )
@@ -452,9 +573,35 @@ class LocalDatabase (context: Context) :
         db.close()
     }
 
-    fun retrieveResult(drawTime: String?): String {
+    fun retrieve2pmDrawResult(drawTime: String): String {
         var data: String = String()
-        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL > DATE('now') AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
+        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = DATE('now') AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieve5pmDrawResult(drawTime: String): String {
+        var data: String = String()
+        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = DATE('now') AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(0)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieve9pmDrawResult(drawTime: String): String {
+        var data: String = String()
+        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = DATE('now') AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {
@@ -652,17 +799,17 @@ class LocalDatabase (context: Context) :
     }
 
     /* PNL Transactions */
-    fun retrievePNL(drawDate: String?): ArrayList<PnlModel> {
-        val db = this.readableDatabase
-        val query = "SELECT t1.draw_date 'draw_date', t2.username 'agent', t4.draw_name 'draw_type', \n" +
-                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'winning_number',\n" +
+    fun retrievePNLString (drawDate: String?): String {
+        var data: String = String()
+        val selectQuery = "SELECT t1.draw_date 'DRAW DATE', t2.username 'AGENT CODE', t4.draw_name 'DRAW TYPE', \n" +
+                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'result',\n" +
                 "\n" +
-                "SUM(t1.total_amount) 'total_bet',\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0) 'totalBet',\n" +
                 "\n" +
                 "COALESCE((\n" +
                 "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
                 "AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
@@ -682,47 +829,15 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
+                "),0.00) 'totalHit',\n" +
                 "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date) 'total_hit',\n" +
-                "\n" +
-                "SUM(t1.total_amount)\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0)\n" +
                 "-\n" +
                 "(\n" +
                 "COALESCE((\n" +
                 "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
                 "AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
@@ -742,52 +857,17 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
-                "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date)\n" +
                 ") 'pnl',\n" +
                 "\n" +
-                "COALESCE((\n" +
+                "(\n" +
                 "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
-                "AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
-                "\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date  \n" +
+                ") \n" +
                 "+\n" +
-                "\n" +
-                "COALESCE((\n" +
+                "(\n" +
                 "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
                 "WHERE e1.bet_number IN (\n" +
@@ -800,30 +880,45 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
+                ") 'win'\n" +
+                "\n" +
+                "\n" +
+                "FROM bet_headers t1\n" +
+                "LEFT JOIN users t2 ON t1.agent = t2.agent_serial\n" +
+                "LEFT JOIN draws t4 ON t1.draw_time = t4.serial\n" +
+                "LEFT JOIN result t5 ON t1.draw_time = t5.draw_serial\n" +
+                "WHERE t1.is_void = 0 AND t1.draw_date = '$drawDate'\n" +
+                "GROUP BY t1.draw_date, t2.username, t4.draw_name"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getString(6)
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrievePNL(drawDate: String?): ArrayList<PnlModel> {
+        val db = this.readableDatabase
+        val query = "SELECT t1.draw_date 'DRAW DATE', t2.username 'AGENT CODE', t4.draw_name 'DRAW TYPE', \n" +
+                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'result',\n" +
+                "\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0) 'totalBet',\n" +
+                "\n" +
+                "COALESCE((\n" +
+                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
+                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
+                "AND t5.winning_number IS NOT NULL\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
                 "\n" +
                 "+\n" +
                 "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
                 "COALESCE((\n" +
-                "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
+                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
                 "WHERE e1.bet_number IN (\n" +
                 "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
                 "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
@@ -831,8 +926,62 @@ class LocalDatabase (context: Context) :
                 "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
                 "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
                 "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date) 'winners'\n" +
+                ")\n" +
+                "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
+                "),0.00) 'totalHit',\n" +
+                "\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0)\n" +
+                "-\n" +
+                "(\n" +
+                "COALESCE((\n" +
+                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
+                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
+                "AND t5.winning_number IS NOT NULL\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
+                "),0.00) \n" +
+                "\n" +
+                "+\n" +
+                "\n" +
+                "COALESCE((\n" +
+                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
+                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.bet_number IN (\n" +
+                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
+                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
+                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
+                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
+                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
+                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
+                ")\n" +
+                "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
+                "),0.00)\n" +
+                ") 'pnl',\n" +
+                "\n" +
+                "(\n" +
+                "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
+                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date  \n" +
+                ") \n" +
+                "+\n" +
+                "(\n" +
+                "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
+                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
+                "WHERE e1.bet_number IN (\n" +
+                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
+                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
+                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
+                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
+                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
+                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
+                ")\n" +
+                "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
+                ") 'win'\n" +
+                "\n" +
                 "\n" +
                 "FROM bet_headers t1\n" +
                 "LEFT JOIN users t2 ON t1.agent = t2.agent_serial\n" +
@@ -866,15 +1015,15 @@ class LocalDatabase (context: Context) :
 
     fun retrieve2pmResult(drawDate: String?): ArrayList<Draw2pmModel> {
         val db = this.readableDatabase
-        val query = "SELECT t1.draw_date 'draw_date', t2.username 'agent', t4.draw_name 'draw_type', \n" +
-                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'winning_number',\n" +
+        val query = "SELECT t1.draw_date 'DRAW DATE', t2.username 'AGENT CODE', t4.draw_name 'DRAW TYPE', \n" +
+                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'result',\n" +
                 "\n" +
-                "SUM(t1.total_amount) 'total_bet',\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0) 'totalBet',\n" +
                 "\n" +
                 "COALESCE((\n" +
                 "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
                 "AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
@@ -894,47 +1043,15 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
+                "),0.00) 'totalHit',\n" +
                 "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date) 'total_hit',\n" +
-                "\n" +
-                "SUM(t1.total_amount)\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0)\n" +
                 "-\n" +
                 "(\n" +
                 "COALESCE((\n" +
                 "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
                 "AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
@@ -954,52 +1071,17 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
-                "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date)\n" +
                 ") 'pnl',\n" +
                 "\n" +
-                "COALESCE((\n" +
+                "(\n" +
                 "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
-                "AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
-                "\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date  \n" +
+                ") \n" +
                 "+\n" +
-                "\n" +
-                "COALESCE((\n" +
+                "(\n" +
                 "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
                 "WHERE e1.bet_number IN (\n" +
@@ -1012,45 +1094,14 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
+                ") 'win'\n" +
                 "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date) 'winners'\n" +
                 "\n" +
                 "FROM bet_headers t1\n" +
                 "LEFT JOIN users t2 ON t1.agent = t2.agent_serial\n" +
                 "LEFT JOIN draws t4 ON t1.draw_time = t4.serial\n" +
                 "LEFT JOIN result t5 ON t1.draw_time = t5.draw_serial\n" +
-                "WHERE t1.is_void = 0 AND t1.draw_date = '$drawDate' AND t4.draw_name = '2 PM' \n" +
+                "WHERE t1.is_void = 0 AND t1.draw_date = '$drawDate' AND t4.draw_name = '2 PM'\n" +
                 "GROUP BY t1.draw_date, t2.username, t4.draw_name"
         val data: ArrayList<Draw2pmModel> = ArrayList()
         val cursor: Cursor?
@@ -1080,15 +1131,15 @@ class LocalDatabase (context: Context) :
 
     fun retrieve5pmResult(drawDate: String?): ArrayList<Draw5pmModel> {
         val db = this.readableDatabase
-        val query = "SELECT t1.draw_date 'draw_date', t2.username 'agent', t4.draw_name 'draw_type', \n" +
-                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'winning_number',\n" +
+        val query = "SELECT t1.draw_date 'DRAW DATE', t2.username 'AGENT CODE', t4.draw_name 'DRAW TYPE', \n" +
+                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'result',\n" +
                 "\n" +
-                "SUM(t1.total_amount) 'total_bet',\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0) 'totalBet',\n" +
                 "\n" +
                 "COALESCE((\n" +
                 "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
                 "AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
@@ -1108,47 +1159,15 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
+                "),0.00) 'totalHit',\n" +
                 "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date) 'total_hit',\n" +
-                "\n" +
-                "SUM(t1.total_amount)\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0)\n" +
                 "-\n" +
                 "(\n" +
                 "COALESCE((\n" +
                 "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
                 "AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
@@ -1168,52 +1187,17 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
-                "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date)\n" +
                 ") 'pnl',\n" +
                 "\n" +
-                "COALESCE((\n" +
+                "(\n" +
                 "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
-                "AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
-                "\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date  \n" +
+                ") \n" +
                 "+\n" +
-                "\n" +
-                "COALESCE((\n" +
+                "(\n" +
                 "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
                 "WHERE e1.bet_number IN (\n" +
@@ -1226,45 +1210,14 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
+                ") 'win'\n" +
                 "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date) 'winners'\n" +
                 "\n" +
                 "FROM bet_headers t1\n" +
                 "LEFT JOIN users t2 ON t1.agent = t2.agent_serial\n" +
                 "LEFT JOIN draws t4 ON t1.draw_time = t4.serial\n" +
                 "LEFT JOIN result t5 ON t1.draw_time = t5.draw_serial\n" +
-                "WHERE t1.is_void = 0 AND t1.draw_date = '$drawDate' AND t4.draw_name = '5 PM' \n" +
+                "WHERE t1.is_void = 0 AND t1.draw_date = '$drawDate' AND t4.draw_name = '5 PM'\n" +
                 "GROUP BY t1.draw_date, t2.username, t4.draw_name"
         val data: ArrayList<Draw5pmModel> = ArrayList()
         val cursor: Cursor?
@@ -1294,15 +1247,15 @@ class LocalDatabase (context: Context) :
 
     fun retrieve9pmResult(drawDate: String?): ArrayList<Draw9pmModel> {
         val db = this.readableDatabase
-        val query = "SELECT t1.draw_date 'draw_date', t2.username 'agent', t4.draw_name 'draw_type', \n" +
-                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'winning_number',\n" +
+        val query = "SELECT t1.draw_date 'DRAW DATE', t2.username 'AGENT CODE', t4.draw_name 'DRAW TYPE', \n" +
+                "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_date = t1.draw_date AND e1.draw_serial = t1.draw_time),'TBA') 'result',\n" +
                 "\n" +
-                "SUM(t1.total_amount) 'total_bet',\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0) 'totalBet',\n" +
                 "\n" +
                 "COALESCE((\n" +
                 "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
                 "AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
@@ -1322,47 +1275,15 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
+                "),0.00) 'totalHit',\n" +
                 "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date) 'total_hit',\n" +
-                "\n" +
-                "SUM(t1.total_amount)\n" +
+                "(SELECT SUM(e1.total_amount) FROM bet_headers e1 WHERE e1.draw_date = t1.draw_date AND e1.agent = t1.agent AND e1.draw_time = t1.draw_time AND e1.is_void = 0)\n" +
                 "-\n" +
                 "(\n" +
                 "COALESCE((\n" +
                 "SELECT SUM(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
                 "AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00) \n" +
@@ -1382,52 +1303,17 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
-                "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT SUM(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
                 "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date)\n" +
                 ") 'pnl',\n" +
                 "\n" +
-                "COALESCE((\n" +
+                "(\n" +
                 "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number\n" +
-                "AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
-                "\n" +
+                "WHERE f1.is_void = 0 AND e1.bet_number = t5.winning_number AND e1.is_rambolito = 0\n" +
+                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date  \n" +
+                ") \n" +
                 "+\n" +
-                "\n" +
-                "COALESCE((\n" +
+                "(\n" +
                 "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
                 "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
                 "WHERE e1.bet_number IN (\n" +
@@ -1440,45 +1326,14 @@ class LocalDatabase (context: Context) :
                 ")\n" +
                 "AND f1.is_void = 0 AND e1.is_rambolito = 1 AND t5.winning_number IS NOT NULL\n" +
                 "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00) \n" +
+                ") 'win'\n" +
                 "\n" +
-                "+\n" +
-                "\n" +
-                "(SELECT CASE WHEN COUNT(e1.bet_number) = 0\n" +
-                "THEN\n" +
-                "COALESCE((\n" +
-                "SELECT COUNT(e1.win) FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers f1 ON e1.header_serial = f1.serial\n" +
-                "WHERE e1.bet_number NOT IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ")\n" +
-                "AND f1.is_void = 0 AND e1.bet_number = 'NW' AND t5.winning_number IS NOT NULL\n" +
-                "AND f1.agent = t2.agent_serial AND f1.draw_time = t5.draw_serial AND f1.draw_date = t5.draw_date\n" +
-                "),0.00)\n" +
-                "\n" +
-                "ELSE 0 END \n" +
-                "FROM bet_details e1 \n" +
-                "INNER JOIN bet_headers e2 ON e1.header_serial = e2.serial\n" +
-                "WHERE e1.bet_number IN (\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,3,1),\n" +
-                "substr(t5.winning_number,2,1) || substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,1,1) || substr(t5.winning_number,2,1),\n" +
-                "substr(t5.winning_number,3,1) || substr(t5.winning_number,2,1) || substr(t5.winning_number,1,1)\n" +
-                ") AND e2.is_void = 0\n" +
-                "AND e2.agent = t2.agent_serial AND e2.draw_time = t5.draw_serial AND e2.draw_date = t5.draw_date) 'winners'\n" +
                 "\n" +
                 "FROM bet_headers t1\n" +
                 "LEFT JOIN users t2 ON t1.agent = t2.agent_serial\n" +
                 "LEFT JOIN draws t4 ON t1.draw_time = t4.serial\n" +
                 "LEFT JOIN result t5 ON t1.draw_time = t5.draw_serial\n" +
-                "WHERE t1.is_void = 0 AND t1.draw_date = '$drawDate' AND t4.draw_name = '9 PM' \n" +
+                "WHERE t1.is_void = 0 AND t1.draw_date = '$drawDate' AND t4.draw_name = '9 PM'\n" +
                 "GROUP BY t1.draw_date, t2.username, t4.draw_name"
         val data: ArrayList<Draw9pmModel> = ArrayList()
         val cursor: Cursor?

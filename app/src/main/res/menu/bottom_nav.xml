@@ -13,6 +13,6 @@
         android:id="@+id/result"
         android:icon="@drawable/result" />
     <item
-        android:id="@+id/settings"
-        android:icon="@drawable/settings" />
+        android:id="@+id/download"
+        android:icon="@drawable/download" />
 </menu>

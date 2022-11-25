@@ -12,21 +12,15 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.hardware.biometrics.BiometricPrompt
 import android.os.*
-import android.provider.Settings
-import android.telephony.TelephonyManager
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
-import androidx.core.view.isInvisible
-import androidx.core.view.isVisible
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.UserUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
-import com.slicksoftcoder.smalltownlottery.features.landing.LandingActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
@@ -180,7 +174,7 @@ class AuthenticateActivity : AppCompatActivity() {
 
     private fun loginFailed(){
         val dialog = Dialog(this)
-        val view = layoutInflater.inflate(R.layout.login_failed_dialog, null)
+        val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
         dialog.setCancelable(true)
         dialog.window?.attributes?.windowAnimations = R.style.TopDialogAnimation
         dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -251,7 +245,8 @@ class AuthenticateActivity : AppCompatActivity() {
                             x.agentSerial,
                             x.username,
                             x.password,
-                            x.deviceId
+                            x.deviceId,
+                            x.location
                         )
                     }
                 }

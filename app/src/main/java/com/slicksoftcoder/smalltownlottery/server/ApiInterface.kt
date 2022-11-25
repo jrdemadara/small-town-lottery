@@ -1,5 +1,6 @@
 package com.slicksoftcoder.smalltownlottery.server
 import com.slicksoftcoder.smalltownlottery.common.model.DrawUpdateModel
+import com.slicksoftcoder.smalltownlottery.common.model.ResultUpdateModel
 import com.slicksoftcoder.smalltownlottery.common.model.UserUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.authenticate.UserModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw2pmModel
@@ -27,6 +28,10 @@ interface ApiInterface {
     @Headers("Content-Type:application/json")
     @GET("updateDraw")
     fun updateDraws(): Call<List<DrawUpdateModel>>
+
+    @Headers("Content-Type:application/json")
+    @GET("updateResult")
+    fun updateResults(): Call<List<ResultUpdateModel>>
 
     @Headers("Content-Type:application/json")
     @GET("updateUser")

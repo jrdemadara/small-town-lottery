@@ -29,6 +29,7 @@
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:logo="@drawable/logo_sm_svg"
@@ -257,6 +258,7 @@
             android:layout_marginTop="10dp"
             android:fontFamily="@font/nexa_xbold"
             android:text="0"
+            android:textAlignment="viewEnd"
             android:textColor="#F1AB55"
             android:textSize="24sp" />
 
@@ -392,6 +394,7 @@
             android:layout_marginTop="10dp"
             android:fontFamily="@font/nexa_xbold"
             android:text="0"
+            android:textAlignment="viewEnd"
             android:textColor="#3D4045"
             android:textSize="24sp" />
 
@@ -488,6 +491,7 @@
             android:layout_marginTop="10dp"
             android:fontFamily="@font/nexa_xbold"
             android:text="0"
+            android:textAlignment="viewEnd"
             android:textColor="#348AB1"
             android:textSize="24sp" />
 

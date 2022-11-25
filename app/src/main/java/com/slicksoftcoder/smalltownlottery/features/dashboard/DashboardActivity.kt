@@ -1,13 +1,14 @@
 package com.slicksoftcoder.smalltownlottery.features.dashboard
 
 import android.app.Dialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.icu.text.DecimalFormat
 import android.icu.text.NumberFormat
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.Menu
 import android.view.View
@@ -15,23 +16,34 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanIntentResult
+import com.journeyapps.barcodescanner.ScanOptions
 import com.slicksoftcoder.smalltownlottery.R
+import com.slicksoftcoder.smalltownlottery.common.model.ResultUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.authenticate.AuthenticateActivity
 import com.slicksoftcoder.smalltownlottery.features.bet.BetActivity
 import com.slicksoftcoder.smalltownlottery.features.history.HistoryActivity
 import com.slicksoftcoder.smalltownlottery.features.result.ResultActivity
 import com.slicksoftcoder.smalltownlottery.features.transmit.TransmitActivity
 import com.slicksoftcoder.smalltownlottery.features.userprofile.UserProfileActivity
+import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
+import com.slicksoftcoder.smalltownlottery.server.NodeServer
 import com.slicksoftcoder.smalltownlottery.util.DateUtil
 import com.slicksoftcoder.smalltownlottery.util.NetworkChecker
+import kotlinx.coroutines.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.*
+
 
 class DashboardActivity : AppCompatActivity() {
     private lateinit var bottomNavigationView: BottomNavigationView
@@ -61,11 +73,11 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var textView9pmTotalWin: TextView
     private lateinit var imageViewStatus: ImageView
     private lateinit var imageViewBet: ImageView
-    private lateinit var agentSerial: String
     val formatter: NumberFormat = DecimalFormat("#,###")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
+        networkChecker = NetworkChecker(application)
         localDatabase = LocalDatabase(this)
         bottomNavigationView = findViewById(R.id.bottomNavigationDash)
         toolbar = findViewById(R.id.materialToolbarDash)
@@ -100,18 +112,53 @@ class DashboardActivity : AppCompatActivity() {
                 logoutUser()
             } else if (item.itemId == R.id.profile) {
                 userProfile()
+            } else if (item.itemId == R.id.dashqr){
+                barcodeLauncher.launch(ScanOptions())
             }
             false
         }
+
+        lifecycleScope.launch(Dispatchers.IO){
+            val pnl = async { localDatabase.retrievePNL(dateUtil.dateFormat()) }
+            val result2pm = async { localDatabase.retrieve2pmResult(dateUtil.dateFormat()) }
+            val result5pm = async { localDatabase.retrieve5pmResult(dateUtil.dateFormat()) }
+            val result9pm = async { localDatabase.retrieve9pmResult(dateUtil.dateFormat()) }
+            withContext(Dispatchers.Main){
+                retrievePNLOffline(pnl.await())
+                retrieve2pmResultOffline(result2pm.await())
+                retrieve5pmResultOffline(result5pm.await())
+                retrieve9pmResultOffline(result9pm.await())
+            }
+            withContext(Dispatchers.Main){
+                retrievePNLOffline(pnl.await())
+                retrieve2pmResultOffline(result2pm.await())
+                retrieve5pmResultOffline(result5pm.await())
+                retrieve9pmResultOffline(result9pm.await())
+            }
+        }
+
         textViewDate.text = dateUtil.currentDateShort().replace("-", " ").uppercase(Locale.ROOT)
         middleNavigation()
         bottomNavigation()
-        checkNetworkConnection()
-        retrievePNLOffline()
-        retrieve2pmResultOffline()
-        retrieve5pmResultOffline()
-        retrieve9pmResultOffline()
-//        cardView2PM()
+        cardView2PM()
+        cardView5PM()
+        cardView9PM()
+    }
+
+    private val barcodeLauncher = registerForActivityResult(
+        ScanContract()
+    ) { result: ScanIntentResult ->
+        if (result.contents == null) {
+            Toast.makeText(this@DashboardActivity, "Cancelled", Toast.LENGTH_LONG).show()
+            resultStatus("Scanner Cancelled", "QR Scanner has been cancelled", 0)
+        } else {
+            Toast.makeText(
+                this@DashboardActivity,
+                "Scanned: " + result.contents,
+                Toast.LENGTH_LONG
+            ).show()
+
+        }
     }
 
     private fun cardView2PM() {
@@ -134,15 +181,114 @@ class DashboardActivity : AppCompatActivity() {
             val textViewWinner: TextView = view.findViewById(R.id.textViewDialogResultWinner)
             val textViewResult: TextView = view.findViewById(R.id.textViewDialogResult)
             val textViewDrawTime: TextView = view.findViewById(R.id.textViewDialogResultHeader)
+            val textViewDialogWinner: TextView = view.findViewById(R.id.textViewDialogWinner)
             val data = localDatabase.retrieve2pmResult(dateUtil.dateFormat())
             val list: ArrayList<Draw2pmModel> = data
             list.forEach {
-                textViewTotalBet.text = it.totalBet
-                textViewTotalHit.text = it.totalHit
-                textViewPNL.text = it.pnl
+                textViewTotalBet.text = formatter.format(it.totalBet.toDouble()).toString() + ".00"
+                textViewTotalHit.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
+                textViewPNL.text = formatter.format(it.pnl.toDouble()).toString() + ".00"
                 textViewWinner.text = it.win
-                textViewResult.text = it.result
-                textViewDrawTime.text = "2 PM"
+                textViewResult.text = "#"+it.result
+                textViewDrawTime.text = "DETAILED 2 PM RESULT"
+                if (it.win.toInt() > 1){
+                    textViewDialogWinner.text = "WINNERS"
+                }else{
+                    textViewDialogWinner.text = "WINNER"
+                }
+                if (it.pnl.toDouble() <= 0){
+                    textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
+                }else{
+                    textViewPNL.setTextColor(Color.parseColor("#41B134"))
+                }
+            }
+        }
+    }
+
+    private fun cardView5PM() {
+        cardView5pm.setOnClickListener {
+            val dialog = Dialog(this)
+            val view = layoutInflater.inflate(R.layout.detailed_result_dialog, null)
+            dialog.setCancelable(true)
+            dialog.window?.attributes?.windowAnimations = R.style.BottomDialogAnimation
+            dialog.window?.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog.window?.setGravity(Gravity.BOTTOM)
+            dialog.setContentView(view)
+            dialog.show()
+            val textViewTotalBet: TextView = view.findViewById(R.id.textViewDialogResultBet)
+            val textViewTotalHit: TextView = view.findViewById(R.id.textViewDialogResultHit)
+            val textViewPNL: TextView = view.findViewById(R.id.textViewDialogResultPNL)
+            val textViewWinner: TextView = view.findViewById(R.id.textViewDialogResultWinner)
+            val textViewResult: TextView = view.findViewById(R.id.textViewDialogResult)
+            val textViewDrawTime: TextView = view.findViewById(R.id.textViewDialogResultHeader)
+            val textViewDialogWinner: TextView = view.findViewById(R.id.textViewDialogWinner)
+            val data = localDatabase.retrieve5pmResult(dateUtil.dateFormat())
+            val list: ArrayList<Draw5pmModel> = data
+            list.forEach {
+                textViewTotalBet.text = formatter.format(it.totalBet.toDouble()).toString() + ".00"
+                textViewTotalHit.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
+                textViewPNL.text = formatter.format(it.pnl.toDouble()).toString() + ".00"
+                textViewWinner.text = it.win
+                textViewResult.text = "#"+it.result
+                textViewDrawTime.text = "DETAILED 5 PM RESULT"
+                if (it.win.toInt() > 1){
+                    textViewDialogWinner.text = "WINNERS"
+                }else{
+                    textViewDialogWinner.text = "WINNER"
+                }
+                if (it.pnl.toDouble() <= 0){
+                    textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
+                }else{
+                    textViewPNL.setTextColor(Color.parseColor("#41B134"))
+                }
+            }
+        }
+    }
+
+    private fun cardView9PM() {
+        cardView9pm.setOnClickListener {
+            val dialog = Dialog(this)
+            val view = layoutInflater.inflate(R.layout.detailed_result_dialog, null)
+            dialog.setCancelable(true)
+            dialog.window?.attributes?.windowAnimations = R.style.BottomDialogAnimation
+            dialog.window?.setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog.window?.setGravity(Gravity.BOTTOM)
+            dialog.setContentView(view)
+            dialog.show()
+            val textViewTotalBet: TextView = view.findViewById(R.id.textViewDialogResultBet)
+            val textViewTotalHit: TextView = view.findViewById(R.id.textViewDialogResultHit)
+            val textViewPNL: TextView = view.findViewById(R.id.textViewDialogResultPNL)
+            val textViewWinner: TextView = view.findViewById(R.id.textViewDialogResultWinner)
+            val textViewResult: TextView = view.findViewById(R.id.textViewDialogResult)
+            val textViewDrawTime: TextView = view.findViewById(R.id.textViewDialogResultHeader)
+            val textViewDialogWinner: TextView = view.findViewById(R.id.textViewDialogWinner)
+            val data = localDatabase.retrieve9pmResult(dateUtil.dateFormat())
+            val list: ArrayList<Draw9pmModel> = data
+            list.forEach {
+                textViewTotalBet.text = formatter.format(it.totalBet.toDouble()).toString() + ".00"
+                textViewTotalHit.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
+                textViewPNL.text = formatter.format(it.pnl.toDouble()).toString() + ".00"
+                textViewWinner.text = it.win
+                textViewResult.text = "#"+it.result
+                textViewDrawTime.text = "DETAILED 9 PM RESULT"
+                if (it.win.toInt() > 1){
+                    textViewDialogWinner.text = "WINNERS"
+                }else{
+                    textViewDialogWinner.text = "WINNER"
+                }
+                if (it.pnl.toDouble() <= 0){
+                    textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
+                }else{
+                    textViewPNL.setTextColor(Color.parseColor("#41B134"))
+                }
             }
         }
     }
@@ -179,10 +325,8 @@ class DashboardActivity : AppCompatActivity() {
                     finish()
                     true
                 }
-                R.id.settings -> {
-                    val intent = Intent(this, DashboardActivity::class.java)
-                    startActivity(intent)
-                    finish()
+                R.id.download -> {
+                    updateResults()
                     true
                 }
                 else -> {
@@ -192,8 +336,8 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun retrievePNLOffline() {
-        val data = localDatabase.retrievePNL(dateUtil.dateFormat())
+    suspend fun retrievePNLOffline(data: ArrayList<PnlModel>) {
+        delay(100L)
         val list: ArrayList<PnlModel> = data
         var totalBet = 0.0
         var totalHit = 0.0
@@ -201,24 +345,25 @@ class DashboardActivity : AppCompatActivity() {
         list.forEach {
             totalBet += it.totalBet.toDouble()
             totalHit += it.totalHit.toDouble()
-            pnl += it.pnl.toDouble()
+            pnl = it.pnl.toDouble()
         }
         if (pnl < 0){
             textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
         }else{
             textViewPNL.setTextColor(Color.parseColor("#41B134"))
         }
+        delay(200L)
         textViewTotalBet.text = formatter.format(totalBet).toString()+".00"
         textViewTotalHits.text = formatter.format(totalHit).toString()+".00"
         textViewPNL.text = formatter.format(pnl).toString()+".00"
     }
 
-    private fun retrieve2pmResultOffline() {
-        val data = localDatabase.retrieve2pmResult(dateUtil.dateFormat())
+    suspend fun retrieve2pmResultOffline(data: ArrayList<Draw2pmModel>) {
+        delay(100L)
         val list: ArrayList<Draw2pmModel> = data
         list.forEach {
             textView2pmResult.text = it.result
-            textView2pmTotalWin.text = it.totalHit
+            textView2pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
             if (it.win > 1.toString()){
                 textView2pmWinner.text = it.win + " winners"
             }else{
@@ -227,12 +372,12 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun retrieve5pmResultOffline() {
-        val data = localDatabase.retrieve5pmResult(dateUtil.dateFormat())
+    suspend fun retrieve5pmResultOffline(data: ArrayList<Draw5pmModel>) {
+        delay(100L)
         val list: ArrayList<Draw5pmModel> = data
         list.forEach {
             textView5pmResult.text = it.result
-            textView5pmTotalWin.text = it.totalHit
+            textView5pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
             if (it.win > 1.toString()){
                 textView5pmWinner.text = it.win + " winners"
             }else{
@@ -241,12 +386,12 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun retrieve9pmResultOffline() {
-        val data = localDatabase.retrieve9pmResult(dateUtil.dateFormat())
+    suspend fun retrieve9pmResultOffline(data: ArrayList<Draw9pmModel>) {
+        delay(100L)
         val list: ArrayList<Draw9pmModel> = data
         list.forEach {
             textView9pmResult.text = it.result
-            textView9pmTotalWin.text = it.totalHit
+            textView9pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
             if (it.win > 1.toString()){
                 textView9pmWinner.text = it.win + " winners"
             }else{
@@ -334,153 +479,81 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-//    Deprecated Feature
+    private fun updateResults(){
+        localDatabase.truncateResults()
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        retrofit.updateResults().enqueue(object : Callback<List<ResultUpdateModel>?> {
+            override fun onResponse(
+                call: Call<List<ResultUpdateModel>?>,
+                response: Response<List<ResultUpdateModel>?>
+            ) {
+                resultStatus("Loading Success", "Updated results has been loaded.", 1)
+                val list: List<ResultUpdateModel?>?
+                list = response.body()
+                assert(list != null)
+                if (list != null) {
+                    for (x in list) {
+                        println(x)
+                        localDatabase.updateResults(
+                            x.serial,
+                            x.drawSerial,
+                            dateUtil.dateFormat(),
+                            x.winningNumber,
+                            dateUtil.dateFormat()
+                        )
+                    }
+                }
+            }
 
-//    private fun retrievePNL() {
-//        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-//        retrofit.getPNL(dateUtil.dateFormat(),localDatabase.retrieveAgent()).enqueue(object :
-//            Callback<List<PnlModel>?> {
-//            override fun onResponse(
-//                call: Call<List<PnlModel>?>,
-//                response: Response<List<PnlModel>?>
-//            ) {
-//                val responseBody = response.body()!!
-//                responseBody.forEach(){
-//                    textViewTotalBet.text = formatter.format(it.totalBet.toDouble()).toString()+".00"
-//                    textViewTotalHits.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
-//                    textViewPNL.text = formatter.format(it.pnl.toDouble()).toString()+".00"
-//                    if (it.pnl.contains("-")){
-//                        textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
-//                    }else{
-//                        textViewPNL.setTextColor(Color.parseColor("#41B134"))
-//                    }
-//
-//
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<PnlModel>?>, t: Throwable) {
-//                retrievePNLOffline()
-//            }
-//        })
-//    }
+            override fun onFailure(call: Call<List<ResultUpdateModel>?>, t: Throwable) {
+                resultStatus("Loading Failed", "Error loading data from the server, Please Try again", 0)
+            }
+        })
+    }
 
-//    private fun retrieveDraw2() {
-//        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-//        retrofit.get2pmDraw(
-//            dateUtil.dateFormat(),
-//            localDatabase.retrieveAgent(),
-//            localDatabase.retrieveDrawSerial("2 PM")
-//        ).enqueue(object :
-//            Callback<List<Draw2pmModel>?> {
-//            override fun onResponse(
-//                call: Call<List<Draw2pmModel>?>,
-//                response: Response<List<Draw2pmModel>?>
-//            ) {
-//                val responseBody = response.body()!!
-//                responseBody.forEach() {
-//                    textView2pmResult.text = it.result
-//                    textView2pmTotalWin.text =
-//                        formatter.format(it.totalHit.toDouble()).toString() + ".00"
-//                    if (it.win.toDouble() > 1) {
-//                        textView2pmWinner.text =
-//                            it.win.replace(".", "").replace("00", "") + " winners"
-//                    } else {
-//                        textView2pmWinner.text =
-//                            it.win.replace(".", "").replace("00", "") + " winner"
-//                    }
-//
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<Draw2pmModel>?>, t: Throwable) {
-//                retrieve2pmResultOffline()
-//            }
-//        })
-//    }
+    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){
+        val dialog = Dialog(this)
+        val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
+        dialog.setCancelable(true)
+        dialog.window?.attributes?.windowAnimations = R.style.TopDialogAnimation
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setGravity(Gravity.TOP)
+        dialog.setContentView(view)
+        dialog.show()
+        val textViewTitle: TextView = view.findViewById(R.id.textViewToastTitle)
+        val textViewDetails: TextView = view.findViewById(R.id.textViewToastDetails)
+        val imageView: ImageView = view.findViewById(R.id.imageViewToast)
+        textViewTitle.text = title
+        textViewDetails.text = detail
+        if (isSuccess == 0){
+            imageView.setImageResource(R.drawable.exclamation)
+        }else{
+            imageView.setImageResource(R.drawable.ic_round_check_circle_24)
+        }
 
-//    private fun retrieveDraw5() {
-//        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-//        retrofit.get5pmDraw(
-//            dateUtil.dateFormat(),
-//            localDatabase.retrieveAgent(),
-//            localDatabase.retrieveDrawSerial("5 PM")
-//        ).enqueue(object :
-//            Callback<List<Draw5pmModel>?> {
-//            override fun onResponse(
-//                call: Call<List<Draw5pmModel>?>,
-//                response: Response<List<Draw5pmModel>?>
-//            ) {
-//                val responseBody = response.body()!!
-//                responseBody.forEach() {
-//                    textView5pmResult.text = it.result
-//                    textView5pmTotalWin.text =
-//                        formatter.format(it.totalHit.toDouble()).toString() + ".00"
-//                    if (it.win.toDouble() > 1) {
-//                        textView5pmWinner.text =
-//                            it.win.replace(".", "").replace("00", "") + " winners"
-//                    } else {
-//                        textView5pmWinner.text =
-//                            it.win.replace(".", "").replace("00", "") + " winner"
-//                    }
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<Draw5pmModel>?>, t: Throwable) {
-//
-//            }
-//        })
-//    }
-//
-//    private fun retrieveDraw9() {
-//        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
-//        retrofit.get9pmDraw(
-//            dateUtil.dateFormat(),
-//            localDatabase.retrieveAgent(),
-//            localDatabase.retrieveDrawSerial("9 PM")
-//        ).enqueue(object :
-//            Callback<List<Draw9pmModel>?> {
-//            override fun onResponse(
-//                call: Call<List<Draw9pmModel>?>,
-//                response: Response<List<Draw9pmModel>?>
-//            ) {
-//                val responseBody = response.body()!!
-//                responseBody.forEach() {
-//                    textView9pmResult.text = it.result
-//                    textView9pmTotalWin.text =
-//                        formatter.format(it.totalHit.toDouble()).toString() + ".00"
-//                    if (it.win.toDouble() > 1) {
-//                        textView9pmWinner.text =
-//                            it.win.replace(".", "").replace("00", "") + " winners"
-//                    } else {
-//                        textView9pmWinner.text =
-//                            it.win.replace(".", "").replace("00", "") + " winner"
-//                    }
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<Draw9pmModel>?>, t: Throwable) {
-//
-//            }
-//        })
-//    }
+        Handler(Looper.getMainLooper()).postDelayed({
+            dialog.dismiss()
+        }, 3000)
+    }
 
-    private fun checkNetworkConnection() {
+
+    suspend fun checkNetworkConnection(): String? {
+        delay(1000L)
+        var status: String? = null
         networkChecker = NetworkChecker(application)
         networkChecker.observe(this) { isConnected ->
-            if (isConnected) {
-                imageViewStatus.setImageResource(R.drawable.online)
-//                retrievePNL()
-//                retrieveDraw2()
-//                retrieveDraw5()
-//                retrieveDraw9()
+            status = if (isConnected) {
+                "true"
+                //imageViewStatus.setImageResource(R.drawable.online)
             } else {
-                imageViewStatus.setImageResource(R.drawable.offline)
-//                retrievePNLOffline()
-//                cardView2PM()
+                "false"
             }
         }
+        return status
     }
+
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.toolbar, menu)

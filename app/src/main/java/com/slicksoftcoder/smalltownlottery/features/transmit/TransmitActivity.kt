@@ -6,15 +6,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
 import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
+import com.slicksoftcoder.smalltownlottery.common.model.DrawUpdateModel
+import com.slicksoftcoder.smalltownlottery.common.model.ResultUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
@@ -68,6 +67,7 @@ class TransmitActivity : AppCompatActivity() {
         updateProgressBar()
         uploadBetHeader()
         uploadBetDetails()
+        updateResults()
 
         buttonClose.setOnClickListener{
             if (statusHeader == 1 && statusDetails == 1){
@@ -98,6 +98,37 @@ class TransmitActivity : AppCompatActivity() {
             }
 
         }
+    }
+
+    private fun updateResults(){
+        localDatabase.truncateResults()
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        retrofit.updateResults().enqueue(object : Callback<List<ResultUpdateModel>?> {
+            override fun onResponse(
+                call: Call<List<ResultUpdateModel>?>,
+                response: Response<List<ResultUpdateModel>?>
+            ) {
+                val list: List<ResultUpdateModel?>?
+                list = response.body()
+                assert(list != null)
+                if (list != null) {
+                    for (x in list) {
+                        println(x)
+                        localDatabase.updateResults(
+                            x.serial,
+                            x.drawSerial,
+                            dateUtil.dateFormat(),
+                            x.winningNumber,
+                            dateUtil.dateFormat()
+                        )
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<List<ResultUpdateModel>?>, t: Throwable) {
+                //Toast.makeText(applicationContext, "", Toast.LENGTH_LONG).show()
+            }
+        })
     }
 
     private fun uploadBetHeader(){
@@ -155,9 +186,6 @@ class TransmitActivity : AppCompatActivity() {
             textViewWait.text = "There is nothing to upload!"
             buttonClose.isVisible = true
             statusHeader = 0
-            Handler(Looper.getMainLooper()).postDelayed({
-                switchActivity()
-            }, 30000)
         }
 
     }
@@ -194,9 +222,6 @@ class TransmitActivity : AppCompatActivity() {
                                 textViewTagline.setTextColor(ContextCompat.getColor(applicationContext, R.color.yellow_500))
                                 textViewTagline.text = "Upload completed!"
                                 textViewWait.isVisible = false
-                                Handler(Looper.getMainLooper()).postDelayed({
-                                    switchActivity()
-                                }, 30000)
                             }
                         } else {
                             textViewTagline.text = "Something went wrong!"
@@ -217,9 +242,6 @@ class TransmitActivity : AppCompatActivity() {
                         buttonClose.isVisible = true
                         buttonClose.text = "Try Again"
                         statusDetails = 1
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            switchActivity()
-                        }, 30000)
                     }
                 })
             }
@@ -231,9 +253,6 @@ class TransmitActivity : AppCompatActivity() {
             textViewWait.text = "There is nothing to upload!"
             buttonClose.isVisible = true
             statusDetails = 0
-            Handler(Looper.getMainLooper()).postDelayed({
-                switchActivity()
-            }, 30000)
         }
 
     }
