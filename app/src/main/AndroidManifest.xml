@@ -30,13 +30,6 @@
             android:screenOrientation="fullSensor"
             tools:replace="screenOrientation" />
         <activity
-            android:name=".tester.TesterActivity"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
             android:name=".features.userprofile.UserProfileActivity"
             android:exported="false">
             <meta-data

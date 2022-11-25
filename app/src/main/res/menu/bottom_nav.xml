@@ -3,16 +3,22 @@
 
     <item
         android:id="@+id/home"
+        android:title=""
         android:icon="@drawable/home"/>
     <item
         android:id="@+id/history"
+        android:title=""
         android:icon="@drawable/history"/>
     <item
-        android:id="@+id/bet"/>
+        android:id="@+id/bet"
+        android:title=""/>
+
     <item
         android:id="@+id/result"
+        android:title=""
         android:icon="@drawable/result" />
     <item
         android:id="@+id/download"
+        android:title=""
         android:icon="@drawable/download" />
 </menu>

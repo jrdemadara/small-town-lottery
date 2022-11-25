@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class DateUtil () {
+class DateUtil {
 
     fun currentDate(): String{
         val currentDate: String

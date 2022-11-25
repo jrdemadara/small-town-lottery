@@ -2,6 +2,9 @@ package com.slicksoftcoder.smalltownlottery.features.bet
 
 import android.Manifest
 import android.app.Dialog
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -12,7 +15,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.*
@@ -28,7 +30,6 @@ import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
 import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
-import com.slicksoftcoder.smalltownlottery.features.landing.LandingActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
@@ -40,6 +41,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
 import kotlin.properties.Delegates
+
 
 class BetActivity : AppCompatActivity() {
     private lateinit var localDatabase: LocalDatabase
@@ -131,12 +133,12 @@ class BetActivity : AppCompatActivity() {
                                 editTextBetNumber.requestFocus()
                                 winAmount = 0.0
                                 isRambolito = 0
-                                resultStatus("Success", "Bet has been added.", 0)
+                                resultStatus("Success", "Bet has been added.", 1)
                                 dialog.dismiss()
                             }else{
                                 if (amount >= 30){
                                     winAmount =  2750 * (amount/30)
-                                    editTextBetAmount.setTextColor(Color.parseColor("#000000"));
+                                    editTextBetAmount.setTextColor(Color.parseColor("#000000"))
                                     /* Save Bet */
                                     localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
                                     val list = localDatabase.retrieveBetDetails(headerSerial.toString())
@@ -150,11 +152,11 @@ class BetActivity : AppCompatActivity() {
                                     editTextBetNumber.requestFocus()
                                     winAmount = 0.0
                                     isRambolito = 0
-                                    resultStatus("Success", "Bet has been added.", 0)
+                                    resultStatus("Success", "Bet has been added.", 1)
                                     dialog.dismiss()
                                 }else{
                                     resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
-                                    editTextBetAmount.setTextColor(Color.parseColor("#F15555"));
+                                    editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
                                     dialog.dismiss()
                                 }
                             }
@@ -167,7 +169,7 @@ class BetActivity : AppCompatActivity() {
                     resultStatus("Warning", "Please fill the required fields.", 0)
                 }
 
-            buttonBetAdd.setText("Add Bet")
+            buttonBetAdd.text = "Add Bet"
         }
 
             adapter?.setOnClickItem {
@@ -197,7 +199,7 @@ class BetActivity : AppCompatActivity() {
                         "edit" -> {
                             editTextBetNumber.setText(betNumber)
                             editTextBetAmount.setText(amount)
-                            buttonBetAdd.setText("Edit Bet")
+                            buttonBetAdd.text = "Edit Bet"
                             localDatabase.deleteBetDetail(serial)
                             totalAmount -= amount.toDouble()
                             textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
@@ -439,76 +441,69 @@ class BetActivity : AppCompatActivity() {
         }
     }
 
-    private val PERMISSIONS_STORAGE = arrayOf(
+    private val PERMISSION = arrayOf(
         Manifest.permission.BLUETOOTH,
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT,
         Manifest.permission.BLUETOOTH_PRIVILEGED
     )
-    private val PERMISSIONS_LOCATION = arrayOf(
-        Manifest.permission.BLUETOOTH,
-        Manifest.permission.BLUETOOTH_SCAN,
-        Manifest.permission.BLUETOOTH_CONNECT,
-        Manifest.permission.BLUETOOTH_PRIVILEGED
-    )
+
 
     private fun checkPermissions() {
         val permission1 =
             ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
-        val permission2 =
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
-
         if (permission1 != PackageManager.PERMISSION_GRANTED) {
             // We don't have permission so prompt the user
             ActivityCompat.requestPermissions(
                 this,
-                PERMISSIONS_STORAGE,
-                1
-            )
-        } else if (permission2 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                this,
-                PERMISSIONS_LOCATION,
+                PERMISSION,
                 1
             )
         }
     }
 
     private fun printReceipt(headerSerial: String , drawDate: String, drawTime:String, betTime: String, transCode: String, totalAmount: String){
-        val agent = localDatabase.retrieveAgentName()
-        val location = localDatabase.retrieveLocation()
-        val data = localDatabase.retrieveBetDetails(headerSerial)
-        val list: ArrayList<BetDetailsModel> = data
-        var bets = ""
+        val bluetoothManager = applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothManager.getAdapter()
+        if (!bluetoothManager.adapter.isEnabled) {
+            Toast.makeText(applicationContext, "Please check your bluetooth connection.", Toast.LENGTH_LONG).show()
+        } else {
+            checkPermissions()
+            val agent = localDatabase.retrieveAgentName()
+            val location = localDatabase.retrieveLocation()
+            val data = localDatabase.retrieveBetDetails(headerSerial)
+            val list: ArrayList<BetDetailsModel> = data
+            var bets = ""
 
-        list.forEach {
-            bets += "[L]${if (it.isRambolito == "0"){it.betNumber}else{it.betNumber+"-R"} }[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
-        }
-        checkPermissions()
-        val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
-        printer
+            list.forEach {
+                bets += "[L]${if (it.isRambolito == "0"){it.betNumber}else{it.betNumber+"-R"} }[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
+            }
+
+            val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
+            printer
                 .printFormattedText("[C]<img>${PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
                     R.drawable.recieptlogo, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
-                "[L]\n" +
+                        "[L]\n" +
                         "[C]<u><font size='tall'>Small Town Lottery</font></u>\n" +
-                "[C]<u><font size='normal'>Just Explore SDT</font></u>\n" + "[L]\n"+
-                "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
-                "[L]<b>Area:</b>[R]<b>$location</b>\n" +
-                "[L]<b>Draw Date:</b>[R]<b>$drawDate</b>\n" +
-                "[L]<b>Bet Time:</b>[R]<b>$betTime</b>\n" +
-                "[L]<b>Draw Time:</b>[R]<b>$drawTime</b>\n" +
-                "[L]<b>Trans Code:[R]<font size='normal'>$transCode</font>\n" +
-                "[C]--------------------------------\n" +
-                "[L]BET[C]WIN[R]AMOUNT\n" +
-                "[C]--------------------------------\n" +
-                "$bets" +
-                "[C]--------------------------------\n" +
-                "[L]<b>TOTAL AMOUNT:</b>[R]<b>$totalAmount</b>\n" +
-                "[C]--------------------------------\n" +
-                "[C]<qrcode size='20'>$transCode</qrcode>\n" +
-                "[L]\n" +
-                "[C]Thank You! Bet Again!\n".trimIndent()
-            )
+                        "[C]<u><font size='normal'>Just Explore SDT</font></u>\n" + "[L]\n"+
+                        "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
+                        "[L]<b>Area:</b>[R]<b>$location</b>\n" +
+                        "[L]<b>Draw Date:</b>[R]<b>$drawDate</b>\n" +
+                        "[L]<b>Bet Time:</b>[R]<b>$betTime</b>\n" +
+                        "[L]<b>Draw Time:</b>[R]<b>$drawTime</b>\n" +
+                        "[L]<b>Trans Code:[R]<font size='normal'>$transCode</font>\n" +
+                        "[C]--------------------------------\n" +
+                        "[L]BET[C]WIN[R]AMOUNT\n" +
+                        "[C]--------------------------------\n" +
+                        "$bets" +
+                        "[C]--------------------------------\n" +
+                        "[L]<b>TOTAL AMOUNT:</b>[R]<b>$totalAmount</b>\n" +
+                        "[C]--------------------------------\n" +
+                        "[C]<qrcode size='20'>$transCode</qrcode>\n" +
+                        "[L]\n" +
+                        "[C]Thank You! Bet Again!\n".trimIndent()
+                )
+        }
     }
 
     private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){

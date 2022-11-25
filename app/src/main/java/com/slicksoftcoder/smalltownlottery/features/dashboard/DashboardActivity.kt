@@ -106,7 +106,7 @@ class DashboardActivity : AppCompatActivity() {
         imageViewStatus = findViewById(R.id.imageViewDashStatus)
         val toolbar = findViewById<View>(R.id.materialToolbarDash) as Toolbar
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayShowTitleEnabled(false);
+        supportActionBar?.setDisplayShowTitleEnabled(false)
         toolbar.setOnMenuItemClickListener { item ->
             if (item.itemId == R.id.logout) {
                 logoutUser()
@@ -152,8 +152,14 @@ class DashboardActivity : AppCompatActivity() {
             Toast.makeText(this@DashboardActivity, "Cancelled", Toast.LENGTH_LONG).show()
             resultStatus("Scanner Cancelled", "QR Scanner has been cancelled", 0)
         } else {
-            localDatabase.claimBet(result.contents)
-            showSuccess()
+            val isClaimed: Boolean = localDatabase.checkClaim(result.contents)
+            if (isClaimed){
+                resultStatus("Invalid Receipt", "Transaction Code ${result.contents} is already claimed", 0)
+            }else{
+                localDatabase.claimBet(result.contents)
+                showSuccess()
+            }
+
         }
     }
 
@@ -356,7 +362,7 @@ class DashboardActivity : AppCompatActivity() {
         list.forEach {
             totalBet += it.totalBet.toDouble()
             totalHit += it.totalHit.toDouble()
-            pnl = it.pnl.toDouble()
+            pnl += it.pnl.toDouble()
         }
         if (pnl < 0){
             textViewPNL.setTextColor(Color.parseColor("#E20A2A"))

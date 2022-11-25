@@ -2,6 +2,8 @@ package com.slicksoftcoder.smalltownlottery.features.history
 
 import android.Manifest
 import android.app.Dialog
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -236,77 +238,70 @@ class HistoryActivity : AppCompatActivity() {
         alertDialog.show()
     }
 
-    private val PERMISSIONS_STORAGE = arrayOf(
+    private val PERMISSION = arrayOf(
         Manifest.permission.BLUETOOTH,
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT,
         Manifest.permission.BLUETOOTH_PRIVILEGED
     )
-    private val PERMISSIONS_LOCATION = arrayOf(
-        Manifest.permission.BLUETOOTH,
-        Manifest.permission.BLUETOOTH_SCAN,
-        Manifest.permission.BLUETOOTH_CONNECT,
-        Manifest.permission.BLUETOOTH_PRIVILEGED
-    )
+
 
     private fun checkPermissions() {
         val permission1 =
             ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
-        val permission2 =
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
-
         if (permission1 != PackageManager.PERMISSION_GRANTED) {
             // We don't have permission so prompt the user
             ActivityCompat.requestPermissions(
                 this,
-                PERMISSIONS_STORAGE,
-                1
-            )
-        } else if (permission2 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                this,
-                PERMISSIONS_LOCATION,
+                PERMISSION,
                 1
             )
         }
     }
 
     private fun printReceipt(headerSerial: String , drawDate: String, drawTime:String, betTime: String, transCode: String, totalAmount: String){
-        val agent = localDatabase.retrieveAgentName()
-        val location = localDatabase.retrieveLocation()
-        val data = localDatabase.retrieveBetDetails(headerSerial)
-        val list: ArrayList<BetDetailsModel> = data
-        var bets = ""
+        val bluetoothManager = applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothManager.getAdapter()
+        if (!bluetoothManager.adapter.isEnabled) {
+            Toast.makeText(applicationContext, "Please check your bluetooth connection.", Toast.LENGTH_LONG).show()
+        } else {
+            val agent = localDatabase.retrieveAgentName()
+            val location = localDatabase.retrieveLocation()
+            val data = localDatabase.retrieveBetDetails(headerSerial)
+            val list: ArrayList<BetDetailsModel> = data
+            var bets = ""
 
-        list.forEach {
-            bets += "[L]${it.betNumber}[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
+            list.forEach {
+                bets += "[L]${it.betNumber}[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
+            }
+            checkPermissions()
+            val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
+            printer
+                .printFormattedText("[C]<img>${
+                    PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
+                        R.drawable.recieptlogo, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
+                        "[L]\n" +
+                        "[C]<u><font size='tall'>Small Town Lottery</font></u>\n" +
+                        "[C]<u><font size='normal'>Just Explore SDT</font></u>\n" + "[L]\n"+
+                        "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
+                        "[L]<b>Area:</b>[R]<b>$location</b>\n" +
+                        "[L]<b>Draw Date:</b>[R]<b>$drawDate</b>\n" +
+                        "[L]<b>Bet Time:</b>[R]<b>$betTime</b>\n" +
+                        "[L]<b>Draw Time:</b>[R]<b>$drawTime</b>\n" +
+                        "[L]<b>Trans Code:[R]<font size='normal'>$transCode</font>\n" +
+                        "[C]--------------------------------\n" +
+                        "[L]BET[C]WIN[R]AMOUNT\n" +
+                        "[C]--------------------------------\n" +
+                        "$bets" +
+                        "[C]--------------------------------\n" +
+                        "[L]<b>TOTAL AMOUNT:</b>[R]<b>$totalAmount</b>\n" +
+                        "[C]--------------------------------\n" +
+                        "[C]<qrcode size='20'>$transCode</qrcode>\n" +
+                        "[L]\n" +
+                        "[C]Thank You! Bet Again!\n".trimIndent()
+                )
         }
-        checkPermissions()
-        val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
-        printer
-            .printFormattedText("[C]<img>${
-                PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
-                R.drawable.recieptlogo, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
-                    "[L]\n" +
-                    "[C]<u><font size='tall'>Small Town Lottery</font></u>\n" +
-                    "[C]<u><font size='normal'>Just Explore SDT</font></u>\n" + "[L]\n"+
-                    "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
-                    "[L]<b>Area:</b>[R]<b>$location</b>\n" +
-                    "[L]<b>Draw Date:</b>[R]<b>$drawDate</b>\n" +
-                    "[L]<b>Bet Time:</b>[R]<b>$betTime</b>\n" +
-                    "[L]<b>Draw Time:</b>[R]<b>$drawTime</b>\n" +
-                    "[L]<b>Trans Code:[R]<font size='normal'>$transCode</font>\n" +
-                    "[C]--------------------------------\n" +
-                    "[L]BET[C]WIN[R]AMOUNT\n" +
-                    "[C]--------------------------------\n" +
-                    "$bets" +
-                    "[C]--------------------------------\n" +
-                    "[L]<b>TOTAL AMOUNT:</b>[R]<b>$totalAmount</b>\n" +
-                    "[C]--------------------------------\n" +
-                    "[C]<qrcode size='20'>$transCode</qrcode>\n" +
-                    "[L]\n" +
-                    "[C]Thank You! Bet Again!\n".trimIndent()
-            )
+
     }
 
     private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){

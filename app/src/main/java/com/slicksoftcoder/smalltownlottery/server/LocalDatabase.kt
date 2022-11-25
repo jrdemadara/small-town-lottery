@@ -424,11 +424,23 @@ class LocalDatabase (context: Context) :
         db.close()
     }
 
+    fun checkClaim(transactionCode: String?): Boolean {
+        val columns = arrayOf(HEADERS_SERIAL_COL)
+        val db = this.readableDatabase
+        val selection = "$HEADERS_TRANSACTION_CODE_COL = '$transactionCode' AND $HEADERS_IS_CLAIMED_COL = 1"
+        val cursor = db.query(TABLE_BET_HEADERS, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+
+    }
+
     fun claimBet(transactionCode: String?) {
         val db = this.writableDatabase
         val values = ContentValues()
         values.put(HEADERS_IS_CLAIMED_COL, 1)
-        db.update(TABLE_BET_HEADERS, values, "$HEADERS_TRANSACTION_CODE_COL = ?", arrayOf(transactionCode))
+        db.update(TABLE_BET_HEADERS, values, "$HEADERS_TRANSACTION_CODE_COL = ? AND $HEADERS_IS_CLAIMED_COL = 0", arrayOf(transactionCode))
         db.close()
     }
 
