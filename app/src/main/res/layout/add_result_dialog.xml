@@ -33,7 +33,7 @@
         android:ems="10"
         android:fontFamily="@font/nexa_regular"
         android:hint="Result"
-        android:inputType="textPersonName|textCapWords|textCapCharacters"
+        android:inputType="none|number"
         android:padding="10dp"
         android:textAllCaps="true"
         tools:ignore="TouchTargetSizeCheck" />

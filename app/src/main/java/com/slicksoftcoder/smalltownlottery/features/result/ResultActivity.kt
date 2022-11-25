@@ -94,9 +94,10 @@ class ResultActivity : AppCompatActivity() {
             buttonResultConfirm.setOnClickListener {
                 val drawSerial = localDatabase.retrieve2pmDrawSerial()
                 textViewResultTime.text = "Add Result (\"2 PM\")"
-                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete())
+                localDatabase.deleteResult(drawSerial)
+                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
-                textViewResult2pmResult.text = localDatabase.retrieve2pmResult(drawSerial).toString()
+                textViewResult2pmResult.text = localDatabase.retrieve2pmDrawResult(drawSerial)
                 dialog.dismiss()
             }
         }
@@ -119,9 +120,10 @@ class ResultActivity : AppCompatActivity() {
             buttonResultConfirm.setOnClickListener {
                 val drawSerial = localDatabase.retrieve5pmDrawSerial()
                 textViewResultTime.text = "Add Result (\"5 PM\")"
-                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete())
+                localDatabase.deleteResult(drawSerial)
+                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
-                textViewResult5pmResult.text = localDatabase.retrieve5pmResult(drawSerial).toString()
+                textViewResult5pmResult.text = localDatabase.retrieve2pmDrawResult(drawSerial)
                 dialog.dismiss()
             }
         }
@@ -144,9 +146,10 @@ class ResultActivity : AppCompatActivity() {
             buttonResultConfirm.setOnClickListener {
                 val drawSerial = localDatabase.retrieve9pmDrawSerial()
                 textViewResultTime.text = "Add Result (\"9 PM\")"
-                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete())
+                localDatabase.deleteResult(drawSerial)
+                localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
-                textViewResult9pmResult.text = localDatabase.retrieve9pmResult(drawSerial).toString()
+                textViewResult9pmResult.text = localDatabase.retrieve2pmDrawResult(drawSerial)
                 dialog.dismiss()
             }
         }
