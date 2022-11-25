@@ -60,13 +60,11 @@ dependencies {
     implementation 'com.squareup.okio:okio:3.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.cardview:cardview:1.0.0'
-
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.0-alpha03")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0-alpha03")
     implementation 'com.github.KhairoHumsi:Printer-ktx:1.0.1'
     implementation 'com.github.kenglxn.QRGen:android:2.6.0'
-
     implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
 }

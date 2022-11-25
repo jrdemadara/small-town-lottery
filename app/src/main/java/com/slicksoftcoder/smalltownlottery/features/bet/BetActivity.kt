@@ -307,7 +307,7 @@ class BetActivity : AppCompatActivity() {
         val radioButton5pm: RadioButton = view.findViewById(R.id.radioButtonBet5PM)
         val radioButton9pm: RadioButton = view.findViewById(R.id.radioButtonBet9PM)
         val radioButtonConfirm: Button = view.findViewById(R.id.buttonBetConfirmDraw)
-        var draw = ""
+        var draw: String
         if ("2 PM" == textViewTime.text){
             radioButton2pm.isChecked = true
             drawTime = "2 PM"

@@ -158,16 +158,6 @@ class LocalDatabase (context: Context) :
      }
 
      /* Cloud Updates Transaction */
-     fun checkDeviceUser(deviceId: String?): Boolean{
-         val db = this.readableDatabase
-         val selectQuery = "SELECT $USER_SERIAL_COL FROM $TABLE_USERS"
-         val cursor = db.rawQuery(selectQuery, null)
-         val cursorCount = cursor.count
-         cursor.close()
-         db.close()
-         return cursorCount > 0
-     }
-
      fun truncateUsers() {
          val db = this.writableDatabase
          db.delete(TABLE_USERS, null, null)

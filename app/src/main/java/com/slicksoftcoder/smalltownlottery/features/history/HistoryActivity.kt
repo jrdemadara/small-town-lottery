@@ -118,7 +118,7 @@ class HistoryActivity : AppCompatActivity() {
         dialog.window?.setGravity(Gravity.BOTTOM)
         dialog.setContentView(view)
         dialog.show()
-        var adapterHistoryBet: HistoryBetAdapter? = null
+        var adapterHistoryBet: HistoryBetAdapter?
         val recyclerViewHistoryBet: RecyclerView = view.findViewById(R.id.recyclerViewHistoryBets)
         val textViewHistoryBetTransaction: TextView = view.findViewById(R.id.textViewHistoryBetTranscode)
         val textViewHistoryBetDate: TextView = view.findViewById(R.id.textViewHistoryBetDate)
