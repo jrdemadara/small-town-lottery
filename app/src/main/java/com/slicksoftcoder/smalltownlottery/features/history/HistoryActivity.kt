@@ -247,24 +247,22 @@ class HistoryActivity : AppCompatActivity() {
 
 
     private fun checkPermissions() {
-        val permission1 =
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
+        val permission1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
+        val permission2 = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
         if (permission1 != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                this,
-                PERMISSION,
-                1
-            )
+            ActivityCompat.requestPermissions(this, PERMISSION, 1)
+        }else if (permission2 != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, PERMISSION, 1)
         }
     }
 
     private fun printReceipt(headerSerial: String , drawDate: String, drawTime:String, betTime: String, transCode: String, totalAmount: String){
         val bluetoothManager = applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        bluetoothManager.getAdapter()
+        bluetoothManager.adapter
         if (!bluetoothManager.adapter.isEnabled) {
             Toast.makeText(applicationContext, "Please check your bluetooth connection.", Toast.LENGTH_LONG).show()
         } else {
+            checkPermissions()
             val agent = localDatabase.retrieveAgentName()
             val location = localDatabase.retrieveLocation()
             val data = localDatabase.retrieveBetDetails(headerSerial)
@@ -274,7 +272,6 @@ class HistoryActivity : AppCompatActivity() {
             list.forEach {
                 bets += "[L]${it.betNumber}[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
             }
-            checkPermissions()
             val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
             printer
                 .printFormattedText("[C]<img>${

@@ -34,7 +34,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:navigationIcon="@drawable/logo_sm_svg" />
+        app:navigationIcon="@drawable/logo_stl" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardViewUpdatePassword"

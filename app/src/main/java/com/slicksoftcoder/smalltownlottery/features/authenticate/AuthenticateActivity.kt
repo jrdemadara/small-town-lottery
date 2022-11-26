@@ -100,7 +100,8 @@ class AuthenticateActivity : AppCompatActivity() {
                     authenticateOnline(editTextUsername.text.toString(), editTextPassword.text.toString(),device)
                 }
             }else{
-                Toast.makeText(application, "Please fill the username and password.", Toast.LENGTH_SHORT).show()
+                resultStatus("Login Failed", "Please fill the username and password.", 0)
+                editTextUsername.requestFocus()
                 vibratePhone()
             }
         }
@@ -163,7 +164,7 @@ class AuthenticateActivity : AppCompatActivity() {
                 } else if (response.code() == 201) {
                     LoadingScreen.hideLoading()
                     vibratePhone()
-                    loginFailed()
+                    resultStatus("Login Failed", "Please check your username and password.", 0)
                 }
             }
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
@@ -172,16 +173,27 @@ class AuthenticateActivity : AppCompatActivity() {
         })
     }
 
-    private fun loginFailed(){
+    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
         dialog.setCancelable(true)
         dialog.window?.attributes?.windowAnimations = R.style.TopDialogAnimation
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.window?.setGravity(Gravity.TOP)
         dialog.setContentView(view)
         dialog.show()
+        val textViewTitle: TextView = view.findViewById(R.id.textViewToastTitle)
+        val textViewDetails: TextView = view.findViewById(R.id.textViewToastDetails)
+        val imageView: ImageView = view.findViewById(R.id.imageViewToast)
+        textViewTitle.text = title
+        textViewDetails.text = detail
+        if (isSuccess == 0){
+            imageView.setImageResource(R.drawable.exclamation)
+        }else{
+            imageView.setImageResource(R.drawable.ic_round_check_circle_24)
+        }
+
         Handler(Looper.getMainLooper()).postDelayed({
             dialog.dismiss()
         }, 3000)
@@ -198,7 +210,8 @@ class AuthenticateActivity : AppCompatActivity() {
             switchActivity()
         }else{
            vibratePhone()
-            loginFailed()
+            resultStatus("Login Failed", "Please check your username and password.", 0)
+            editTextUsername.requestFocus()
         }
     }
 
@@ -215,7 +228,8 @@ class AuthenticateActivity : AppCompatActivity() {
                     authenticateOnline(editTextUsername.text.toString(), editTextPassword.text.toString(), deviceid)
                     updateUsers()
                 } else {
-                    Toast.makeText(application, "Login failed", Toast.LENGTH_SHORT).show()
+                    resultStatus("Login Failed", "Please check your username and password.", 0)
+                    editTextUsername.requestFocus()
                 }
             }
 

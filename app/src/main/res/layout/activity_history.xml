@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:menu="@menu/toolbar_history"
-        app:navigationIcon="@drawable/logo_sm_svg" />
+        app:navigationIcon="@drawable/logo_stl" />
 
     <LinearLayout
         android:id="@+id/linearLayout"

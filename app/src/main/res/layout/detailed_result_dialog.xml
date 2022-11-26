@@ -23,7 +23,7 @@
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
         android:fontFamily="@font/nexa_bold"
-        android:text="Detailed 2pm Result"
+        android:text="Detailed Result"
         android:textAlignment="center"
         android:textColor="#000000"
         android:textSize="16dp" />
@@ -54,7 +54,7 @@
                 android:layout_height="30dp"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
-                android:text="#867"
+                android:text="#"
                 android:textColor="#F1AB55"
                 android:textSize="28sp" />
 
@@ -67,7 +67,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="18dp"
                     android:fontFamily="@font/nexa_xbold"
-                    android:text="3"
+                    android:text="0"
                     android:textSize="18sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -107,9 +107,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
-                android:text="1,000"
+                android:text="0.00"
                 android:textAlignment="viewStart"
-                android:textColor="#348AB1"
+                android:textColor="#757575"
                 android:textSize="22sp" />
 
             <TextView
@@ -141,8 +141,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
-                android:text="34,200.00"
-                android:textColor="#E20A2A"
+                android:text="0.00"
+                android:textColor="#757575"
                 android:textSize="22sp" />
 
             <TextView
@@ -174,7 +174,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:fontFamily="@font/nexa_xbold"
-                android:text="25,600.00"
+                android:text="0.00"
                 android:textColor="#50D05C"
                 android:textSize="22sp" />
 

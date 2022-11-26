@@ -424,6 +424,17 @@ class LocalDatabase (context: Context) :
         db.close()
     }
 
+    fun checkBetValidity(transactionCode: String?): Boolean {
+        val columns = arrayOf(HEADERS_SERIAL_COL)
+        val db = this.readableDatabase
+        val selection = "$HEADERS_TRANSACTION_CODE_COL = '$transactionCode'"
+        val cursor = db.query(TABLE_BET_HEADERS, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+    }
+
     fun checkClaim(transactionCode: String?): Boolean {
         val columns = arrayOf(HEADERS_SERIAL_COL)
         val db = this.readableDatabase
@@ -433,7 +444,6 @@ class LocalDatabase (context: Context) :
         cursor.close()
         db.close()
         return cursorCount > 0
-
     }
 
     fun claimBet(transactionCode: String?) {
@@ -593,9 +603,9 @@ class LocalDatabase (context: Context) :
         db.close()
     }
 
-    fun retrieve2pmDrawResult(drawTime: String): String {
+    fun retrieve2pmDrawResult(date: String, drawTime: String): String {
         var data: String = String()
-        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = DATE('now') AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
+        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = '$date' AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {
@@ -606,9 +616,9 @@ class LocalDatabase (context: Context) :
         return data
     }
 
-    fun retrieve5pmDrawResult(drawTime: String): String {
+    fun retrieve5pmDrawResult(date: String, drawTime: String): String {
         var data: String = String()
-        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = DATE('now') AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
+        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = '$date' AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {
@@ -619,9 +629,9 @@ class LocalDatabase (context: Context) :
         return data
     }
 
-    fun retrieve9pmDrawResult(drawTime: String): String {
+    fun retrieve9pmDrawResult(date: String, drawTime: String): String {
         var data: String = String()
-        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = DATE('now') AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
+        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = '$date' AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {

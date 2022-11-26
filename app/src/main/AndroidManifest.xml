@@ -24,7 +24,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SmallTownLottery"
         android:usesCleartextTraffic="true"
-        tools:targetApi="31">
+        >
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"

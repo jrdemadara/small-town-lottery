@@ -44,7 +44,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:logo="@drawable/logo_sm_svg"
+        app:logo="@drawable/logo_stl"
         app:logoAdjustViewBounds="false"
         app:logoScaleType="matrix" />
 

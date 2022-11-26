@@ -56,9 +56,9 @@ class ResultActivity : AppCompatActivity() {
             val drawSerial2pm =  localDatabase.retrieve2pmDrawSerial()
             val drawSerial5pm = localDatabase.retrieve5pmDrawSerial()
             val drawSerial9pm =  localDatabase.retrieve9pmDrawSerial()
-            val result2pm = localDatabase.retrieve2pmDrawResult(drawSerial2pm)
-            val result5pm =  localDatabase.retrieve5pmDrawResult(drawSerial5pm)
-            val result9pm =  localDatabase.retrieve9pmDrawResult(drawSerial9pm)
+            val result2pm = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(),drawSerial2pm)
+            val result5pm =  localDatabase.retrieve5pmDrawResult(dateUtil.dateFormat(),drawSerial5pm)
+            val result9pm =  localDatabase.retrieve9pmDrawResult(dateUtil.dateFormat(),drawSerial9pm)
             withContext(Dispatchers.Main){
                 textViewResult2pmResult.text = result2pm
                 textViewResult5pmResult.text = result5pm
@@ -97,7 +97,7 @@ class ResultActivity : AppCompatActivity() {
                 localDatabase.deleteResult(drawSerial)
                 localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
-                textViewResult2pmResult.text = localDatabase.retrieve2pmDrawResult(drawSerial)
+                textViewResult2pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(),drawSerial)
                 dialog.dismiss()
             }
         }
@@ -123,7 +123,7 @@ class ResultActivity : AppCompatActivity() {
                 localDatabase.deleteResult(drawSerial)
                 localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
-                textViewResult5pmResult.text = localDatabase.retrieve2pmDrawResult(drawSerial)
+                textViewResult5pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(),drawSerial)
                 dialog.dismiss()
             }
         }
@@ -149,7 +149,7 @@ class ResultActivity : AppCompatActivity() {
                 localDatabase.deleteResult(drawSerial)
                 localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
                 Toast.makeText(applicationContext, "Result has been saved.", Toast.LENGTH_SHORT).show()
-                textViewResult9pmResult.text = localDatabase.retrieve2pmDrawResult(drawSerial)
+                textViewResult9pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(),drawSerial)
                 dialog.dismiss()
             }
         }

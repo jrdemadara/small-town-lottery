@@ -152,13 +152,19 @@ class DashboardActivity : AppCompatActivity() {
             Toast.makeText(this@DashboardActivity, "Cancelled", Toast.LENGTH_LONG).show()
             resultStatus("Scanner Cancelled", "QR Scanner has been cancelled", 0)
         } else {
-            val isClaimed: Boolean = localDatabase.checkClaim(result.contents)
-            if (isClaimed){
-                resultStatus("Invalid Receipt", "Transaction Code ${result.contents} is already claimed", 0)
+            val isValid: Boolean = localDatabase.checkBetValidity(result.contents)
+            if (isValid){
+                val isClaimed: Boolean = localDatabase.checkClaim(result.contents)
+                if (isClaimed){
+                    resultStatus("Already Claimed", "Transaction Code ${result.contents} is already claimed", 0)
+                }else{
+                    localDatabase.claimBet(result.contents)
+                    showSuccess()
+                }
             }else{
-                localDatabase.claimBet(result.contents)
-                showSuccess()
+                resultStatus("Invalid Receipt", "Transaction Code ${result.contents} is invalid", 0)
             }
+
 
         }
     }
@@ -201,6 +207,7 @@ class DashboardActivity : AppCompatActivity() {
             val textViewDialogWinner: TextView = view.findViewById(R.id.textViewDialogWinner)
             val data = localDatabase.retrieve2pmResult(dateUtil.dateFormat())
             val list: ArrayList<Draw2pmModel> = data
+            textViewResult.setTextColor(Color.parseColor("#F1AB55"))
             list.forEach {
                 textViewTotalBet.text = formatter.format(it.totalBet.toDouble()).toString() + ".00"
                 textViewTotalHit.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
@@ -245,6 +252,7 @@ class DashboardActivity : AppCompatActivity() {
             val textViewDialogWinner: TextView = view.findViewById(R.id.textViewDialogWinner)
             val data = localDatabase.retrieve5pmResult(dateUtil.dateFormat())
             val list: ArrayList<Draw5pmModel> = data
+            textViewResult.setTextColor(Color.parseColor("#3D4045"))
             list.forEach {
                 textViewTotalBet.text = formatter.format(it.totalBet.toDouble()).toString() + ".00"
                 textViewTotalHit.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
@@ -287,6 +295,7 @@ class DashboardActivity : AppCompatActivity() {
             val textViewResult: TextView = view.findViewById(R.id.textViewDialogResult)
             val textViewDrawTime: TextView = view.findViewById(R.id.textViewDialogResultHeader)
             val textViewDialogWinner: TextView = view.findViewById(R.id.textViewDialogWinner)
+            textViewResult.setTextColor(Color.parseColor("#348AB1"))
             val data = localDatabase.retrieve9pmResult(dateUtil.dateFormat())
             val list: ArrayList<Draw9pmModel> = data
             list.forEach {
@@ -553,24 +562,6 @@ class DashboardActivity : AppCompatActivity() {
             dialog.dismiss()
         }, 3000)
     }
-
-
-    suspend fun checkNetworkConnection(): String? {
-        delay(1000L)
-        var status: String? = null
-        networkChecker = NetworkChecker(application)
-        networkChecker.observe(this) { isConnected ->
-            status = if (isConnected) {
-                "true"
-                //imageViewStatus.setImageResource(R.drawable.online)
-            } else {
-                "false"
-            }
-        }
-        return status
-    }
-
-
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.toolbar, menu)
