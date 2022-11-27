@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.icu.text.DecimalFormat
 import android.icu.text.NumberFormat
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -25,6 +26,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
+import com.muddassir.connection_checker.ConnectionState
+import com.muddassir.connection_checker.checkConnection
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.ResultUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.authenticate.AuthenticateActivity
@@ -116,6 +119,28 @@ class DashboardActivity : AppCompatActivity() {
                 barcodeLauncher.launch(ScanOptions())
             }
             false
+        }
+
+        //* Check Internet Connection
+        val connection = this.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connection.activeNetworkInfo
+        if (activeNetwork != null){
+            imageViewStatus.setImageResource(R.drawable.online)
+        }else{
+            imageViewStatus.setImageResource(R.drawable.offline)
+        }
+        checkConnection(this) { connectionState ->
+            when(connectionState) {
+                ConnectionState.CONNECTED -> {
+                    imageViewStatus.setImageResource(R.drawable.online)
+                }
+                ConnectionState.SLOW -> {
+                    imageViewStatus.setImageResource(R.drawable.slow)
+                }
+                else -> {
+                    imageViewStatus.setImageResource(R.drawable.offline)
+                }
+            }
         }
 
         lifecycleScope.launch(Dispatchers.IO){
@@ -532,7 +557,7 @@ class DashboardActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<ResultUpdateModel>?>, t: Throwable) {
-                resultStatus("Loading Failed", "Error loading data from the server, Please Try again", 0)
+                resultStatus("No Result", "No new result has been release yet.", 0)
             }
         })
     }

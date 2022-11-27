@@ -2,7 +2,6 @@ package com.slicksoftcoder.smalltownlottery.features.bet
 
 import android.Manifest
 import android.app.Dialog
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
@@ -11,6 +10,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.icu.text.DecimalFormat
 import android.icu.text.NumberFormat
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -26,6 +26,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.khairo.escposprinter.EscPosPrinter
 import com.khairo.escposprinter.connection.bluetooth.BluetoothPrintersConnections
 import com.khairo.escposprinter.textparser.PrinterTextParserImg
+import com.muddassir.connection_checker.ConnectionState
+import com.muddassir.connection_checker.checkConnection
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
 import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
@@ -45,7 +47,6 @@ import kotlin.properties.Delegates
 
 class BetActivity : AppCompatActivity() {
     private lateinit var localDatabase: LocalDatabase
-    private lateinit var networkChecker: NetworkChecker
     private lateinit var dateUtil: DateUtil
     private lateinit var recyclerView: RecyclerView
     private var adapter: BetAdapter? = null
@@ -71,7 +72,7 @@ class BetActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = BetAdapter()
         recyclerView.adapter = adapter
-        imageViewStatus = findViewById(R.id.imageViewStatus)
+        imageViewStatus = findViewById(R.id.imageViewStatusBet)
         textViewDate = findViewById(R.id.textViewBetDate)
         textViewTime = findViewById(R.id.textViewBetTime)
         textViewTotal = findViewById(R.id.textViewBetTotal)
@@ -84,7 +85,29 @@ class BetActivity : AppCompatActivity() {
         totalAmount = 0.0
         winAmount = 0.0
         drawTime = ""
-        checkNetworkConnection()
+
+        //* Check Internet Connection
+        val connection = this.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connection.activeNetworkInfo
+        if (activeNetwork != null){
+            imageViewStatus.setImageResource(R.drawable.online)
+        }else{
+            imageViewStatus.setImageResource(R.drawable.offline)
+        }
+        checkConnection(this) { connectionState ->
+            when(connectionState) {
+                ConnectionState.CONNECTED -> {
+                    imageViewStatus.setImageResource(R.drawable.online)
+                }
+                ConnectionState.SLOW -> {
+                    imageViewStatus.setImageResource(R.drawable.slow)
+                }
+                else -> {
+                    imageViewStatus.setImageResource(R.drawable.offline)
+                }
+            }
+        }
+
         selectDrawTime()
         editTextBetNumber.requestFocus()
         textViewTime.setOnClickListener {
@@ -368,17 +391,6 @@ class BetActivity : AppCompatActivity() {
             finish()
         }, 1000)
 
-    }
-
-    private fun checkNetworkConnection() {
-        networkChecker = NetworkChecker(application)
-        networkChecker.observe(this) { isConnected ->
-            if (isConnected) {
-                imageViewStatus.setImageResource(R.drawable.online)
-            } else {
-                imageViewStatus.setImageResource(R.drawable.offline)
-            }
-        }
     }
 
     private fun transmitBetHeader(headerSerial: String){

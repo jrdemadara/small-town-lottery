@@ -73,7 +73,7 @@
             android:textSize="16sp" />
 
         <ImageView
-            android:id="@+id/imageViewStatus"
+            android:id="@+id/imageViewStatusBet"
             android:layout_width="12dp"
             android:layout_height="match_parent"
             android:layout_marginStart="100dp"

@@ -11,9 +11,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="35dp"
         android:layout_marginBottom="30dp"
         android:clickable="true"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
         app:backgroundTint="#000000"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -65,14 +66,15 @@
             android:text="NOV 13 2022"
             android:textAlignment="textEnd" />
 
-        <TextView
-            android:id="@+id/textViewResultTimeNow"
-            android:layout_width="1dp"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:id="@+id/imageViewResultStatus"
+            android:layout_width="77dp"
+            android:layout_height="19dp"
             android:layout_weight="1"
-            android:fontFamily="@font/nexa_bold"
-            android:text="2 PM"
-            android:textAlignment="textEnd" />
+            android:scaleType="fitEnd"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
     </LinearLayout>
 
     <androidx.cardview.widget.CardView
