@@ -14,6 +14,8 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.ViewGroup
@@ -113,6 +115,21 @@ class BetActivity : AppCompatActivity() {
         textViewTime.setOnClickListener {
             selectDrawTime()
         }
+
+        editTextBetNumber.addTextChangedListener(object : TextWatcher{
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (editTextBetNumber.text.length == 3){
+                    editTextBetAmount.requestFocus()
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+
+        })
+
+
         val headerSerial: UUID = UUID.randomUUID()
         buttonBetAdd.setOnClickListener {
                 if (editTextBetNumber.text.isNotEmpty() && editTextBetAmount.text.isNotEmpty()){
