@@ -278,8 +278,6 @@ class HistoryActivity : AppCompatActivity() {
                     PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
                         R.drawable.recieptlogo, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
                         "[L]\n" +
-                        "[C]<u><font size='tall'>Small Town Lottery</font></u>\n" +
-                        "[C]<u><font size='normal'>Just Explore SDT</font></u>\n" + "[L]\n"+
                         "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
                         "[L]<b>Area:</b>[R]<b>$location</b>\n" +
                         "[L]<b>Draw Date:</b>[R]<b>$drawDate</b>\n" +

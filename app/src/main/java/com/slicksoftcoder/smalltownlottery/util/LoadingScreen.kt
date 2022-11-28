@@ -32,5 +32,4 @@ object LoadingScreen {
         } catch (e: Exception) {
         }
     }
-
 }
