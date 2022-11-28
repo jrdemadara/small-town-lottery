@@ -124,7 +124,6 @@ class BetActivity : AppCompatActivity() {
                     editTextBetAmount.requestFocus()
                 }
             }
-
             override fun afterTextChanged(s: Editable?) {}
 
         })
