@@ -174,7 +174,6 @@ class DashboardActivity : AppCompatActivity() {
         ScanContract()
     ) { result: ScanIntentResult ->
         if (result.contents == null) {
-            Toast.makeText(this@DashboardActivity, "Cancelled", Toast.LENGTH_LONG).show()
             resultStatus("Scanner Cancelled", "QR Scanner has been cancelled", 0)
         } else {
             val isValid: Boolean = localDatabase.checkBetValidity(result.contents)
