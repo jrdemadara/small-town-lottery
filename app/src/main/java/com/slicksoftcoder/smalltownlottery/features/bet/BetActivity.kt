@@ -348,20 +348,47 @@ class BetActivity : AppCompatActivity() {
         val radioButton5pm: RadioButton = view.findViewById(R.id.radioButtonBet5PM)
         val radioButton9pm: RadioButton = view.findViewById(R.id.radioButtonBet9PM)
         val radioButtonConfirm: Button = view.findViewById(R.id.buttonBetConfirmDraw)
-        var draw: String
-        if ("2 PM" == textViewTime.text){
-            radioButton2pm.isChecked = true
-            drawTime = "2 PM"
-            draw = "2 PM"
-        }else if("5 PM" == textViewTime.text){
-            radioButton5pm.isChecked = true
+        var draw: String?
+        val currentTime = dateUtil.currentTimeComplete()
+        val cutoff2 = localDatabase.retrieveDrawCutOff("2 PM")
+        val cutoff5 = localDatabase.retrieveDrawCutOff("5 PM")
+        val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
+        if (currentTime >= cutoff2){
+            radioButton2pm.isChecked = false
+            radioButton2pm.isEnabled = false
             drawTime = "5 PM"
             draw = "5 PM"
         }else{
+            radioButton2pm.isChecked = true
+            drawTime = "2 PM"
+            draw = "2 PM"
+        }
+        if (currentTime >= cutoff5){
             radioButton9pm.isChecked = true
             drawTime = "9 PM"
             draw = "9 PM"
+        }else{
+            radioButton5pm.isChecked = false
+            radioButton5pm.isEnabled = false
+            drawTime = "5 PM"
+            draw = "5 PM"
         }
+        if (currentTime >= cutoff9){
+            resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
+            dialog.dismiss()
+            Handler(Looper.getMainLooper()).postDelayed({
+                val intent = Intent(this, DashboardActivity ::class.java)
+                startActivity(intent)
+                finish()
+            }, 3000)
+
+        }else{
+            radioButton9pm.isChecked = false
+            radioButton9pm.isEnabled = false
+            drawTime = "9 PM"
+            draw = "9 PM"
+        }
+
         radioButton2pm.setOnClickListener {
             radioButton5pm.isChecked = false
             radioButton9pm.isChecked = false
@@ -381,7 +408,7 @@ class BetActivity : AppCompatActivity() {
             draw = "9 PM"
         }
         radioButtonConfirm.setOnClickListener {
-            if (draw.isNotEmpty()){
+            if (draw?.isNotEmpty() == true){
                 textViewTime.text = draw
                 dialog.dismiss()
             }else{
