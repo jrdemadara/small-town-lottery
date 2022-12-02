@@ -65,7 +65,7 @@ class LandingActivity : AppCompatActivity() {
                 .printFormattedText("[C]<img>${
                     PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
                         android.R.drawable.ic_media_play, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
-                        "[C]Printer is reader!\n".trimIndent()
+                        "[C]Printer is ready!\n".trimIndent()
                 )
         }
 

@@ -347,7 +347,6 @@ class DashboardActivity : AppCompatActivity() {
         imageViewBet.setOnClickListener {
             val currentTime = dateUtil.currentTimeComplete()
             val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
-
             if (currentTime >= cutoff9){
                 resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
             }else{
@@ -371,9 +370,15 @@ class DashboardActivity : AppCompatActivity() {
                     true
                 }
                 R.id.bet -> {
-                    val intent = Intent(this, BetActivity::class.java)
-                    startActivity(intent)
-                    finish()
+                    val currentTime = dateUtil.currentTimeComplete()
+                    val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
+                    if (currentTime >= cutoff9){
+                        resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
+                    }else{
+                        val intent = Intent(this, BetActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
                     true
                 }
                 R.id.result -> {
@@ -484,7 +489,9 @@ class DashboardActivity : AppCompatActivity() {
             if (currentTime >= cutoff9){
                 resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
             }else{
-
+                val intent = Intent(this, BetActivity::class.java)
+                startActivity(intent)
+                finish()
             }
 
 //            if (currentTime > cutoff2 && currentTime < resume2) {

@@ -142,8 +142,6 @@ class AuthenticateActivity : AppCompatActivity() {
             .apply()
     }
 
-
-
     private fun clear() {
         val editor = sharedPreferences.edit()
         editor.remove(prefusername)

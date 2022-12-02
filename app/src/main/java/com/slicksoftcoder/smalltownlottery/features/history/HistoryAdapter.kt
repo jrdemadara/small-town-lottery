@@ -1,5 +1,6 @@
 package com.slicksoftcoder.smalltownlottery.features.history
 
+import android.graphics.Color
 import android.icu.text.DecimalFormat
 import android.icu.text.NumberFormat
 import android.view.LayoutInflater
@@ -59,8 +60,10 @@ class HistoryAdapter : RecyclerView.Adapter<HistoryAdapter.ViewHolder>()  {
         holder.totalAmount.text = formatter.format(mPosition.totalAmount.toDouble()).toString()
         if(mPosition.isVoid == "0"){
             holder.isVoid.text = "VALID"
+            holder.isVoid.setTextColor(Color.parseColor("#3AAC26"))
         }else{
             holder.isVoid.text = "VOID"
+            holder.isVoid.setTextColor(Color.parseColor("#D72E1F"))
         }
     }
 

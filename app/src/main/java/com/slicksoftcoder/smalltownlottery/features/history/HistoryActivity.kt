@@ -139,9 +139,9 @@ class HistoryActivity : AppCompatActivity() {
         textViewHistoryBetDraw.text = draw
         textViewHistoryBetTotalAmount.text = amount
 
-        if (status.isEmpty()){
+        if (status.isNotEmpty()){
             if (0 == status.toInt()){
-                textViewHistoryBetStatus.text = "ACTIVE"
+                textViewHistoryBetStatus.text = "VALID"
                 buttonHistoryBetVoid.text = "VOID"
             }else{
                 textViewHistoryBetStatus.text = "VOID"

@@ -5,6 +5,7 @@ import android.app.Dialog
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -18,7 +19,9 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.DisplayMetrics
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -38,17 +41,21 @@ import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
 import com.slicksoftcoder.smalltownlottery.util.DateUtil
-import com.slicksoftcoder.smalltownlottery.util.NetworkChecker
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.properties.Delegates
 
 
 class BetActivity : AppCompatActivity() {
     private lateinit var localDatabase: LocalDatabase
+    private lateinit var sharedPreferences: SharedPreferences
+    private var prefname = "USERPREF"
+    private var prefquota = "BETQUOTA"
+    private var quota: String? = null
     private lateinit var dateUtil: DateUtil
     private lateinit var recyclerView: RecyclerView
     private var adapter: BetAdapter? = null
@@ -70,6 +77,8 @@ class BetActivity : AppCompatActivity() {
         setContentView(R.layout.activity_bet)
         dateUtil = DateUtil()
         localDatabase = LocalDatabase(this)
+        sharedPreferences = getSharedPreferences(prefname, MODE_PRIVATE)
+        quota = sharedPreferences.getString(prefquota, null).toString()
         recyclerView = findViewById(R.id.recyclerViewBets)
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = BetAdapter()
@@ -157,48 +166,86 @@ class BetActivity : AppCompatActivity() {
 
                     buttonConfirm.setOnClickListener {
                         if (radioButtonRegular.isChecked || radioButtonRambolito.isChecked){
-                            if (isRambolito == 0){
-                                winAmount =   2750 * (amount/5)
-                                /* Save Bet */
-                                localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
-                                val list = localDatabase.retrieveBetDetails(headerSerial.toString())
-                                /* Retrieve Bet */
-                                adapter?.addItems(list)
-                                /* Update UI */
-                                totalAmount += amount
-                                textViewTotal.text = formatter.format(totalAmount).toString()+".00"
-                                editTextBetNumber.setText("")
-                                editTextBetAmount.setText("")
-                                editTextBetNumber.requestFocus()
-                                winAmount = 0.0
-                                isRambolito = 0
-                                resultStatus("Success", "Bet has been added.", 1)
-                                dialog.dismiss()
+                            val totalBet = localDatabase.retrieveBetQuota(dateUtil.dateFormat(), drawTime, editTextBetNumber.text.toString())
+                            if (editTextBetAmount.text.toString().toInt() > quota!!.toInt()){
+                                resultStatus("Warning", "Bet amount should not be greater than $quota.", 0)
                             }else{
-                                if (amount >= 30){
-                                    winAmount =  2750 * (amount/30)
-                                    editTextBetAmount.setTextColor(Color.parseColor("#000000"))
-                                    /* Save Bet */
-                                    localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
-                                    val list = localDatabase.retrieveBetDetails(headerSerial.toString())
-                                    /* Retrieve Bet */
-                                    adapter?.addItems(list)
-                                    /* Update UI */
-                                    totalAmount += amount
-                                    textViewTotal.text = formatter.format(totalAmount).toString()+".00"
-                                    editTextBetNumber.setText("")
-                                    editTextBetAmount.setText("")
-                                    editTextBetNumber.requestFocus()
-                                    winAmount = 0.0
-                                    isRambolito = 0
-                                    resultStatus("Success", "Bet has been added.", 1)
-                                    dialog.dismiss()
+                                if (isRambolito == 0){
+                                    if (totalBet != "null"){
+                                        val bettableAmount = quota!!.toInt() - totalBet.toInt()
+                                        if (totalBet.toInt() >= quota!!.toInt()){
+                                            resultStatus("Warning", "Bet quota has been reach.", 0)
+                                        }else if (editTextBetAmount.text.toString().toInt() > bettableAmount){
+                                            resultStatus("Warning", "Only $bettableAmount pesos are available to reach the limit.", 0)
+                                        }else{
+                                            winAmount =   2750 * (amount/5)
+                                            /* Save Bet */
+                                            localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
+                                            val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                                            /* Retrieve Bet */
+                                            adapter?.addItems(list)
+                                            /* Update UI */
+                                            totalAmount += amount
+                                            textViewTotal.text = formatter.format(totalAmount).toString()+".00"
+                                            editTextBetNumber.setText("")
+                                            editTextBetAmount.setText("")
+                                            winAmount = 0.0
+                                            isRambolito = 0
+                                            resultStatus("Success", "Bet has been added.", 1)
+                                            dialog.dismiss()
+
+                                            if (isRambolito == 0){
+
+                                            }else{
+
+                                            }
+                                        }
+                                    }else{
+                                        winAmount =   2750 * (amount/5)
+                                        /* Save Bet */
+                                        localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
+                                        val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                                        /* Retrieve Bet */
+                                        adapter?.addItems(list)
+                                        /* Update UI */
+                                        totalAmount += amount
+                                        textViewTotal.text = formatter.format(totalAmount).toString()+".00"
+                                        editTextBetNumber.setText("")
+                                        editTextBetAmount.setText("")
+                                        winAmount = 0.0
+                                        isRambolito = 0
+                                        resultStatus("Success", "Bet has been added.", 1)
+                                        dialog.dismiss()
+                                    }
                                 }else{
-                                    resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
-                                    editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
-                                    dialog.dismiss()
+                                    if (amount >= 30){
+                                        winAmount =  2750 * (amount/30)
+                                        editTextBetAmount.setTextColor(Color.parseColor("#000000"))
+                                        /* Save Bet */
+                                        localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
+                                        val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                                        /* Retrieve Bet */
+                                        adapter?.addItems(list)
+                                        /* Update UI */
+                                        totalAmount += amount
+                                        textViewTotal.text = formatter.format(totalAmount).toString()+".00"
+                                        editTextBetNumber.setText("")
+                                        editTextBetAmount.setText("")
+                                        winAmount = 0.0
+                                        isRambolito = 0
+                                        resultStatus("Success", "Bet has been added.", 1)
+                                        dialog.dismiss()
+                                    }else{
+                                        resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
+                                        editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
+                                        dialog.dismiss()
+                                    }
                                 }
+
                             }
+
+
+
                         }else{
                             resultStatus("Warning", "Please select type.", 0)
                         }
@@ -209,6 +256,7 @@ class BetActivity : AppCompatActivity() {
                 }
 
             buttonBetAdd.text = "Add Bet"
+            showSoftKeyboard(editTextBetNumber)
         }
 
             adapter?.setOnClickItem {
@@ -329,10 +377,14 @@ class BetActivity : AppCompatActivity() {
                 alertDialog.setCancelable(false)
                 alertDialog.show()
             }
-
-
         }
+    }
 
+    private fun showSoftKeyboard(view: View) {
+        if (view.requestFocus()) {
+            val inputMethodManager: InputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputMethodManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        }
     }
 
     private fun selectDrawTime(){
@@ -365,11 +417,13 @@ class BetActivity : AppCompatActivity() {
         }
         if (currentTime >= cutoff5){
             radioButton9pm.isChecked = true
+            radioButton9pm.isEnabled = true
+            radioButton5pm.isEnabled = false
             drawTime = "9 PM"
             draw = "9 PM"
         }else{
-            radioButton5pm.isChecked = false
-            radioButton5pm.isEnabled = false
+            radioButton5pm.isChecked = true
+            radioButton5pm.isEnabled = true
             drawTime = "5 PM"
             draw = "5 PM"
         }
@@ -383,8 +437,8 @@ class BetActivity : AppCompatActivity() {
             }, 3000)
 
         }else{
-            radioButton9pm.isChecked = false
-            radioButton9pm.isEnabled = false
+            radioButton9pm.isChecked = true
+            radioButton9pm.isEnabled = true
             drawTime = "9 PM"
             draw = "9 PM"
         }
