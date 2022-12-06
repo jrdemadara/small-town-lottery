@@ -9,7 +9,6 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
 
-
 interface ApiInterface {
     @Headers("Content-Type:application/json")
     @POST("login")

@@ -1,48 +1,46 @@
 package com.slicksoftcoder.smalltownlottery.util
 
-import java.text.DateFormat
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
 class DateUtil {
 
-    fun currentDate(): String{
+    fun currentDate(): String {
         val currentDate: String
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
         val day = calendar.get(Calendar.DAY_OF_MONTH)
         currentDate = ("$year-$month-$day").toString()
-        return  currentDate
+        return currentDate
     }
 
-    fun currentYear(): String{
+    fun currentYear(): String {
         val currentYear: String
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         currentYear = year.toString()
-        return  currentYear
+        return currentYear
     }
 
-    fun currentMonth(): String{
+    fun currentMonth(): String {
         val currentMonth: String
         val calendar = Calendar.getInstance()
         val month = calendar.get(Calendar.MONTH)
         currentMonth = month.toString()
-        return  currentMonth
+        return currentMonth
     }
 
-    fun currentDay(): String{
+    fun currentDay(): String {
         val currentDay: String
         val calendar = Calendar.getInstance()
         val day = calendar.get(Calendar.DAY_OF_MONTH)
         currentDay = day.toString()
-        return  currentDay
+        return currentDay
     }
 
-    fun dateFormat(): String{
+    fun dateFormat(): String {
         val formatDate: String
         val currentDate = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -50,7 +48,7 @@ class DateUtil {
         return formatDate
     }
 
-    fun dateShort(): String{
+    fun dateShort(): String {
         val formatDate: String
         val currentDate = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("yy-MM")
@@ -58,7 +56,7 @@ class DateUtil {
         return formatDate
     }
 
-    fun currentDateShort(): String{
+    fun currentDateShort(): String {
         val formatDate: String
         val currentDate = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("MMM-dd-yyyy")
@@ -66,7 +64,7 @@ class DateUtil {
         return formatDate
     }
 
-    fun currentTime(): String{
+    fun currentTime(): String {
         val formatTime: String
         val currentDate = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -74,12 +72,11 @@ class DateUtil {
         return formatTime
     }
 
-    fun currentTimeComplete(): String{
+    fun currentTimeComplete(): String {
         val formatTime: String
         val currentDate = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
         formatTime = currentDate.format(formatter)
         return formatTime
     }
-
 }

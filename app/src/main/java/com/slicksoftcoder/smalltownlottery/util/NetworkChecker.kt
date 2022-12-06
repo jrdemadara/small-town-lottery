@@ -7,9 +7,9 @@ import android.net.Network
 import android.net.NetworkRequest
 import androidx.lifecycle.LiveData
 
-class NetworkChecker (private val connectivityManager: ConnectivityManager) : LiveData<Boolean>() {
+class NetworkChecker(private val connectivityManager: ConnectivityManager) : LiveData<Boolean>() {
     constructor(application: Application) : this(application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager)
-    private val networkCallback = object : ConnectivityManager.NetworkCallback(){
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             super.onAvailable(network)
             postValue(true)
@@ -24,12 +24,11 @@ class NetworkChecker (private val connectivityManager: ConnectivityManager) : Li
     override fun onActive() {
         super.onActive()
         val builder = NetworkRequest.Builder()
-        connectivityManager.registerNetworkCallback(builder.build(),networkCallback)
+        connectivityManager.registerNetworkCallback(builder.build(), networkCallback)
     }
 
     override fun onInactive() {
         super.onInactive()
         connectivityManager.unregisterNetworkCallback(networkCallback)
     }
-
 }

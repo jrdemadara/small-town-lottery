@@ -5,5 +5,5 @@ data class ResultUpdateModel(
     val drawSerial: String,
     val drawDate: String,
     val winningNumber: String,
-    val dateCreated: String,
+    val dateCreated: String
 )

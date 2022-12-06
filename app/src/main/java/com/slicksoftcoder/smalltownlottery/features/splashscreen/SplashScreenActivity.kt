@@ -9,7 +9,6 @@ import android.os.Looper
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.gson.JsonObject
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.DrawUpdateModel
 import com.slicksoftcoder.smalltownlottery.common.model.QuotaUpdateModel
@@ -18,11 +17,9 @@ import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
 import com.slicksoftcoder.smalltownlottery.util.NetworkChecker
-import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-
 
 @SuppressLint("CustomSplashScreen")
 class SplashScreenActivity : AppCompatActivity() {
@@ -43,7 +40,7 @@ class SplashScreenActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this,LandingActivity ::class.java)
+            val intent = Intent(this, LandingActivity::class.java)
             startActivity(intent)
             finish()
         }, 3000)
@@ -61,7 +58,7 @@ class SplashScreenActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateDraws(){
+    private fun updateDraws() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retrofit.updateDraws().enqueue(object : Callback<List<DrawUpdateModel>?> {
             override fun onResponse(
@@ -91,12 +88,12 @@ class SplashScreenActivity : AppCompatActivity() {
         })
     }
 
-    private fun updateQuota(){
+    private fun updateQuota() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retrofit.updateQuota().enqueue(object : Callback<List<QuotaUpdateModel>?> {
             override fun onResponse(
                 call: Call<List<QuotaUpdateModel>?>,
-                response:  Response<List<QuotaUpdateModel>?>
+                response: Response<List<QuotaUpdateModel>?>
             ) {
                 val list: List<QuotaUpdateModel?>?
                 list = response.body()

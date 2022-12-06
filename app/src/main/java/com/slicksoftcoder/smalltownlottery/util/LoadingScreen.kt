@@ -9,7 +9,7 @@ import android.widget.TextView
 import com.slicksoftcoder.smalltownlottery.R
 
 object LoadingScreen {
-    private var dialog: Dialog? = null //obj
+    private var dialog: Dialog? = null // obj
     fun displayLoadingWithText(context: Context?, text: String?, cancelable: Boolean) { // function -- context(parent (reference))
         dialog = Dialog(context!!)
         dialog!!.requestWindowFeature(Window.FEATURE_NO_TITLE)

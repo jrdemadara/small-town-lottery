@@ -2,24 +2,20 @@ package com.slicksoftcoder.smalltownlottery.features.userprofile
 
 import android.app.Dialog
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
-import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Switch
 import android.widget.Toast
-import androidx.appcompat.widget.SwitchCompat
+import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
-import com.slicksoftcoder.smalltownlottery.features.history.HistoryActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
@@ -50,10 +46,10 @@ class UserProfileActivity : AppCompatActivity() {
         val isEnabled: Boolean = localDatabase.checkBiometric()
         switchEnableFingerprint.isChecked = isEnabled
         switchEnableFingerprint.setOnClickListener {
-            if (switchEnableFingerprint.isChecked){
+            if (switchEnableFingerprint.isChecked) {
                 switchEnableFingerprint.text = "Disable"
                 localDatabase.enableBiometric(1)
-            }else{
+            } else {
                 switchEnableFingerprint.text = "Enable"
                 localDatabase.enableBiometric(0)
             }
@@ -72,26 +68,26 @@ class UserProfileActivity : AppCompatActivity() {
             val editTextNewPassword: EditText = view.findViewById(R.id.editTextNewPassword)
             val editTextConfirmPassword: EditText = view.findViewById(R.id.editTextConfirmPassword)
             val buttonUpdate: Button = view.findViewById(R.id.buttonPasswordConfirm)
-            if (onlineStatus == 1){
+            if (onlineStatus == 1) {
                 dialog.show()
                 buttonUpdate.setOnClickListener {
-                val oldPassword = localDatabase.retrievePassword()
+                    val oldPassword = localDatabase.retrievePassword()
                     val agent = localDatabase.retrieveAgent()
-                    if (editTextOldPassword.text.toString() !== "" && editTextNewPassword.text.toString() !== "" && editTextConfirmPassword.text.toString() !== ""){
-                        if (editTextOldPassword.text.toString() == oldPassword){
-                            if (editTextNewPassword.text.toString() == editTextConfirmPassword.text.toString()){
+                    if (editTextOldPassword.text.toString() !== "" && editTextNewPassword.text.toString() !== "" && editTextConfirmPassword.text.toString() !== "") {
+                        if (editTextOldPassword.text.toString() == oldPassword) {
+                            if (editTextNewPassword.text.toString() == editTextConfirmPassword.text.toString()) {
                                 updatePassword(editTextConfirmPassword.text.toString(), agent, dialog)
-                            }else{
+                            } else {
                                 Toast.makeText(applicationContext, "Confirm password don't match.", Toast.LENGTH_SHORT).show()
                             }
-                        }else{
+                        } else {
                             Toast.makeText(applicationContext, "Old password don't match.", Toast.LENGTH_SHORT).show()
                         }
-                    }else{
+                    } else {
                         Toast.makeText(applicationContext, "Please complete the required fields.", Toast.LENGTH_SHORT).show()
                     }
                 }
-            }else{
+            } else {
                 Toast.makeText(applicationContext, "Please connect to internet and try again.", Toast.LENGTH_SHORT).show()
             }
         }
@@ -114,14 +110,14 @@ class UserProfileActivity : AppCompatActivity() {
         }
     }
 
-    private fun updatePassword(password: String, agent: String, dialog: Dialog){
+    private fun updatePassword(password: String, agent: String, dialog: Dialog) {
         val retIn = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retIn.updatePassword(password, agent).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.code() == 200) {
                     Toast.makeText(applicationContext, "Password has been updated.", Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
-                }else{
+                } else {
                     Toast.makeText(applicationContext, "Something went wrong, Please contact developer.", Toast.LENGTH_SHORT).show()
                 }
             }

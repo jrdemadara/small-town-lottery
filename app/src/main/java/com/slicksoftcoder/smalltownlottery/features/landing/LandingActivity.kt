@@ -18,7 +18,6 @@ import com.khairo.escposprinter.textparser.PrinterTextParserImg
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.features.authenticate.AuthenticateActivity
 
-
 class LandingActivity : AppCompatActivity() {
     private lateinit var buttonGetStarted: Button
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,18 +39,17 @@ class LandingActivity : AppCompatActivity() {
         Manifest.permission.BLUETOOTH_PRIVILEGED
     )
 
-
     private fun checkPermissions() {
         val permission1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
         val permission2 = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
         if (permission1 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, PERMISSION, 1)
-        }else if (permission2 != PackageManager.PERMISSION_GRANTED){
+        } else if (permission2 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, PERMISSION, 1)
         }
     }
 
-    private fun printReceipt(){
+    private fun printReceipt() {
         val bluetoothManager = applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
         if (!bluetoothManager.adapter.isEnabled) {
@@ -62,12 +60,17 @@ class LandingActivity : AppCompatActivity() {
             checkPermissions()
             val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
             printer
-                .printFormattedText("[C]<img>${
-                    PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
-                        android.R.drawable.ic_media_play, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
+                .printFormattedText(
+                    "[C]<img>${
+                    PrinterTextParserImg.bitmapToHexadecimalString(
+                        printer,
+                        this.applicationContext.resources.getDrawableForDensity(
+                            android.R.drawable.ic_media_play,
+                            DisplayMetrics.DENSITY_MEDIUM
+                        )
+                    )}</img>\n" +
                         "[C]Printer is ready!\n".trimIndent()
                 )
         }
-
     }
 }

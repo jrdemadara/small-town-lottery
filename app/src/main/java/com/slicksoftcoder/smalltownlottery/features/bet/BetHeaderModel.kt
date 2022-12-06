@@ -7,5 +7,5 @@ data class BetHeaderModel(
     val transactionCode: String,
     val totalAmount: String,
     val datePrinted: String,
-    val isVoid: String,
+    val isVoid: String
 )

@@ -49,7 +49,6 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.properties.Delegates
 
-
 class BetActivity : AppCompatActivity() {
     private lateinit var localDatabase: LocalDatabase
     private lateinit var sharedPreferences: SharedPreferences
@@ -97,16 +96,16 @@ class BetActivity : AppCompatActivity() {
         winAmount = 0.0
         drawTime = ""
 
-        //* Check Internet Connection
+        // * Check Internet Connection
         val connection = this.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connection.activeNetworkInfo
-        if (activeNetwork != null){
+        if (activeNetwork != null) {
             imageViewStatus.setImageResource(R.drawable.online)
-        }else{
+        } else {
             imageViewStatus.setImageResource(R.drawable.offline)
         }
         checkConnection(this) { connectionState ->
-            when(connectionState) {
+            when (connectionState) {
                 ConnectionState.CONNECTED -> {
                     imageViewStatus.setImageResource(R.drawable.online)
                 }
@@ -125,204 +124,194 @@ class BetActivity : AppCompatActivity() {
             selectDrawTime()
         }
 
-        editTextBetNumber.addTextChangedListener(object : TextWatcher{
+        editTextBetNumber.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (editTextBetNumber.text.length == 3){
+                if (editTextBetNumber.text.length == 3) {
                     editTextBetAmount.requestFocus()
                 }
             }
             override fun afterTextChanged(s: Editable?) {}
-
         })
-
 
         val headerSerial: UUID = UUID.randomUUID()
         buttonBetAdd.setOnClickListener {
-                if (editTextBetNumber.text.isNotEmpty() && editTextBetAmount.text.isNotEmpty()){
-                    val dialog = Dialog(this)
-                    val view = layoutInflater.inflate(R.layout.bet_option_dialog, null)
-                    dialog.setCancelable(true)
-                    dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                    dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                    dialog.window?.setGravity(Gravity.CENTER)
-                    dialog.setContentView(view)
-                    dialog.show()
-                    val radioButtonRegular: RadioButton = view.findViewById(R.id.radioButtonBetRegular)
-                    val radioButtonRambolito: RadioButton = view.findViewById(R.id.radioButtonBetRambolito)
-                    val buttonConfirm: Button = view.findViewById(R.id.buttonBetConfirmType)
-                    val serial: UUID = UUID.randomUUID()
-                    var isRambolito: Int = 0
-                    val amount: Double = editTextBetAmount.text.toString().toDouble()
-                    radioButtonRegular.setOnClickListener {
-                        radioButtonRambolito.isChecked = false
-                        isRambolito = 0
-                    }
-                    radioButtonRambolito.setOnClickListener {
-                        radioButtonRegular.isChecked = false
-                        isRambolito = 1
-                    }
-
-                    buttonConfirm.setOnClickListener {
-                        if (radioButtonRegular.isChecked || radioButtonRambolito.isChecked){
-                            val totalBet = localDatabase.retrieveBetQuota(dateUtil.dateFormat(), drawTime, editTextBetNumber.text.toString())
-                            if (editTextBetAmount.text.toString().toInt() > quota!!.toInt()){
-                                resultStatus("Warning", "Bet amount should not be greater than $quota.", 0)
-                            }else{
-                                if (isRambolito == 0){
-                                    if (totalBet != "null"){
-                                        val bettableAmount = quota!!.toInt() - totalBet.toInt()
-                                        if (totalBet.toInt() >= quota!!.toInt()){
-                                            resultStatus("Warning", "Bet quota has been reach.", 0)
-                                        }else if (editTextBetAmount.text.toString().toInt() > bettableAmount){
-                                            resultStatus("Warning", "Only $bettableAmount pesos are available to reach the limit.", 0)
-                                        }else{
-                                            winAmount =   2750 * (amount/5)
-                                            /* Save Bet */
-                                            localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
-                                            val list = localDatabase.retrieveBetDetails(headerSerial.toString())
-                                            /* Retrieve Bet */
-                                            adapter?.addItems(list)
-                                            /* Update UI */
-                                            totalAmount += amount
-                                            textViewTotal.text = formatter.format(totalAmount).toString()+".00"
-                                            editTextBetNumber.setText("")
-                                            editTextBetAmount.setText("")
-                                            winAmount = 0.0
-                                            isRambolito = 0
-                                            resultStatus("Success", "Bet has been added.", 1)
-                                            dialog.dismiss()
-
-                                            if (isRambolito == 0){
-
-                                            }else{
-
-                                            }
-                                        }
-                                    }else{
-                                        winAmount =   2750 * (amount/5)
-                                        /* Save Bet */
-                                        localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
-                                        val list = localDatabase.retrieveBetDetails(headerSerial.toString())
-                                        /* Retrieve Bet */
-                                        adapter?.addItems(list)
-                                        /* Update UI */
-                                        totalAmount += amount
-                                        textViewTotal.text = formatter.format(totalAmount).toString()+".00"
-                                        editTextBetNumber.setText("")
-                                        editTextBetAmount.setText("")
-                                        winAmount = 0.0
-                                        isRambolito = 0
-                                        resultStatus("Success", "Bet has been added.", 1)
-                                        dialog.dismiss()
-                                    }
-                                }else{
-                                    if (amount >= 30){
-                                        winAmount =  2750 * (amount/30)
-                                        editTextBetAmount.setTextColor(Color.parseColor("#000000"))
-                                        /* Save Bet */
-                                        localDatabase.insertBetDetails(serial.toString(),headerSerial.toString(),editTextBetNumber.text.toString(),editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
-                                        val list = localDatabase.retrieveBetDetails(headerSerial.toString())
-                                        /* Retrieve Bet */
-                                        adapter?.addItems(list)
-                                        /* Update UI */
-                                        totalAmount += amount
-                                        textViewTotal.text = formatter.format(totalAmount).toString()+".00"
-                                        editTextBetNumber.setText("")
-                                        editTextBetAmount.setText("")
-                                        winAmount = 0.0
-                                        isRambolito = 0
-                                        resultStatus("Success", "Bet has been added.", 1)
-                                        dialog.dismiss()
-                                    }else{
-                                        resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
-                                        editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
-                                        dialog.dismiss()
-                                    }
-                                }
-
-                            }
-
-
-
-                        }else{
-                            resultStatus("Warning", "Please select type.", 0)
-                        }
-
-                    }
-                }else{
-                    resultStatus("Warning", "Please fill the required fields.", 0)
-                }
-
-            buttonBetAdd.text = "Add Bet"
-            showSoftKeyboard(editTextBetNumber)
-        }
-
-            adapter?.setOnClickItem {
+            if (editTextBetNumber.text.isNotEmpty() && editTextBetAmount.text.isNotEmpty()) {
                 val dialog = Dialog(this)
-                val view = layoutInflater.inflate(R.layout.bet_action_dialog, null)
+                val view = layoutInflater.inflate(R.layout.bet_option_dialog, null)
                 dialog.setCancelable(true)
                 dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                 dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
                 dialog.window?.setGravity(Gravity.CENTER)
                 dialog.setContentView(view)
                 dialog.show()
-                val radioButtonBetActionEdit: RadioButton = view.findViewById(R.id.radioButtonBetActionEdit)
-                val radioButtonBetActionDelete: RadioButton = view.findViewById(R.id.radioButtonBetActionDelete)
-                val buttonBetActionConfirm: Button = view.findViewById(R.id.buttonBetActionConfirm)
-                var action = ""
-                val serial = it.serial
-                val betNumber = it.betNumber
-                val amount = it.amount
-                radioButtonBetActionEdit.setOnClickListener {
-                    action = "edit"
+                val radioButtonRegular: RadioButton = view.findViewById(R.id.radioButtonBetRegular)
+                val radioButtonRambolito: RadioButton = view.findViewById(R.id.radioButtonBetRambolito)
+                val buttonConfirm: Button = view.findViewById(R.id.buttonBetConfirmType)
+                val serial: UUID = UUID.randomUUID()
+                var isRambolito: Int = 0
+                val amount: Double = editTextBetAmount.text.toString().toDouble()
+                radioButtonRegular.setOnClickListener {
+                    radioButtonRambolito.isChecked = false
+                    isRambolito = 0
                 }
-                radioButtonBetActionDelete.setOnClickListener {
-                    action = "delete"
+                radioButtonRambolito.setOnClickListener {
+                    radioButtonRegular.isChecked = false
+                    isRambolito = 1
                 }
-                buttonBetActionConfirm.setOnClickListener{
-                    when (action) {
-                        "edit" -> {
-                            editTextBetNumber.setText(betNumber)
-                            editTextBetAmount.setText(amount)
-                            buttonBetAdd.text = "Edit Bet"
-                            localDatabase.deleteBetDetail(serial)
-                            totalAmount -= amount.toDouble()
-                            textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
-                            dialog.dismiss()
+
+                buttonConfirm.setOnClickListener {
+                    if (radioButtonRegular.isChecked || radioButtonRambolito.isChecked) {
+                        val totalBet = localDatabase.retrieveBetQuota(dateUtil.dateFormat(), drawTime, editTextBetNumber.text.toString())
+                        if (editTextBetAmount.text.toString().toInt() > quota!!.toInt()) {
+                            resultStatus("Warning", "Bet amount should not be greater than $quota.", 0)
+                        } else {
+                            if (isRambolito == 0) {
+                                if (totalBet != "null") {
+                                    val bettableAmount = quota!!.toInt() - totalBet.toInt()
+                                    if (totalBet.toInt() >= quota!!.toInt()) {
+                                        resultStatus("Warning", "Bet quota has been reach.", 0)
+                                    } else if (editTextBetAmount.text.toString().toInt() > bettableAmount) {
+                                        resultStatus("Warning", "Only $bettableAmount pesos are available to reach the limit.", 0)
+                                    } else {
+                                        winAmount = 2750 * (amount / 5)
+                                        /* Save Bet */
+                                        localDatabase.insertBetDetails(serial.toString(), headerSerial.toString(), editTextBetNumber.text.toString(), editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
+                                        val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                                        /* Retrieve Bet */
+                                        adapter?.addItems(list)
+                                        /* Update UI */
+                                        totalAmount += amount
+                                        textViewTotal.text = formatter.format(totalAmount).toString() + ".00"
+                                        editTextBetNumber.setText("")
+                                        editTextBetAmount.setText("")
+                                        winAmount = 0.0
+                                        isRambolito = 0
+                                        resultStatus("Success", "Bet has been added.", 1)
+                                        dialog.dismiss()
+
+                                        if (isRambolito == 0) {
+                                        } else {
+                                        }
+                                    }
+                                } else {
+                                    winAmount = 2750 * (amount / 5)
+                                    /* Save Bet */
+                                    localDatabase.insertBetDetails(serial.toString(), headerSerial.toString(), editTextBetNumber.text.toString(), editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
+                                    val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                                    /* Retrieve Bet */
+                                    adapter?.addItems(list)
+                                    /* Update UI */
+                                    totalAmount += amount
+                                    textViewTotal.text = formatter.format(totalAmount).toString() + ".00"
+                                    editTextBetNumber.setText("")
+                                    editTextBetAmount.setText("")
+                                    winAmount = 0.0
+                                    isRambolito = 0
+                                    resultStatus("Success", "Bet has been added.", 1)
+                                    dialog.dismiss()
+                                }
+                            } else {
+                                if (amount >= 30) {
+                                    winAmount = 2750 * (amount / 30)
+                                    editTextBetAmount.setTextColor(Color.parseColor("#000000"))
+                                    /* Save Bet */
+                                    localDatabase.insertBetDetails(serial.toString(), headerSerial.toString(), editTextBetNumber.text.toString(), editTextBetAmount.text.toString(), winAmount.toString(), isRambolito.toString())
+                                    val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                                    /* Retrieve Bet */
+                                    adapter?.addItems(list)
+                                    /* Update UI */
+                                    totalAmount += amount
+                                    textViewTotal.text = formatter.format(totalAmount).toString() + ".00"
+                                    editTextBetNumber.setText("")
+                                    editTextBetAmount.setText("")
+                                    winAmount = 0.0
+                                    isRambolito = 0
+                                    resultStatus("Success", "Bet has been added.", 1)
+                                    dialog.dismiss()
+                                } else {
+                                    resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
+                                    editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
+                                    dialog.dismiss()
+                                }
+                            }
                         }
-                        "delete" -> {
-                            localDatabase.deleteBetDetail(serial)
-                            val list = localDatabase.retrieveBetDetails(headerSerial.toString())
-                            adapter?.addItems(list)
-                            totalAmount -= amount.toDouble()
-                            textViewTotal.text =  formatter.format(totalAmount).toString()+".00"
-                            dialog.dismiss()
-                        }
-                        else -> {
-                            dialog.dismiss()
-                        }
+                    } else {
+                        resultStatus("Warning", "Please select type.", 0)
+                    }
+                }
+            } else {
+                resultStatus("Warning", "Please fill the required fields.", 0)
+            }
+
+            buttonBetAdd.text = "Add Bet"
+            showSoftKeyboard(editTextBetNumber)
+        }
+
+        adapter?.setOnClickItem {
+            val dialog = Dialog(this)
+            val view = layoutInflater.inflate(R.layout.bet_action_dialog, null)
+            dialog.setCancelable(true)
+            dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog.window?.setGravity(Gravity.CENTER)
+            dialog.setContentView(view)
+            dialog.show()
+            val radioButtonBetActionEdit: RadioButton = view.findViewById(R.id.radioButtonBetActionEdit)
+            val radioButtonBetActionDelete: RadioButton = view.findViewById(R.id.radioButtonBetActionDelete)
+            val buttonBetActionConfirm: Button = view.findViewById(R.id.buttonBetActionConfirm)
+            var action = ""
+            val serial = it.serial
+            val betNumber = it.betNumber
+            val amount = it.amount
+            radioButtonBetActionEdit.setOnClickListener {
+                action = "edit"
+            }
+            radioButtonBetActionDelete.setOnClickListener {
+                action = "delete"
+            }
+            buttonBetActionConfirm.setOnClickListener {
+                when (action) {
+                    "edit" -> {
+                        editTextBetNumber.setText(betNumber)
+                        editTextBetAmount.setText(amount)
+                        buttonBetAdd.text = "Edit Bet"
+                        localDatabase.deleteBetDetail(serial)
+                        totalAmount -= amount.toDouble()
+                        textViewTotal.text = formatter.format(totalAmount).toString() + ".00"
+                        dialog.dismiss()
+                    }
+                    "delete" -> {
+                        localDatabase.deleteBetDetail(serial)
+                        val list = localDatabase.retrieveBetDetails(headerSerial.toString())
+                        adapter?.addItems(list)
+                        totalAmount -= amount.toDouble()
+                        textViewTotal.text = formatter.format(totalAmount).toString() + ".00"
+                        dialog.dismiss()
+                    }
+                    else -> {
+                        dialog.dismiss()
                     }
                 }
             }
-
+        }
 
         buttonBetConfirm.setOnClickListener {
-            if (totalAmount <= 0){
+            if (totalAmount <= 0) {
                 resultStatus("Warning", "Please place a bet first.", 0)
-            }else{
+            } else {
                 val builder = AlertDialog.Builder(this)
                 builder.setTitle("Confirm")
                 builder.setMessage("Do you wish to continue?")
                 builder.setIcon(R.drawable.ic_round_check_circle_24)
-                builder.setPositiveButton("Yes"){ dialogInterface, _ ->
+                builder.setPositiveButton("Yes") { dialogInterface, _ ->
                     val agent = localDatabase.retrieveAgent()
                     val draw = localDatabase.retrieveDrawSerial(drawTime)
-                    val transCode: String = "B"+dateUtil.dateShort()+dateUtil.currentTimeComplete()+ agent.take(2)
+                    val transCode: String = "B" + dateUtil.dateShort() + dateUtil.currentTimeComplete() + agent.take(2)
                         .uppercase(Locale.ROOT)
-                    val transCodeDash = transCode.replace("-","")
-                    val transCodeCol = transCodeDash.replace(":","")
+                    val transCodeDash = transCode.replace("-", "")
+                    val transCodeCol = transCodeDash.replace(":", "")
                     localDatabase.insertBetHeader(
                         headerSerial.toString(),
                         agent,
@@ -341,36 +330,33 @@ class BetActivity : AppCompatActivity() {
                         dialogInterface.dismiss()
                     }, 2000)
                 }
-                builder.setNeutralButton("Cancel"){ dialogInterface, _ ->
+                builder.setNeutralButton("Cancel") { dialogInterface, _ ->
                     dialogInterface.dismiss()
                 }
                 val alertDialog: AlertDialog = builder.create()
                 alertDialog.setCancelable(false)
                 alertDialog.show()
             }
-
-
-
         }
         buttonBetCancel.setOnClickListener {
-            if (totalAmount <= 0){
+            if (totalAmount <= 0) {
                 localDatabase.deleteBet(headerSerial.toString())
-                val intent = Intent(this, DashboardActivity ::class.java)
+                val intent = Intent(this, DashboardActivity::class.java)
                 startActivity(intent)
                 finish()
-            }else{
+            } else {
                 val builder = AlertDialog.Builder(this)
                 builder.setTitle("Cancel")
                 builder.setMessage("Are you sure you want to cancel?")
                 builder.setIcon(R.drawable.ic_round_cancel_24)
-                builder.setPositiveButton("Yes"){ dialogInterface, _ ->
+                builder.setPositiveButton("Yes") { dialogInterface, _ ->
                     localDatabase.deleteBet(headerSerial.toString())
-                    val intent = Intent(this, DashboardActivity ::class.java)
+                    val intent = Intent(this, DashboardActivity::class.java)
                     startActivity(intent)
                     finish()
                     dialogInterface.dismiss()
                 }
-                builder.setNeutralButton("No"){ dialogInterface, _ ->
+                builder.setNeutralButton("No") { dialogInterface, _ ->
                     dialogInterface.dismiss()
                 }
                 val alertDialog: AlertDialog = builder.create()
@@ -387,7 +373,7 @@ class BetActivity : AppCompatActivity() {
         }
     }
 
-    private fun selectDrawTime(){
+    private fun selectDrawTime() {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.draw_option_dialog, null)
         dialog.setCancelable(false)
@@ -405,39 +391,33 @@ class BetActivity : AppCompatActivity() {
         val cutoff2 = localDatabase.retrieveDrawCutOff("2 PM")
         val cutoff5 = localDatabase.retrieveDrawCutOff("5 PM")
         val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
-        if (currentTime >= cutoff2){
-            radioButton2pm.isChecked = false
+        if (currentTime >= cutoff2) {
             radioButton2pm.isEnabled = false
             drawTime = "5 PM"
             draw = "5 PM"
-        }else{
-            radioButton2pm.isChecked = true
+        } else {
             drawTime = "2 PM"
             draw = "2 PM"
         }
-        if (currentTime >= cutoff5){
-            radioButton9pm.isChecked = true
+        if (currentTime >= cutoff5) {
             radioButton9pm.isEnabled = true
             radioButton5pm.isEnabled = false
             drawTime = "9 PM"
             draw = "9 PM"
-        }else{
-            radioButton5pm.isChecked = true
+        } else {
             radioButton5pm.isEnabled = true
             drawTime = "5 PM"
             draw = "5 PM"
         }
-        if (currentTime >= cutoff9){
+        if (currentTime >= cutoff9) {
             resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
             dialog.dismiss()
             Handler(Looper.getMainLooper()).postDelayed({
-                val intent = Intent(this, DashboardActivity ::class.java)
+                val intent = Intent(this, DashboardActivity::class.java)
                 startActivity(intent)
                 finish()
             }, 3000)
-
-        }else{
-            radioButton9pm.isChecked = true
+        } else {
             radioButton9pm.isEnabled = true
             drawTime = "9 PM"
             draw = "9 PM"
@@ -462,17 +442,16 @@ class BetActivity : AppCompatActivity() {
             draw = "9 PM"
         }
         radioButtonConfirm.setOnClickListener {
-            if (draw?.isNotEmpty() == true){
+            if (draw?.isNotEmpty() == true) {
                 textViewTime.text = draw
                 dialog.dismiss()
-            }else{
+            } else {
                 resultStatus("No Draw Time", "Please select draw time", 0)
             }
-
         }
     }
 
-    private fun showSuccess(){
+    private fun showSuccess() {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.success_dialog, null)
         dialog.setCancelable(true)
@@ -483,19 +462,18 @@ class BetActivity : AppCompatActivity() {
         dialog.show()
         Handler(Looper.getMainLooper()).postDelayed({
             dialog.dismiss()
-            val intent = Intent(this, DashboardActivity ::class.java)
+            val intent = Intent(this, DashboardActivity::class.java)
             startActivity(intent)
             finish()
         }, 1000)
-
     }
 
-    private fun transmitBetHeader(headerSerial: String){
+    private fun transmitBetHeader(headerSerial: String) {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         val data = localDatabase.transmitBetHeader(headerSerial)
         val list: ArrayList<BetHeaderTransmitModel> = data
-        if (list.size > 0){
-            list.forEach{
+        if (list.size > 0) {
+            list.forEach {
                 val filter = HashMap<String, String>()
                 filter["serial"] = it.serial
                 filter["agent"] = it.agent
@@ -511,23 +489,22 @@ class BetActivity : AppCompatActivity() {
                 retrofit.transmitBetHeaders(filter).enqueue(object : Callback<ResponseBody?> {
                     override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
                         if (response.code() == 200) {
-                            localDatabase.updateBetHeaderTransmitted(headerSerial,dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 1)
+                            localDatabase.updateBetHeaderTransmitted(headerSerial, dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 1)
                         }
                     }
 
                     override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
-
                     }
                 })
             }
         }
     }
-    private fun transmitBetDetails(headerSerial: String){
+    private fun transmitBetDetails(headerSerial: String) {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         val data = localDatabase.transmitBetDetail(headerSerial)
         val list: ArrayList<BetDetailsTransmitModel> = data
-        if (list.size > 0){
-            list.forEach{
+        if (list.size > 0) {
+            list.forEach {
                 val filter = HashMap<String, String>()
                 filter["serial"] = it.serial
                 filter["headerserial"] = it.headerSerial
@@ -538,12 +515,11 @@ class BetActivity : AppCompatActivity() {
                 retrofit.transmitBetDetails(filter).enqueue(object : Callback<ResponseBody?> {
                     override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
                         if (response.code() == 200) {
-                            localDatabase.updateBetDetailTransmitted(it.serial,dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 1)
+                            localDatabase.updateBetDetailTransmitted(it.serial, dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 1)
                         }
                     }
 
                     override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
-
                     }
                 })
             }
@@ -557,18 +533,17 @@ class BetActivity : AppCompatActivity() {
         Manifest.permission.BLUETOOTH_PRIVILEGED
     )
 
-
     private fun checkPermissions() {
         val permission1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
         val permission2 = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
         if (permission1 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, PERMISSION, 1)
-        }else if (permission2 != PackageManager.PERMISSION_GRANTED){
+        } else if (permission2 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, PERMISSION, 1)
         }
     }
 
-    private fun printReceipt(headerSerial: String , drawDate: String, drawTime:String, betTime: String, transCode: String, totalAmount: String){
+    private fun printReceipt(headerSerial: String, drawDate: String, drawTime: String, betTime: String, transCode: String, totalAmount: String) {
         val bluetoothManager = applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
         if (!bluetoothManager.adapter.isEnabled) {
@@ -582,13 +557,19 @@ class BetActivity : AppCompatActivity() {
             var bets = ""
 
             list.forEach {
-                bets += "[L]${if (it.isRambolito == "0"){it.betNumber}else{it.betNumber+"-R"} }[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
+                bets += "[L]${if (it.isRambolito == "0"){it.betNumber}else {it.betNumber + "-R"} }[C]${formatter.format(it.win.toDouble())}[R]${it.amount + ".00"}\n"
             }
 
             val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
             printer
-                .printFormattedText("[C]<img>${PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
-                    R.drawable.recieptlogo, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
+                .printFormattedText(
+                    "[C]<img>${PrinterTextParserImg.bitmapToHexadecimalString(
+                        printer,
+                        this.applicationContext.resources.getDrawableForDensity(
+                            R.drawable.recieptlogo,
+                            DisplayMetrics.DENSITY_MEDIUM
+                        )
+                    )}</img>\n" +
                         "[L]\n" +
                         "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
                         "[L]<b>Area:</b>[R]<b>$location</b>\n" +
@@ -610,7 +591,7 @@ class BetActivity : AppCompatActivity() {
         }
     }
 
-    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){
+    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?) {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
         dialog.setCancelable(true)
@@ -625,9 +606,9 @@ class BetActivity : AppCompatActivity() {
         val imageView: ImageView = view.findViewById(R.id.imageViewToast)
         textViewTitle.text = title
         textViewDetails.text = detail
-        if (isSuccess == 0){
+        if (isSuccess == 0) {
             imageView.setImageResource(R.drawable.exclamation)
-        }else{
+        } else {
             imageView.setImageResource(R.drawable.ic_round_check_circle_24)
         }
 
@@ -635,6 +616,4 @@ class BetActivity : AppCompatActivity() {
             dialog.dismiss()
         }, 3000)
     }
-
-
 }

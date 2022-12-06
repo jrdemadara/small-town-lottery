@@ -2,17 +2,14 @@ package com.slicksoftcoder.smalltownlottery.features.transmit
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
 import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
-import com.slicksoftcoder.smalltownlottery.common.model.DrawUpdateModel
 import com.slicksoftcoder.smalltownlottery.common.model.ResultUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
@@ -45,8 +42,8 @@ class TransmitActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_transmit)
         localDatabase = LocalDatabase(this)
-        imageView =findViewById(R.id.imageViewUpload)
-        imageViewStatus =findViewById(R.id.imageViewTransmitStatus)
+        imageView = findViewById(R.id.imageViewUpload)
+        imageViewStatus = findViewById(R.id.imageViewTransmitStatus)
         progressBar = findViewById(R.id.progressBar)
         progressText = findViewById(R.id.textviewProgress)
         textViewWait = findViewById(R.id.textViewWait)
@@ -69,38 +66,37 @@ class TransmitActivity : AppCompatActivity() {
         uploadBetDetails()
         updateResults()
 
-        buttonClose.setOnClickListener{
-            if (statusHeader == 1 && statusDetails == 1){
+        buttonClose.setOnClickListener {
+            if (statusHeader == 1 && statusDetails == 1) {
                 updateProgressBar()
                 uploadBetHeader()
                 uploadBetDetails()
-            }else{
-                val intent = Intent(this, DashboardActivity ::class.java)
+            } else {
+                val intent = Intent(this, DashboardActivity::class.java)
                 startActivity(intent)
                 finish()
             }
 
-            if (statusHeader == 0){
-                val intent = Intent(this, DashboardActivity ::class.java)
+            if (statusHeader == 0) {
+                val intent = Intent(this, DashboardActivity::class.java)
                 startActivity(intent)
                 finish()
-            }else{
+            } else {
                 updateProgressBar()
                 uploadBetHeader()
             }
-            if (statusDetails == 0){
-                val intent = Intent(this, DashboardActivity ::class.java)
+            if (statusDetails == 0) {
+                val intent = Intent(this, DashboardActivity::class.java)
                 startActivity(intent)
                 finish()
-            }else{
+            } else {
                 updateProgressBar()
                 uploadBetDetails()
             }
-
         }
     }
 
-    private fun updateResults(){
+    private fun updateResults() {
         localDatabase.truncateResults()
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retrofit.updateResults().enqueue(object : Callback<List<ResultUpdateModel>?> {
@@ -126,17 +122,17 @@ class TransmitActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<ResultUpdateModel>?>, t: Throwable) {
-                //Toast.makeText(applicationContext, "", Toast.LENGTH_LONG).show()
+                // Toast.makeText(applicationContext, "", Toast.LENGTH_LONG).show()
             }
         })
     }
 
-    private fun uploadBetHeader(){
+    private fun uploadBetHeader() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         val data = localDatabase.transmitBetHeaders()
         val list: ArrayList<BetHeaderTransmitModel> = data
-        if (list.size > 0){
-            list.forEach{
+        if (list.size > 0) {
+            list.forEach {
                 val filter = HashMap<String, String>()
                 filter["serial"] = it.serial
                 filter["agent"] = it.agent
@@ -175,10 +171,9 @@ class TransmitActivity : AppCompatActivity() {
                         buttonClose.text = "Try Again"
                         statusHeader = 1
                     }
-
                 })
             }
-        }else{
+        } else {
             imageView.setImageResource(R.drawable.ic_empty)
             progressText.text = "Empty"
             textViewTagline.setTextColor(ContextCompat.getColor(applicationContext, R.color.pink_500))
@@ -187,17 +182,16 @@ class TransmitActivity : AppCompatActivity() {
             buttonClose.isVisible = true
             statusHeader = 0
         }
-
     }
 
-    private fun uploadBetDetails(){
+    private fun uploadBetDetails() {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         val data = localDatabase.transmitBetDetails()
         val list: ArrayList<BetDetailsTransmitModel> = data
         val size = list.size
-        if (list.size > 0){
+        if (list.size > 0) {
             val progressStep: Double = (100 / size).toDouble()
-            list.forEach{
+            list.forEach {
                 val filter = HashMap<String, String>()
                 filter["serial"] = it.serial
                 filter["headerserial"] = it.headerSerial
@@ -209,12 +203,12 @@ class TransmitActivity : AppCompatActivity() {
                     @SuppressLint("SetTextI18n")
                     override fun onResponse(call: Call<ResponseBody?>, response: Response<ResponseBody?>) {
                         if (response.code() == 200) {
-                            localDatabase.updateBetDetailTransmitted(it.serial,dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 1)
+                            localDatabase.updateBetDetailTransmitted(it.serial, dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 1)
                             if (uploadProgress <= 90) {
                                 uploadProgress += progressStep
                                 updateProgressBar()
                             }
-                            if (uploadProgress > 89){
+                            if (uploadProgress > 89) {
                                 uploadProgress = 100.00
                                 updateProgressBar()
                                 buttonClose.isVisible = true
@@ -245,7 +239,7 @@ class TransmitActivity : AppCompatActivity() {
                     }
                 })
             }
-        }else{
+        } else {
             imageView.setImageResource(R.drawable.ic_empty)
             progressText.text = "Empty"
             textViewTagline.setTextColor(ContextCompat.getColor(applicationContext, R.color.pink_500))
@@ -254,7 +248,6 @@ class TransmitActivity : AppCompatActivity() {
             buttonClose.isVisible = true
             statusDetails = 0
         }
-
     }
 
     private fun updateProgressBar() {
@@ -262,10 +255,9 @@ class TransmitActivity : AppCompatActivity() {
         progressText.text = "$uploadProgress%"
     }
 
-    private fun switchActivity(){
-        val intent = Intent(this, DashboardActivity ::class.java)
+    private fun switchActivity() {
+        val intent = Intent(this, DashboardActivity::class.java)
         startActivity(intent)
         finish()
     }
-
 }

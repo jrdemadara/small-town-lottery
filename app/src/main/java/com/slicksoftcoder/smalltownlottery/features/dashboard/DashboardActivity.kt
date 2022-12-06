@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
@@ -46,7 +45,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
-
 
 class DashboardActivity : AppCompatActivity() {
     private lateinit var bottomNavigationView: BottomNavigationView
@@ -115,22 +113,22 @@ class DashboardActivity : AppCompatActivity() {
                 logoutUser()
             } else if (item.itemId == R.id.profile) {
                 userProfile()
-            } else if (item.itemId == R.id.dashqr){
+            } else if (item.itemId == R.id.dashqr) {
                 barcodeLauncher.launch(ScanOptions())
             }
             false
         }
 
-        //* Check Internet Connection
+        // * Check Internet Connection
         val connection = this.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connection.activeNetworkInfo
-        if (activeNetwork != null){
+        if (activeNetwork != null) {
             imageViewStatus.setImageResource(R.drawable.online)
-        }else{
+        } else {
             imageViewStatus.setImageResource(R.drawable.offline)
         }
         checkConnection(this) { connectionState ->
-            when(connectionState) {
+            when (connectionState) {
                 ConnectionState.CONNECTED -> {
                     imageViewStatus.setImageResource(R.drawable.online)
                 }
@@ -143,18 +141,18 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
 
-        lifecycleScope.launch(Dispatchers.IO){
+        lifecycleScope.launch(Dispatchers.IO) {
             val pnl = async { localDatabase.retrievePNL(dateUtil.dateFormat()) }
             val result2pm = async { localDatabase.retrieve2pmResult(dateUtil.dateFormat()) }
             val result5pm = async { localDatabase.retrieve5pmResult(dateUtil.dateFormat()) }
             val result9pm = async { localDatabase.retrieve9pmResult(dateUtil.dateFormat()) }
-            withContext(Dispatchers.Main){
+            withContext(Dispatchers.Main) {
                 retrievePNLOffline(pnl.await())
                 retrieve2pmResultOffline(result2pm.await())
                 retrieve5pmResultOffline(result5pm.await())
                 retrieve9pmResultOffline(result9pm.await())
             }
-            withContext(Dispatchers.Main){
+            withContext(Dispatchers.Main) {
                 retrievePNLOffline(pnl.await())
                 retrieve2pmResultOffline(result2pm.await())
                 retrieve5pmResultOffline(result5pm.await())
@@ -177,23 +175,21 @@ class DashboardActivity : AppCompatActivity() {
             resultStatus("Scanner Cancelled", "QR Scanner has been cancelled", 0)
         } else {
             val isValid: Boolean = localDatabase.checkBetValidity(result.contents)
-            if (isValid){
+            if (isValid) {
                 val isClaimed: Boolean = localDatabase.checkClaim(result.contents)
-                if (isClaimed){
+                if (isClaimed) {
                     resultStatus("Already Claimed", "Transaction Code ${result.contents} is already claimed", 0)
-                }else{
+                } else {
                     localDatabase.claimBet(result.contents)
                     showSuccess()
                 }
-            }else{
+            } else {
                 resultStatus("Invalid Receipt", "Transaction Code ${result.contents} is invalid", 0)
             }
-
-
         }
     }
 
-    private fun showSuccess(){
+    private fun showSuccess() {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.success_dialog, null)
         dialog.setCancelable(true)
@@ -205,7 +201,6 @@ class DashboardActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             dialog.dismiss()
         }, 1000)
-
     }
 
     private fun cardView2PM() {
@@ -237,16 +232,16 @@ class DashboardActivity : AppCompatActivity() {
                 textViewTotalHit.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
                 textViewPNL.text = formatter.format(it.pnl.toDouble()).toString() + ".00"
                 textViewWinner.text = it.win
-                textViewResult.text = "#"+it.result
+                textViewResult.text = "#" + it.result
                 textViewDrawTime.text = "DETAILED 2 PM RESULT"
-                if (it.win.toInt() > 1){
+                if (it.win.toInt() > 1) {
                     textViewDialogWinner.text = "WINNERS"
-                }else{
+                } else {
                     textViewDialogWinner.text = "WINNER"
                 }
-                if (it.pnl.toDouble() <= 0){
+                if (it.pnl.toDouble() <= 0) {
                     textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
-                }else{
+                } else {
                     textViewPNL.setTextColor(Color.parseColor("#41B134"))
                 }
             }
@@ -282,16 +277,16 @@ class DashboardActivity : AppCompatActivity() {
                 textViewTotalHit.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
                 textViewPNL.text = formatter.format(it.pnl.toDouble()).toString() + ".00"
                 textViewWinner.text = it.win
-                textViewResult.text = "#"+it.result
+                textViewResult.text = "#" + it.result
                 textViewDrawTime.text = "DETAILED 5 PM RESULT"
-                if (it.win.toInt() > 1){
+                if (it.win.toInt() > 1) {
                     textViewDialogWinner.text = "WINNERS"
-                }else{
+                } else {
                     textViewDialogWinner.text = "WINNER"
                 }
-                if (it.pnl.toDouble() <= 0){
+                if (it.pnl.toDouble() <= 0) {
                     textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
-                }else{
+                } else {
                     textViewPNL.setTextColor(Color.parseColor("#41B134"))
                 }
             }
@@ -327,16 +322,16 @@ class DashboardActivity : AppCompatActivity() {
                 textViewTotalHit.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
                 textViewPNL.text = formatter.format(it.pnl.toDouble()).toString() + ".00"
                 textViewWinner.text = it.win
-                textViewResult.text = "#"+it.result
+                textViewResult.text = "#" + it.result
                 textViewDrawTime.text = "DETAILED 9 PM RESULT"
-                if (it.win.toInt() > 1){
+                if (it.win.toInt() > 1) {
                     textViewDialogWinner.text = "WINNERS"
-                }else{
+                } else {
                     textViewDialogWinner.text = "WINNER"
                 }
-                if (it.pnl.toDouble() <= 0){
+                if (it.pnl.toDouble() <= 0) {
                     textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
-                }else{
+                } else {
                     textViewPNL.setTextColor(Color.parseColor("#41B134"))
                 }
             }
@@ -347,9 +342,9 @@ class DashboardActivity : AppCompatActivity() {
         imageViewBet.setOnClickListener {
             val currentTime = dateUtil.currentTimeComplete()
             val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
-            if (currentTime >= cutoff9){
+            if (currentTime >= cutoff9) {
                 resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
-            }else{
+            } else {
                 val intent = Intent(this, BetActivity::class.java)
                 startActivity(intent)
                 finish()
@@ -372,9 +367,9 @@ class DashboardActivity : AppCompatActivity() {
                 R.id.bet -> {
                     val currentTime = dateUtil.currentTimeComplete()
                     val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
-                    if (currentTime >= cutoff9){
+                    if (currentTime >= cutoff9) {
                         resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
-                    }else{
+                    } else {
                         val intent = Intent(this, BetActivity::class.java)
                         startActivity(intent)
                         finish()
@@ -409,15 +404,15 @@ class DashboardActivity : AppCompatActivity() {
             totalHit += it.totalHit.toDouble()
             pnl += it.pnl.toDouble()
         }
-        if (pnl < 0){
+        if (pnl < 0) {
             textViewPNL.setTextColor(Color.parseColor("#E20A2A"))
-        }else{
+        } else {
             textViewPNL.setTextColor(Color.parseColor("#41B134"))
         }
         delay(200L)
-        textViewTotalBet.text = formatter.format(totalBet).toString()+".00"
-        textViewTotalHits.text = formatter.format(totalHit).toString()+".00"
-        textViewPNL.text = formatter.format(pnl).toString()+".00"
+        textViewTotalBet.text = formatter.format(totalBet).toString() + ".00"
+        textViewTotalHits.text = formatter.format(totalHit).toString() + ".00"
+        textViewPNL.text = formatter.format(pnl).toString() + ".00"
     }
 
     suspend fun retrieve2pmResultOffline(data: ArrayList<Draw2pmModel>) {
@@ -425,10 +420,10 @@ class DashboardActivity : AppCompatActivity() {
         val list: ArrayList<Draw2pmModel> = data
         list.forEach {
             textView2pmResult.text = it.result
-            textView2pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
-            if (it.win > 1.toString()){
+            textView2pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
+            if (it.win > 1.toString()) {
                 textView2pmWinner.text = it.win + " winners"
-            }else{
+            } else {
                 textView2pmWinner.text = it.win + " winner"
             }
         }
@@ -439,10 +434,10 @@ class DashboardActivity : AppCompatActivity() {
         val list: ArrayList<Draw5pmModel> = data
         list.forEach {
             textView5pmResult.text = it.result
-            textView5pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
-            if (it.win > 1.toString()){
+            textView5pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
+            if (it.win > 1.toString()) {
                 textView5pmWinner.text = it.win + " winners"
-            }else{
+            } else {
                 textView5pmWinner.text = it.win + " winner"
             }
         }
@@ -453,16 +448,16 @@ class DashboardActivity : AppCompatActivity() {
         val list: ArrayList<Draw9pmModel> = data
         list.forEach {
             textView9pmResult.text = it.result
-            textView9pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString()+".00"
-            if (it.win > 1.toString()){
+            textView9pmTotalWin.text = formatter.format(it.totalHit.toDouble()).toString() + ".00"
+            if (it.win > 1.toString()) {
                 textView9pmWinner.text = it.win + " winners"
-            }else{
+            } else {
                 textView9pmWinner.text = it.win + " winner"
             }
         }
     }
 
-    private fun dialogCutoff(){
+    private fun dialogCutoff() {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.custoff_dialog, null)
         dialog.setCancelable(true)
@@ -486,9 +481,9 @@ class DashboardActivity : AppCompatActivity() {
             val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
             val resume9 = localDatabase.retrieveDrawResume("9 PM")
 
-            if (currentTime >= cutoff9){
+            if (currentTime >= cutoff9) {
                 resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
-            }else{
+            } else {
                 val intent = Intent(this, BetActivity::class.java)
                 startActivity(intent)
                 finish()
@@ -549,7 +544,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateResults(){
+    private fun updateResults() {
         localDatabase.truncateResults()
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retrofit.updateResults().enqueue(object : Callback<List<ResultUpdateModel>?> {
@@ -581,7 +576,7 @@ class DashboardActivity : AppCompatActivity() {
         })
     }
 
-    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){
+    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?) {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
         dialog.setCancelable(true)
@@ -596,9 +591,9 @@ class DashboardActivity : AppCompatActivity() {
         val imageView: ImageView = view.findViewById(R.id.imageViewToast)
         textViewTitle.text = title
         textViewDetails.text = detail
-        if (isSuccess == 0){
+        if (isSuccess == 0) {
             imageView.setImageResource(R.drawable.exclamation)
-        }else{
+        } else {
             imageView.setImageResource(R.drawable.ic_round_check_circle_24)
         }
 
@@ -612,16 +607,15 @@ class DashboardActivity : AppCompatActivity() {
         return true
     }
 
-    private fun userProfile(){
+    private fun userProfile() {
         val intent = Intent(this, UserProfileActivity::class.java)
         startActivity(intent)
         finish()
     }
 
-    private fun logoutUser(){
+    private fun logoutUser() {
         val intent = Intent(this, AuthenticateActivity::class.java)
         startActivity(intent)
         finish()
     }
-
 }

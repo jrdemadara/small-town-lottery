@@ -11,10 +11,11 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.hardware.biometrics.BiometricPrompt
-import android.os.*
+import android.os.* // ktlint-disable no-wildcard-imports
 import android.view.Gravity
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.* // ktlint-disable no-wildcard-imports
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isGone
@@ -33,7 +34,6 @@ import retrofit2.Response
 import java.util.*
 import kotlin.collections.HashMap
 
-
 class AuthenticateActivity : AppCompatActivity() {
     private lateinit var networkChecker: NetworkChecker
     private lateinit var localDatabase: LocalDatabase
@@ -47,12 +47,13 @@ class AuthenticateActivity : AppCompatActivity() {
     private lateinit var editTextPassword: EditText
     private lateinit var remember: CheckBox
     private lateinit var textViewForgotPassword: TextView
-    private lateinit var imageViewBoimetric : ImageView
+    private lateinit var imageViewBoimetric: ImageView
     private lateinit var device: String
-    private var cancellationSignal : CancellationSignal? = null
-    private val authenticationCallback : BiometricPrompt.AuthenticationCallback
+    private var cancellationSignal: CancellationSignal? = null
+    private val authenticationCallback: BiometricPrompt.AuthenticationCallback
         get() =
-            object : BiometricPrompt.AuthenticationCallback(){
+            @RequiresApi(Build.VERSION_CODES.P)
+            object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence?) {
                     super.onAuthenticationError(errorCode, errString)
                     notifyUser("Authentication Error : $errString")
@@ -63,6 +64,8 @@ class AuthenticateActivity : AppCompatActivity() {
                     switchActivity()
                 }
             }
+
+    @RequiresApi(Build.VERSION_CODES.P)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authenticate)
@@ -86,20 +89,20 @@ class AuthenticateActivity : AppCompatActivity() {
             remember.isChecked = true
         }
         buttonLogin.setOnClickListener {
-            if (editTextUsername.text.isNotEmpty() && editTextPassword.text.isNotEmpty()){
+            if (editTextUsername.text.isNotEmpty() && editTextPassword.text.isNotEmpty()) {
                 if (remember.isChecked) {
                     rememberMe(editTextUsername.text.toString(), editTextPassword.text.toString())
                 } else {
                     clear()
                 }
 
-                if (device == "null"){
+                if (device == "null") {
                     rememberDeviceID(deviceId.toString())
-                    updateUserDevice(editTextUsername.text.toString(), editTextPassword.text.toString(),deviceId.toString())
-                }else{
-                    authenticateOnline(editTextUsername.text.toString(), editTextPassword.text.toString(),device)
+                    updateUserDevice(editTextUsername.text.toString(), editTextPassword.text.toString(), deviceId.toString())
+                } else {
+                    authenticateOnline(editTextUsername.text.toString(), editTextPassword.text.toString(), device)
                 }
-            }else{
+            } else {
                 resultStatus("Login Failed", "Please fill the username and password.", 0)
                 editTextUsername.requestFocus()
                 vibratePhone()
@@ -108,21 +111,26 @@ class AuthenticateActivity : AppCompatActivity() {
         checkBiometric()
     }
 
-    private fun checkBiometric(){
+    @RequiresApi(Build.VERSION_CODES.P)
+    private fun checkBiometric() {
         val isEnabled: Boolean = localDatabase.checkBiometric()
-        if (isEnabled){
+        if (isEnabled) {
             imageViewBoimetric.isGone = false
             checkBiometricSupport()
             imageViewBoimetric.setOnClickListener {
                 val biometricPrompt = BiometricPrompt.Builder(this)
                     .setTitle("Login with Fingerprint")
                     .setSubtitle("Place your finger on your device's \nfingerprint sensor.")
-                    .setNegativeButton("Login with Password" , this.mainExecutor, DialogInterface.OnClickListener { _, _ ->
-                        notifyUser("Authentication Cancelled")
-                    }).build()
-                biometricPrompt.authenticate(getCancellationSignal(),mainExecutor, authenticationCallback)
+                    .setNegativeButton(
+                        "Login with Password",
+                        this.mainExecutor,
+                        DialogInterface.OnClickListener { _, _ ->
+                            notifyUser("Authentication Cancelled")
+                        }
+                    ).build()
+                biometricPrompt.authenticate(getCancellationSignal(), mainExecutor, authenticationCallback)
             }
-        }else{
+        } else {
             imageViewBoimetric.isGone = true
         }
     }
@@ -149,7 +157,7 @@ class AuthenticateActivity : AppCompatActivity() {
         editor.apply()
     }
 
-    private fun authenticateOnline(username: String, password: String, deviceid: String){
+    private fun authenticateOnline(username: String, password: String, deviceid: String) {
         val retIn = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         val signInInfo = UserModel(username, password, deviceid)
         retIn.signin(signInInfo).enqueue(object : Callback<ResponseBody> {
@@ -171,7 +179,7 @@ class AuthenticateActivity : AppCompatActivity() {
         })
     }
 
-    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){
+    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?) {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
         dialog.setCancelable(true)
@@ -186,9 +194,9 @@ class AuthenticateActivity : AppCompatActivity() {
         val imageView: ImageView = view.findViewById(R.id.imageViewToast)
         textViewTitle.text = title
         textViewDetails.text = detail
-        if (isSuccess == 0){
+        if (isSuccess == 0) {
             imageView.setImageResource(R.drawable.exclamation)
-        }else{
+        } else {
             imageView.setImageResource(R.drawable.ic_round_check_circle_24)
         }
 
@@ -197,23 +205,23 @@ class AuthenticateActivity : AppCompatActivity() {
         }, 3000)
     }
 
-    private fun authenticateOffline(){
+    private fun authenticateOffline() {
         if (remember.isChecked) {
             rememberMe(editTextUsername.text.toString(), editTextPassword.text.toString())
         } else {
             clear()
         }
         val isExist: Boolean = localDatabase.authenticate(editTextUsername.text.toString(), editTextPassword.text.toString(), device)
-        if (isExist){
+        if (isExist) {
             switchActivity()
-        }else{
-           vibratePhone()
+        } else {
+            vibratePhone()
             resultStatus("Login Failed", "Please check your username and password.", 0)
             editTextUsername.requestFocus()
         }
     }
 
-    private fun updateUserDevice(username: String, password: String, deviceid: String){
+    private fun updateUserDevice(username: String, password: String, deviceid: String) {
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         val filter = HashMap<String, String>()
         filter["deviceid"] = deviceid
@@ -234,11 +242,10 @@ class AuthenticateActivity : AppCompatActivity() {
             override fun onFailure(call: Call<ResponseBody?>, t: Throwable) {
                 Toast.makeText(application, "Something went wrong with the server response.", Toast.LENGTH_SHORT).show()
             }
-
         })
     }
 
-    private fun updateUsers(){
+    private fun updateUsers() {
         localDatabase.truncateUsers()
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retrofit.updateUser(editTextUsername.text.toString()).enqueue(object : Callback<List<UserUpdateModel>?> {
@@ -274,15 +281,17 @@ class AuthenticateActivity : AppCompatActivity() {
         val v = (getSystemService(Context.VIBRATOR_SERVICE) as Vibrator)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             v.vibrate(
-                VibrationEffect.createOneShot(500,
-                VibrationEffect.DEFAULT_AMPLITUDE))
-        }
-        else {
+                VibrationEffect.createOneShot(
+                    500,
+                    VibrationEffect.DEFAULT_AMPLITUDE
+                )
+            )
+        } else {
             v.vibrate(500)
         }
     }
 
-    private fun getCancellationSignal() : CancellationSignal {
+    private fun getCancellationSignal(): CancellationSignal {
         cancellationSignal = CancellationSignal()
         cancellationSignal?.setOnCancelListener {
             notifyUser("Authentication was Cancelled by the user")
@@ -290,28 +299,27 @@ class AuthenticateActivity : AppCompatActivity() {
         return cancellationSignal as CancellationSignal
     }
 
-    private fun checkBiometricSupport() : Boolean {
+    private fun checkBiometricSupport(): Boolean {
         val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-        if (!keyguardManager.isDeviceSecure){
+        if (!keyguardManager.isDeviceSecure) {
             notifyUser("Fingerprint authentication has not been enabled in settings")
             return false
         }
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.USE_BIOMETRIC) != PackageManager.PERMISSION_GRANTED){
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.USE_BIOMETRIC) != PackageManager.PERMISSION_GRANTED) {
             notifyUser("Fingerprint Authentication Permission is not enabled")
             return false
         }
-        return if (packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)){
+        return if (packageManager.hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)) {
             true
-        }else true
-
+        } else true
     }
 
-    private fun notifyUser(message : String){
-        Toast.makeText(this, message , Toast.LENGTH_SHORT).show()
+    private fun notifyUser(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun switchActivity(){
-        val intent = Intent( this,DashboardActivity::class.java)
+    private fun switchActivity() {
+        val intent = Intent(this, DashboardActivity::class.java)
         startActivity(intent)
         finish()
     }

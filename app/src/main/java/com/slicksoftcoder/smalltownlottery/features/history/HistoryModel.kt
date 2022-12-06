@@ -7,5 +7,5 @@ data class HistoryModel(
     val transactionCode: String,
     val totalAmount: String,
     val isVoid: String,
-    val betTime: String,
+    val betTime: String
 )

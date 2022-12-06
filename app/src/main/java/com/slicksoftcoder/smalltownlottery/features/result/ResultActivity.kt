@@ -5,13 +5,13 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.ConnectivityManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -24,7 +24,6 @@ import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
 import com.slicksoftcoder.smalltownlottery.util.DateUtil
-import com.slicksoftcoder.smalltownlottery.util.NetworkChecker
 import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -59,20 +58,20 @@ class ResultActivity : AppCompatActivity() {
         cardView5 = findViewById(R.id.cardView5pmResult)
         cardView9 = findViewById(R.id.cardView9pmResult)
         textViewResultDate.text = dateUtil.currentDateShort().replace("-", " ").uppercase(Locale.ROOT)
-        //* Check Internet Connection
+        // * Check Internet Connection
         val connection = this.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connection.activeNetworkInfo
 
-        if (activeNetwork != null){
+        if (activeNetwork != null) {
             isConnected = true
             imageViewStatus.setImageResource(R.drawable.online)
             updateResults()
-        }else{
+        } else {
             imageViewStatus.setImageResource(R.drawable.offline)
             isConnected = false
         }
         checkConnection(this) { connectionState ->
-            when(connectionState) {
+            when (connectionState) {
                 ConnectionState.CONNECTED -> {
                     isConnected = true
                     imageViewStatus.setImageResource(R.drawable.online)
@@ -90,32 +89,32 @@ class ResultActivity : AppCompatActivity() {
             }
         }
 
-        lifecycleScope.launch(Dispatchers.IO){
-            val drawSerial2pm =  localDatabase.retrieve2pmDrawSerial()
+        lifecycleScope.launch(Dispatchers.IO) {
+            val drawSerial2pm = localDatabase.retrieve2pmDrawSerial()
             val drawSerial5pm = localDatabase.retrieve5pmDrawSerial()
-            val drawSerial9pm =  localDatabase.retrieve9pmDrawSerial()
-            val result2pm = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(),drawSerial2pm)
-            val result5pm =  localDatabase.retrieve5pmDrawResult(dateUtil.dateFormat(),drawSerial5pm)
-            val result9pm =  localDatabase.retrieve9pmDrawResult(dateUtil.dateFormat(),drawSerial9pm)
-            withContext(Dispatchers.Main){
+            val drawSerial9pm = localDatabase.retrieve9pmDrawSerial()
+            val result2pm = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(), drawSerial2pm)
+            val result5pm = localDatabase.retrieve5pmDrawResult(dateUtil.dateFormat(), drawSerial5pm)
+            val result9pm = localDatabase.retrieve9pmDrawResult(dateUtil.dateFormat(), drawSerial9pm)
+            withContext(Dispatchers.Main) {
                 textViewResult2pmResult.text = result2pm
                 textViewResult5pmResult.text = result5pm
                 textViewResult9pmResult.text = result9pm
             }
         }
 
-            result2pm()
-            result5pm()
-            result9pm()
+        result2pm()
+        result5pm()
+        result9pm()
 
         floatingButtonResultBack.setOnClickListener {
-            val intent = Intent(this, DashboardActivity ::class.java)
+            val intent = Intent(this, DashboardActivity::class.java)
             startActivity(intent)
             finish()
         }
     }
 
-    private fun updateResults(){
+    private fun updateResults() {
         localDatabase.truncateResults()
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retrofit.updateResults().enqueue(object : Callback<List<ResultUpdateModel>?> {
@@ -147,11 +146,11 @@ class ResultActivity : AppCompatActivity() {
         })
     }
 
-    private fun result2pm(){
+    private fun result2pm() {
         cardView2.setOnClickListener {
-            if (isConnected){
+            if (isConnected) {
                 updateResults()
-            }else{
+            } else {
                 val dialog = Dialog(this)
                 val view = layoutInflater.inflate(R.layout.add_result_dialog, null)
                 dialog.setCancelable(true)
@@ -168,21 +167,20 @@ class ResultActivity : AppCompatActivity() {
                     val drawSerial = localDatabase.retrieve2pmDrawSerial()
                     textViewResultTime.text = "Add Result (\"2 PM\")"
                     localDatabase.deleteResult(drawSerial)
-                    localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
+                    localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(), dateUtil.dateFormat())
                     resultStatus("Sucesss", "Result has been added.", 1)
-                    textViewResult2pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(),drawSerial)
+                    textViewResult2pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(), drawSerial)
                     dialog.dismiss()
                 }
             }
-
         }
     }
 
-    private fun result5pm(){
+    private fun result5pm() {
         cardView5.setOnClickListener {
-            if (isConnected){
+            if (isConnected) {
                 updateResults()
-            }else{
+            } else {
                 val dialog = Dialog(this)
                 val view = layoutInflater.inflate(R.layout.add_result_dialog, null)
                 dialog.setCancelable(true)
@@ -199,20 +197,20 @@ class ResultActivity : AppCompatActivity() {
                     val drawSerial = localDatabase.retrieve5pmDrawSerial()
                     textViewResultTime.text = "Add Result (\"5 PM\")"
                     localDatabase.deleteResult(drawSerial)
-                    localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
+                    localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(), dateUtil.dateFormat())
                     resultStatus("Sucesss", "Result has been added.", 1)
-                    textViewResult5pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(),drawSerial)
+                    textViewResult5pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(), drawSerial)
                     dialog.dismiss()
                 }
             }
         }
     }
 
-    private fun result9pm(){
+    private fun result9pm() {
         cardView9.setOnClickListener {
-            if (isConnected){
+            if (isConnected) {
                 updateResults()
-            }else{
+            } else {
                 val dialog = Dialog(this)
                 val view = layoutInflater.inflate(R.layout.add_result_dialog, null)
                 dialog.setCancelable(true)
@@ -229,16 +227,16 @@ class ResultActivity : AppCompatActivity() {
                     val drawSerial = localDatabase.retrieve9pmDrawSerial()
                     textViewResultTime.text = "Add Result (\"9 PM\")"
                     localDatabase.deleteResult(drawSerial)
-                    localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(),dateUtil.dateFormat())
+                    localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(), dateUtil.dateFormat())
                     resultStatus("Sucesss", "Result has been added.", 1)
-                    textViewResult9pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(),drawSerial)
+                    textViewResult9pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(), drawSerial)
                     dialog.dismiss()
                 }
             }
         }
     }
 
-    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){
+    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?) {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
         dialog.setCancelable(true)
@@ -253,9 +251,9 @@ class ResultActivity : AppCompatActivity() {
         val imageView: ImageView = view.findViewById(R.id.imageViewToast)
         textViewTitle.text = title
         textViewDetails.text = detail
-        if (isSuccess == 0){
+        if (isSuccess == 0) {
             imageView.setImageResource(R.drawable.exclamation)
-        }else{
+        } else {
             imageView.setImageResource(R.drawable.ic_round_check_circle_24)
         }
 

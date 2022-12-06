@@ -47,7 +47,6 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
 
-
 class HistoryActivity : AppCompatActivity() {
     private lateinit var localDatabase: LocalDatabase
     private lateinit var dateUtil: DateUtil
@@ -79,13 +78,13 @@ class HistoryActivity : AppCompatActivity() {
         textViewHistoryDate.text = dateUtil.currentDateShort().replace("-", " ").uppercase(Locale.ROOT)
         retrieveHistory()
         floatingButtonHistoryBack.setOnClickListener {
-            val intent = Intent(this, DashboardActivity ::class.java)
+            val intent = Intent(this, DashboardActivity::class.java)
             startActivity(intent)
             finish()
         }
 
         adapterHistory!!.setOnClickItem {
-            dialogBets(it.headerSerial,it.transactionCode,it.drawDate,it.drawTime,it.totalAmount,it.isVoid, it.betTime)
+            dialogBets(it.headerSerial, it.transactionCode, it.drawDate, it.drawTime, it.totalAmount, it.isVoid, it.betTime)
         }
     }
 
@@ -94,7 +93,7 @@ class HistoryActivity : AppCompatActivity() {
         return true
     }
 
-    private fun retrieveHistory(){
+    private fun retrieveHistory() {
         val list = localDatabase.retrieveHistory()
         adapterHistory?.addItems(list)
     }
@@ -139,23 +138,23 @@ class HistoryActivity : AppCompatActivity() {
         textViewHistoryBetDraw.text = draw
         textViewHistoryBetTotalAmount.text = amount
 
-        if (status.isNotEmpty()){
-            if (0 == status.toInt()){
+        if (status.isNotEmpty()) {
+            if (0 == status.toInt()) {
                 textViewHistoryBetStatus.text = "VALID"
                 buttonHistoryBetVoid.text = "VOID"
-            }else{
+            } else {
                 textViewHistoryBetStatus.text = "VOID"
                 buttonHistoryBetVoid.text = "DEVOID"
             }
         }
         buttonHistoryBetPrint.setOnClickListener {
-            printReceipt(headerSerial, date,draw,betTime, transaction, formatter.format(amount.toDouble()).toString() + ".00")
+            printReceipt(headerSerial, date, draw, betTime, transaction, formatter.format(amount.toDouble()).toString() + ".00")
         }
         buttonHistoryBetVoid.setOnClickListener {
-            if (status.toInt() == 0){
-                alertDialog(transaction, headerSerial,dialog,0)
-            }else{
-                alertDialog(transaction, headerSerial,dialog,1)
+            if (status.toInt() == 0) {
+                alertDialog(transaction, headerSerial, dialog, 0)
+            } else {
+                alertDialog(transaction, headerSerial, dialog, 1)
             }
         }
     }
@@ -175,7 +174,7 @@ class HistoryActivity : AppCompatActivity() {
             var totalAmount: String? = null
             var transaction: String? = null
             var status: String? = null
-            if (list.size > 0){
+            if (list.size > 0) {
                 list.forEach {
                     betTime = it.betTime
                     drawDate = it.drawDate
@@ -185,20 +184,19 @@ class HistoryActivity : AppCompatActivity() {
                     transaction = it.transactionCode
                     status = it.isVoid
                 }
-                dialogBets(headerSerial.toString(),transaction.toString(),drawDate.toString(),drawTime.toString(),totalAmount.toString(),status.toString(), betTime.toString())
-            }else{
+                dialogBets(headerSerial.toString(), transaction.toString(), drawDate.toString(), drawTime.toString(), totalAmount.toString(), status.toString(), betTime.toString())
+            } else {
                 resultStatus("Invalid Receipt", "Transaction number ${result.contents} is invalid.", 0)
             }
         }
     }
 
-    private fun voidBet(headerSerial: String, void: Int){
+    private fun voidBet(headerSerial: String, void: Int) {
         val retIn = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
         retIn.voidBetHeader(headerSerial, void).enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.code() == 200) {
-
-                }else{
+                } else {
                     localDatabase.updateBetHeaderTransmitted(headerSerial, dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 0)
                     localDatabase.updateBetDetailsTransmitted(headerSerial, dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete(), 0)
                 }
@@ -210,19 +208,19 @@ class HistoryActivity : AppCompatActivity() {
         })
     }
 
-    private fun alertDialog(transaction: String, headerSerial: String, dialog: Dialog, isVoid: Int){
+    private fun alertDialog(transaction: String, headerSerial: String, dialog: Dialog, isVoid: Int) {
         val voidStatus: Int
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Void Bet")
-        voidStatus = if (isVoid == 0){
+        voidStatus = if (isVoid == 0) {
             builder.setMessage("Are you sure you want to void $transaction?")
             1
-        }else{
+        } else {
             builder.setMessage("Are you sure you want to devoid $transaction?")
             0
         }
         builder.setIcon(R.drawable.resource_void)
-        builder.setPositiveButton("Yes"){ dialogInterface, _ ->
+        builder.setPositiveButton("Yes") { dialogInterface, _ ->
             localDatabase.voidBet(headerSerial, voidStatus)
             voidBet(headerSerial, voidStatus)
             dialogInterface.dismiss()
@@ -230,7 +228,7 @@ class HistoryActivity : AppCompatActivity() {
             resultStatus("Bet Status", "$transaction has been updated.", 0)
             dialog.dismiss()
         }
-        builder.setNeutralButton("No"){ dialogInterface, _ ->
+        builder.setNeutralButton("No") { dialogInterface, _ ->
             dialogInterface.dismiss()
         }
         val alertDialog: AlertDialog = builder.create()
@@ -245,18 +243,17 @@ class HistoryActivity : AppCompatActivity() {
         Manifest.permission.BLUETOOTH_PRIVILEGED
     )
 
-
     private fun checkPermissions() {
         val permission1 = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
         val permission2 = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
         if (permission1 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, PERMISSION, 1)
-        }else if (permission2 != PackageManager.PERMISSION_GRANTED){
+        } else if (permission2 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, PERMISSION, 1)
         }
     }
 
-    private fun printReceipt(headerSerial: String , drawDate: String, drawTime:String, betTime: String, transCode: String, totalAmount: String){
+    private fun printReceipt(headerSerial: String, drawDate: String, drawTime: String, betTime: String, transCode: String, totalAmount: String) {
         val bluetoothManager = applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
         if (!bluetoothManager.adapter.isEnabled) {
@@ -270,13 +267,19 @@ class HistoryActivity : AppCompatActivity() {
             var bets = ""
 
             list.forEach {
-                bets += "[L]${it.betNumber}[C]${formatter.format(it.win.toDouble())}[R]${it.amount+".00"}\n"
+                bets += "[L]${it.betNumber}[C]${formatter.format(it.win.toDouble())}[R]${it.amount + ".00"}\n"
             }
             val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
             printer
-                .printFormattedText("[C]<img>${
-                    PrinterTextParserImg.bitmapToHexadecimalString(printer, this.applicationContext.resources.getDrawableForDensity(
-                        R.drawable.recieptlogo, DisplayMetrics.DENSITY_MEDIUM))}</img>\n" +
+                .printFormattedText(
+                    "[C]<img>${
+                    PrinterTextParserImg.bitmapToHexadecimalString(
+                        printer,
+                        this.applicationContext.resources.getDrawableForDensity(
+                            R.drawable.recieptlogo,
+                            DisplayMetrics.DENSITY_MEDIUM
+                        )
+                    )}</img>\n" +
                         "[L]\n" +
                         "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
                         "[L]<b>Area:</b>[R]<b>$location</b>\n" +
@@ -296,10 +299,9 @@ class HistoryActivity : AppCompatActivity() {
                         "[C]Thank You! Bet Again!\n".trimIndent()
                 )
         }
-
     }
 
-    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?){
+    private fun resultStatus(title: String?, detail: String?, isSuccess: Int?) {
         val dialog = Dialog(this)
         val view = layoutInflater.inflate(R.layout.custom_toast_dialog, null)
         dialog.setCancelable(true)
@@ -314,9 +316,9 @@ class HistoryActivity : AppCompatActivity() {
         val imageView: ImageView = view.findViewById(R.id.imageViewToast)
         textViewTitle.text = title
         textViewDetails.text = detail
-        if (isSuccess == 0){
+        if (isSuccess == 0) {
             imageView.setImageResource(R.drawable.exclamation)
-        }else{
+        } else {
             imageView.setImageResource(R.drawable.ic_round_check_circle_24)
         }
 
@@ -324,6 +326,4 @@ class HistoryActivity : AppCompatActivity() {
             dialog.dismiss()
         }, 3000)
     }
-
 }
-

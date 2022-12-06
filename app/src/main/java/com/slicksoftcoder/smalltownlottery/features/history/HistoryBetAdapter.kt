@@ -9,28 +9,27 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.slicksoftcoder.smalltownlottery.R
 
-class HistoryBetAdapter : RecyclerView.Adapter<HistoryBetAdapter.ViewHolder>()  {
+class HistoryBetAdapter : RecyclerView.Adapter<HistoryBetAdapter.ViewHolder>() {
     private var mList: ArrayList<HistoryBetModel> = ArrayList()
     private var onClickItem: ((HistoryBetModel) -> Unit)? = null
 
-    fun addItems(items: ArrayList<HistoryBetModel>){
+    fun addItems(items: ArrayList<HistoryBetModel>) {
         this.mList = items
         notifyDataSetChanged()
     }
 
-    fun setOnClickItem(callback: (HistoryBetModel)->Unit){
+    fun setOnClickItem(callback: (HistoryBetModel) -> Unit) {
         this.onClickItem = callback
-
     }
 
-    class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val betNUmber: TextView = itemView.findViewById(R.id.textViewHistoryBetNumber)
         val win: TextView = itemView.findViewById(R.id.textViewHistoryBetWin)
         val amount: TextView = itemView.findViewById(R.id.textViewHistoryBetAmount)
         val type: TextView = itemView.findViewById(R.id.textViewHistoryBetType)
 
-        fun bindView(historyBetModel: HistoryBetModel){
-            betNUmber.text= historyBetModel.betNumber
+        fun bindView(historyBetModel: HistoryBetModel) {
+            betNUmber.text = historyBetModel.betNumber
             amount.text = historyBetModel.amount
         }
     }
@@ -40,20 +39,20 @@ class HistoryBetAdapter : RecyclerView.Adapter<HistoryBetAdapter.ViewHolder>()  
             LayoutInflater.from(parent.context).inflate(R.layout.cardview_history_bets, parent, false)
         )
 
-    override fun onBindViewHolder(holder:ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val mPosition = mList[position]
         val formatter: NumberFormat = DecimalFormat("#,###")
         holder.bindView(mPosition)
-        holder.itemView.setOnClickListener{onClickItem?.invoke(mPosition)}
+        holder.itemView.setOnClickListener { onClickItem?.invoke(mPosition) }
         holder.win.text = formatter.format(mPosition.win.toDouble()).toString()
         holder.amount.text = mPosition.amount
-        if(mPosition.isRambolito == "0"){
+        if (mPosition.isRambolito == "0") {
             holder.betNUmber.text = "#" + mPosition.betNumber
             holder.type.text = "REGULAR"
-        }else if (mPosition.isRambolito == "1"){
+        } else if (mPosition.isRambolito == "1") {
             holder.betNUmber.text = "#" + mPosition.betNumber + "-R"
             holder.type.text = "RAMBOLITO"
-        }else{
+        } else {
             holder.betNUmber.text = "#" + mPosition.betNumber
             holder.type.text = "NO WIN"
         }
@@ -62,6 +61,4 @@ class HistoryBetAdapter : RecyclerView.Adapter<HistoryBetAdapter.ViewHolder>()  
     override fun getItemCount(): Int {
         return mList.size
     }
-
-
 }
