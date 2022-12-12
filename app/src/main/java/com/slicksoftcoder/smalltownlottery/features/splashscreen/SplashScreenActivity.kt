@@ -11,7 +11,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.DrawUpdateModel
+import com.slicksoftcoder.smalltownlottery.common.model.LowWinModel
 import com.slicksoftcoder.smalltownlottery.common.model.QuotaUpdateModel
+import com.slicksoftcoder.smalltownlottery.common.model.SoldOutModel
 import com.slicksoftcoder.smalltownlottery.features.landing.LandingActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
@@ -50,9 +52,10 @@ class SplashScreenActivity : AppCompatActivity() {
         networkChecker = NetworkChecker(application)
         networkChecker.observe(this) { isConnected ->
             if (isConnected) {
-                localDatabase.truncateDraws()
                 updateDraws()
                 updateQuota()
+                updateSoldOut()
+                updateLowWin()
                 localDatabase.deleteCanceledBet()
             }
         }
@@ -69,6 +72,7 @@ class SplashScreenActivity : AppCompatActivity() {
                 list = response.body()
                 assert(list != null)
                 if (list != null) {
+                    localDatabase.truncateDraws()
                     for (x in list) {
                         println(x)
                         localDatabase.updateDraws(
@@ -106,6 +110,52 @@ class SplashScreenActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<QuotaUpdateModel>?>, t: Throwable) {
+            }
+        })
+    }
+
+    private fun updateSoldOut() {
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        retrofit.updateSoldOut().enqueue(object : Callback<List<SoldOutModel>?> {
+            override fun onResponse(
+                call: Call<List<SoldOutModel>?>,
+                response: Response<List<SoldOutModel>?>
+            ) {
+                val list: List<SoldOutModel?>?
+                list = response.body()
+                assert(list != null)
+                if (list != null) {
+                    localDatabase.truncateSoldOut()
+                    for (x in list) {
+                        localDatabase.updateSoldOut(x.number)
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<List<SoldOutModel>?>, t: Throwable) {
+            }
+        })
+    }
+
+    private fun updateLowWin() {
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        retrofit.updateLowWin().enqueue(object : Callback<List<LowWinModel>?> {
+            override fun onResponse(
+                call: Call<List<LowWinModel>?>,
+                response: Response<List<LowWinModel>?>
+            ) {
+                val list: List<LowWinModel?>?
+                list = response.body()
+                assert(list != null)
+                if (list != null) {
+                    localDatabase.truncateLowWin()
+                    for (x in list) {
+                        localDatabase.updateLowWin(x.number)
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<List<LowWinModel>?>, t: Throwable) {
             }
         })
     }

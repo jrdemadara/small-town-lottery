@@ -40,12 +40,12 @@
         android:id="@+id/cardViewUpdatePassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="10dp"
-        android:padding="10dp"
-        app:cardCornerRadius="10dp"
-        app:cardElevation="2dp"
+        android:layout_marginStart="@dimen/_10sdp"
+        android:layout_marginTop="@dimen/_20sdp"
+        android:layout_marginEnd="@dimen/_10sdp"
+        android:padding="@dimen/_10sdp"
+        app:cardCornerRadius="@dimen/_10sdp"
+        app:cardElevation="@dimen/_2sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -54,23 +54,23 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_10sdp"
             android:fontFamily="@font/nexa_bold"
             android:text="Update Password"
             android:textColor="#2F2F2F"
-            android:textSize="15sp" />
+            android:textSize="@dimen/_13ssp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_25sdp"
+            android:layout_marginBottom="@dimen/_10sdp"
             android:fontFamily="@font/nexa_regular"
             android:text="Change your STL Online profile password."
             android:textColor="#2F2F2F"
-            android:textSize="13sp" />
+            android:textSize="@dimen/_10ssp" />
 
         <ImageView
             android:id="@+id/imageView26"
@@ -86,12 +86,12 @@
         android:id="@+id/cardViewEnableFingerprint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="10dp"
-        android:padding="10dp"
-        app:cardCornerRadius="10dp"
-        app:cardElevation="2dp"
+        android:layout_marginStart="@dimen/_10sdp"
+        android:layout_marginTop="@dimen/_15sdp"
+        android:layout_marginEnd="@dimen/_10sdp"
+        android:padding="@dimen/_10sdp"
+        app:cardCornerRadius="@dimen/_10sdp"
+        app:cardElevation="@dimen/_2sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -100,33 +100,33 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_10sdp"
             android:fontFamily="@font/nexa_bold"
             android:text="Enable Fingerprint Authentication"
             android:textColor="#2F2F2F"
-            android:textSize="15sp" />
+            android:textSize="@dimen/_13ssp" />
 
         <TextView
-            android:layout_width="256dp"
+            android:layout_width="@dimen/_180sdp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginStart="@dimen/_10sdp"
+            android:layout_marginTop="@dimen/_25sdp"
+            android:layout_marginBottom="@dimen/_10sdp"
             android:fontFamily="@font/nexa_regular"
             android:text="All fingerprints stored on this device can be use to access your STL Online profile."
             android:textAlignment="viewStart"
             android:textColor="#2F2F2F"
-            android:textSize="13sp" />
+            android:textSize="@dimen/_10ssp" />
 
         <Switch
             android:id="@+id/switchEnableFingerprint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|end"
-            android:layout_marginEnd="10dp"
+            android:layout_marginEnd="@dimen/_10sdp"
             android:fontFamily="@font/nexa_regular"
-            android:minHeight="48dp"
+            android:minHeight="@dimen/_48sdp"
             android:text="Enable"
             android:thumbTint="#F1AB55"
             android:trackTint="#F1AB55" />

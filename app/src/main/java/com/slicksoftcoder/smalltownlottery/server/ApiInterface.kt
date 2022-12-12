@@ -35,6 +35,14 @@ interface ApiInterface {
     fun updateResults(): Call<List<ResultUpdateModel>>
 
     @Headers("Content-Type:application/json")
+    @GET("updateSoldOut")
+    fun updateSoldOut(): Call<List<SoldOutModel>>
+
+    @Headers("Content-Type:application/json")
+    @GET("updateLowWin")
+    fun updateLowWin(): Call<List<LowWinModel>>
+
+    @Headers("Content-Type:application/json")
     @GET("updateUser")
     fun updateUser(@Query("username") username: String): Call<List<UserUpdateModel>>
 

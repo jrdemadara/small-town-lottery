@@ -74,7 +74,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var textView9pmTotalWin: TextView
     private lateinit var imageViewStatus: ImageView
     private lateinit var imageViewBet: ImageView
-    val formatter: NumberFormat = DecimalFormat("#,###")
+    private val formatter: NumberFormat = DecimalFormat("#,###")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
@@ -109,12 +109,16 @@ class DashboardActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
         toolbar.setOnMenuItemClickListener { item ->
-            if (item.itemId == R.id.logout) {
-                logoutUser()
-            } else if (item.itemId == R.id.profile) {
-                userProfile()
-            } else if (item.itemId == R.id.dashqr) {
-                barcodeLauncher.launch(ScanOptions())
+            when (item.itemId) {
+                R.id.logout -> {
+                    logoutUser()
+                }
+                R.id.profile -> {
+                    userProfile()
+                }
+                R.id.dashqr -> {
+                    barcodeLauncher.launch(ScanOptions())
+                }
             }
             false
         }
@@ -340,15 +344,9 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun bottomNavigation() {
         imageViewBet.setOnClickListener {
-            val currentTime = dateUtil.currentTimeComplete()
-            val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
-            if (currentTime >= cutoff9) {
-                resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
-            } else {
-                val intent = Intent(this, BetActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
+            val intent = Intent(this, BetActivity::class.java)
+            startActivity(intent)
+            finish()
         }
         bottomNavigationView.setOnItemSelectedListener {
             when (it.itemId) {
@@ -365,15 +363,9 @@ class DashboardActivity : AppCompatActivity() {
                     true
                 }
                 R.id.bet -> {
-                    val currentTime = dateUtil.currentTimeComplete()
-                    val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
-                    if (currentTime >= cutoff9) {
-                        resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
-                    } else {
-                        val intent = Intent(this, BetActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    }
+                    val intent = Intent(this, BetActivity::class.java)
+                    startActivity(intent)
+                    finish()
                     true
                 }
                 R.id.result -> {
@@ -473,57 +465,9 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun middleNavigation() {
         textViewMenuBet.setOnClickListener {
-            val currentTime = dateUtil.currentTimeComplete()
-            val cutoff2 = localDatabase.retrieveDrawCutOff("2 PM")
-            val resume2 = localDatabase.retrieveDrawResume("2 PM")
-            val cutoff5 = localDatabase.retrieveDrawCutOff("5 PM")
-            val resume5 = localDatabase.retrieveDrawResume("5 PM")
-            val cutoff9 = localDatabase.retrieveDrawCutOff("9 PM")
-            val resume9 = localDatabase.retrieveDrawResume("9 PM")
-
-            if (currentTime >= cutoff9) {
-                resultStatus("Cutoff", "Bet will resume tomorrow.", 0)
-            } else {
-                val intent = Intent(this, BetActivity::class.java)
-                startActivity(intent)
-                finish()
-            }
-
-//            if (currentTime > cutoff2 && currentTime < resume2) {
-//                dialogCutoff()
-//            } else if (currentTime > cutoff2 && currentTime > resume2 ) {
-//                val intent = Intent(this, BetActivity::class.java)
-//                startActivity(intent)
-//                finish()
-//            }else if (currentTime < cutoff2){
-//                val intent = Intent(this, BetActivity::class.java)
-//                startActivity(intent)
-//                finish()
-//            }
-//
-//            if (currentTime > cutoff5 && currentTime < resume5) {
-//                dialogCutoff()
-//            } else if (currentTime > cutoff5 && currentTime > resume5 ) {
-//                val intent = Intent(this, BetActivity::class.java)
-//                startActivity(intent)
-//                finish()
-//            }else if (currentTime < cutoff5){
-//                val intent = Intent(this, BetActivity::class.java)
-//                startActivity(intent)
-//                finish()
-//            }
-//
-//            if (currentTime > cutoff9 && currentTime < resume9) {
-//                dialogCutoff()
-//            } else if (currentTime > cutoff9 && currentTime > resume9 ) {
-//                val intent = Intent(this, BetActivity::class.java)
-//                startActivity(intent)
-//                finish()
-//            }else if (currentTime < cutoff9){
-//                val intent = Intent(this, BetActivity::class.java)
-//                startActivity(intent)
-//                finish()
-//            }
+            val intent = Intent(this, BetActivity::class.java)
+            startActivity(intent)
+            finish()
         }
 
         textViewMenuHistory.setOnClickListener {

@@ -46,15 +46,16 @@ class HistoryBetAdapter : RecyclerView.Adapter<HistoryBetAdapter.ViewHolder>() {
         holder.itemView.setOnClickListener { onClickItem?.invoke(mPosition) }
         holder.win.text = formatter.format(mPosition.win.toDouble()).toString()
         holder.amount.text = mPosition.amount
-        if (mPosition.isRambolito == "0") {
+        if (mPosition.isLowWin == "0") {
             holder.betNUmber.text = "#" + mPosition.betNumber
             holder.type.text = "REGULAR"
-        } else if (mPosition.isRambolito == "1") {
+        } else {
+            holder.betNUmber.text = "#" + mPosition.betNumber + "-LW"
+            holder.type.text = "LOW WIN"
+        }
+        if (mPosition.isRambolito == "1") {
             holder.betNUmber.text = "#" + mPosition.betNumber + "-R"
             holder.type.text = "RAMBOLITO"
-        } else {
-            holder.betNUmber.text = "#" + mPosition.betNumber
-            holder.type.text = "NO WIN"
         }
     }
 

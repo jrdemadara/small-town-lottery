@@ -1,6 +1,7 @@
 package com.slicksoftcoder.smalltownlottery.features.result
 
-import android.app.Dialog
+import android.app.Dialog // ktlint-disable import-ordering
+// ktlint-disable import-ordering
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -10,10 +11,9 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.* // ktlint-disable no-wildcard-imports
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
-import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.muddassir.connection_checker.ConnectionState
 import com.muddassir.connection_checker.checkConnection
@@ -24,7 +24,8 @@ import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
 import com.slicksoftcoder.smalltownlottery.util.DateUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
+// ktlint-disable no-wildcard-imports
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -76,30 +77,19 @@ class ResultActivity : AppCompatActivity() {
                     isConnected = true
                     imageViewStatus.setImageResource(R.drawable.online)
                     updateResults()
+                    retrieveResult()
                 }
                 ConnectionState.SLOW -> {
                     isConnected = true
                     imageViewStatus.setImageResource(R.drawable.slow)
                     updateResults()
+                    retrieveResult()
                 }
                 else -> {
                     isConnected = false
                     imageViewStatus.setImageResource(R.drawable.offline)
+                    retrieveResult()
                 }
-            }
-        }
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            val drawSerial2pm = localDatabase.retrieve2pmDrawSerial()
-            val drawSerial5pm = localDatabase.retrieve5pmDrawSerial()
-            val drawSerial9pm = localDatabase.retrieve9pmDrawSerial()
-            val result2pm = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(), drawSerial2pm)
-            val result5pm = localDatabase.retrieve5pmDrawResult(dateUtil.dateFormat(), drawSerial5pm)
-            val result9pm = localDatabase.retrieve9pmDrawResult(dateUtil.dateFormat(), drawSerial9pm)
-            withContext(Dispatchers.Main) {
-                textViewResult2pmResult.text = result2pm
-                textViewResult5pmResult.text = result5pm
-                textViewResult9pmResult.text = result9pm
             }
         }
 
@@ -114,6 +104,18 @@ class ResultActivity : AppCompatActivity() {
         }
     }
 
+    private fun retrieveResult() {
+        val data = localDatabase.retrieveDrawResult(dateUtil.dateFormat())
+        val list: ArrayList<ResultModel> = data
+        if (list.size > 0) {
+            list.forEach {
+                textViewResult2pmResult.text = it.result2PM
+                textViewResult5pmResult.text = it.result5PM
+                textViewResult9pmResult.text = it.result9PM
+            }
+        }
+    }
+
     private fun updateResults() {
         localDatabase.truncateResults()
         val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
@@ -122,7 +124,6 @@ class ResultActivity : AppCompatActivity() {
                 call: Call<List<ResultUpdateModel>?>,
                 response: Response<List<ResultUpdateModel>?>
             ) {
-                resultStatus("Loading Success", "Updated results has been loaded.", 1)
                 val list: List<ResultUpdateModel?>?
                 list = response.body()
                 assert(list != null)
@@ -137,6 +138,7 @@ class ResultActivity : AppCompatActivity() {
                             dateUtil.dateFormat()
                         )
                     }
+                    retrieveResult()
                 }
             }
 
@@ -168,8 +170,8 @@ class ResultActivity : AppCompatActivity() {
                     textViewResultTime.text = "Add Result (\"2 PM\")"
                     localDatabase.deleteResult(drawSerial)
                     localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(), dateUtil.dateFormat())
-                    resultStatus("Sucesss", "Result has been added.", 1)
-                    textViewResult2pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(), drawSerial)
+                    resultStatus("Success", "Result has been added.", 1)
+                    retrieveResult()
                     dialog.dismiss()
                 }
             }
@@ -199,7 +201,7 @@ class ResultActivity : AppCompatActivity() {
                     localDatabase.deleteResult(drawSerial)
                     localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(), dateUtil.dateFormat())
                     resultStatus("Sucesss", "Result has been added.", 1)
-                    textViewResult5pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(), drawSerial)
+                    retrieveResult()
                     dialog.dismiss()
                 }
             }
@@ -229,7 +231,7 @@ class ResultActivity : AppCompatActivity() {
                     localDatabase.deleteResult(drawSerial)
                     localDatabase.insertResult(serial.toString(), drawSerial, dateUtil.dateFormat(), editTextResult.text.toString(), dateUtil.dateFormat())
                     resultStatus("Sucesss", "Result has been added.", 1)
-                    textViewResult9pmResult.text = localDatabase.retrieve2pmDrawResult(dateUtil.dateFormat(), drawSerial)
+                    retrieveResult()
                     dialog.dismiss()
                 }
             }
@@ -259,6 +261,6 @@ class ResultActivity : AppCompatActivity() {
 
         Handler(Looper.getMainLooper()).postDelayed({
             dialog.dismiss()
-        }, 3000)
+        }, 2000)
     }
 }

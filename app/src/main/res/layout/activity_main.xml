@@ -55,7 +55,8 @@
             android:layout_marginTop="130dp"
             android:rotation="180"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/bg_landing_inverted" />
+            app:srcCompat="@drawable/bg_landing_inverted"
+            tools:ignore="ImageContrastCheck" />
 
         <ImageView
             android:id="@+id/imageView7"
@@ -81,7 +82,8 @@
             android:layout_marginStart="150dp"
             android:layout_marginTop="240dp"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/landing_2" />
+            app:srcCompat="@drawable/landing_2"
+            tools:ignore="ImageContrastCheck" />
 
         <TextView
             android:id="@+id/textView4"
@@ -109,8 +111,8 @@
         android:id="@+id/frameLayout2"
         android:layout_width="match_parent"
         android:layout_height="285dp"
-        android:layout_marginTop="40dp"
-        app:layout_constraintTop_toBottomOf="@+id/frameLayout"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/imageView5"
         tools:layout_editor_absoluteX="0dp">
 
         <ImageView
@@ -127,7 +129,8 @@
             android:layout_height="62dp"
             android:layout_marginStart="300dp"
             android:layout_marginTop="30dp"
-            app:srcCompat="@drawable/landing_round_2" />
+            app:srcCompat="@drawable/landing_round_2"
+            tools:ignore="ImageContrastCheck" />
 
         <ImageView
             android:id="@+id/imageView12"
@@ -150,28 +153,27 @@
 
     <Button
         android:id="@+id/buttonGetStarted"
-        android:layout_width="350dp"
-        android:layout_height="63dp"
-        android:layout_marginStart="22dp"
-        android:layout_marginEnd="22dp"
+        android:layout_width="@dimen/_280sdp"
+        android:layout_height="@dimen/_48sdp"
+        android:layout_marginStart="@dimen/_22sdp"
+        android:layout_marginEnd="@dimen/_22sdp"
+        android:layout_marginBottom="@dimen/_10sdp"
         android:fontFamily="@font/nexa_xbold"
         android:text="GET STARTED"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.428"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView5" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <ImageView
         android:id="@+id/imageView5"
-        android:layout_width="40dp"
+        android:layout_width="match_parent"
         android:layout_height="29dp"
-        android:layout_marginStart="185dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="185dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintBottom_toTopOf="@+id/buttonGetStarted"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/frameLayout2"
         app:srcCompat="@drawable/landing_3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

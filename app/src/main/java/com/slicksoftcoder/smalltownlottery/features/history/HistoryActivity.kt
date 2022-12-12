@@ -152,9 +152,9 @@ class HistoryActivity : AppCompatActivity() {
         }
         buttonHistoryBetVoid.setOnClickListener {
             if (status.toInt() == 0) {
-                alertDialog(transaction, headerSerial, dialog, 0)
+                alertDialog(transaction, headerSerial, dialog, 0, draw)
             } else {
-                alertDialog(transaction, headerSerial, dialog, 1)
+                alertDialog(transaction, headerSerial, dialog, 1, draw)
             }
         }
     }
@@ -208,32 +208,39 @@ class HistoryActivity : AppCompatActivity() {
         })
     }
 
-    private fun alertDialog(transaction: String, headerSerial: String, dialog: Dialog, isVoid: Int) {
-        val voidStatus: Int
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Void Bet")
-        voidStatus = if (isVoid == 0) {
-            builder.setMessage("Are you sure you want to void $transaction?")
-            1
+    private fun alertDialog(transaction: String, headerSerial: String, dialog: Dialog, isVoid: Int, drawTime: String) {
+        val cutoff = localDatabase.retrieveDrawCutOff(drawTime)
+        if (dateUtil.currentTimeComplete() > cutoff) {
+            resultStatus("Oops!", "This bet is already past the cutoff time.", 0)
         } else {
-            builder.setMessage("Are you sure you want to devoid $transaction?")
-            0
+            val voidStatus: Int
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Void Bet")
+            voidStatus = if (isVoid == 0) {
+                builder.setMessage("Are you sure you want to void $transaction?")
+                1
+            } else {
+                builder.setMessage("Are you sure you want to devoid $transaction?")
+                0
+            }
+            builder.setIcon(R.drawable.resource_void)
+            builder.setPositiveButton("Yes") { dialogInterface, _ ->
+                /* Check cutoff time */
+
+                localDatabase.voidBet(headerSerial, voidStatus)
+                voidBet(headerSerial, voidStatus)
+                dialogInterface.dismiss()
+                retrieveHistory()
+                resultStatus("Bet Status", "$transaction has been updated.", 0)
+                dialog.dismiss()
+            }
+            builder.setNeutralButton("No") { dialogInterface, _ ->
+                dialogInterface.dismiss()
+            }
+            val alertDialog: AlertDialog = builder.create()
+            alertDialog.setCancelable(false)
+            alertDialog.show()
         }
-        builder.setIcon(R.drawable.resource_void)
-        builder.setPositiveButton("Yes") { dialogInterface, _ ->
-            localDatabase.voidBet(headerSerial, voidStatus)
-            voidBet(headerSerial, voidStatus)
-            dialogInterface.dismiss()
-            retrieveHistory()
-            resultStatus("Bet Status", "$transaction has been updated.", 0)
-            dialog.dismiss()
-        }
-        builder.setNeutralButton("No") { dialogInterface, _ ->
-            dialogInterface.dismiss()
-        }
-        val alertDialog: AlertDialog = builder.create()
-        alertDialog.setCancelable(false)
-        alertDialog.show()
     }
 
     private val PERMISSION = arrayOf(
@@ -267,7 +274,7 @@ class HistoryActivity : AppCompatActivity() {
             var bets = ""
 
             list.forEach {
-                bets += "[L]${it.betNumber}[C]${formatter.format(it.win.toDouble())}[R]${it.amount + ".00"}\n"
+                bets += "[L]${if (it.isRambolito == "0"){if (it.isLowWin == "0"){it.betNumber}else{it.betNumber + "-LW"} }else {it.betNumber + "-R"} }[C]${formatter.format(it.win.toDouble())}[R]${it.amount + ".00"}\n"
             }
             val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
             printer
@@ -280,7 +287,6 @@ class HistoryActivity : AppCompatActivity() {
                             DisplayMetrics.DENSITY_MEDIUM
                         )
                     )}</img>\n" +
-                        "[L]\n" +
                         "[L]<b>Agent:</b>[R]<b>${agent.uppercase(Locale.ROOT)}</b>\n" +
                         "[L]<b>Area:</b>[R]<b>$location</b>\n" +
                         "[L]<b>Draw Date:</b>[R]<b>$drawDate</b>\n" +
@@ -294,9 +300,7 @@ class HistoryActivity : AppCompatActivity() {
                         "[C]--------------------------------\n" +
                         "[L]<b>TOTAL AMOUNT:</b>[R]<b>$totalAmount</b>\n" +
                         "[C]--------------------------------\n" +
-                        "[C]<qrcode size='20'>$transCode</qrcode>\n" +
-                        "[L]\n" +
-                        "[C]Thank You! Bet Again!\n".trimIndent()
+                        "[C]<qrcode size='15'>$transCode</qrcode>\n".trimIndent()
                 )
         }
     }

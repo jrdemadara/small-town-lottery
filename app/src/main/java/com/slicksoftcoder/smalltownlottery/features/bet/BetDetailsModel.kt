@@ -5,5 +5,6 @@ data class BetDetailsModel(
     val betNumber: String,
     val amount: String,
     val win: String,
-    val isRambolito: String
+    val isRambolito: String,
+    val isLowWin: String
 )

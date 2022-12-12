@@ -39,11 +39,11 @@
 
     <LinearLayout
         android:id="@+id/linearLayout"
-        android:layout_width="370dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="24dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginEnd="15dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -60,7 +60,7 @@
 
         <TextView
             android:id="@+id/textViewDashDate"
-            android:layout_width="180dp"
+            android:layout_width="@dimen/_160sdp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:fontFamily="@font/nexa_bold"
@@ -142,11 +142,11 @@
 
     <LinearLayout
         android:id="@+id/linearLayout3"
-        android:layout_width="380dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="28dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginEnd="15dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -158,13 +158,13 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:drawablePadding="5dp"
             android:fontFamily="@font/nexa_regular"
             android:rotationX="1"
             android:text="Bet"
             android:textAlignment="center"
-            android:background="?attr/selectableItemBackgroundBorderless"
             app:drawableTopCompat="@drawable/menu_bet" />
 
         <TextView
@@ -172,13 +172,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:drawablePadding="5dp"
             android:fontFamily="@font/nexa_regular"
             android:rotationX="1"
             android:text="History"
             android:textAlignment="center"
-            android:background="?attr/selectableItemBackgroundBorderless"
             app:drawableTopCompat="@drawable/menu_history" />
 
         <TextView
@@ -216,7 +216,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="20dp"
         android:fontFamily="@font/nexa_xbold"
         android:text="RESULT"
         android:textColor="#000000"
@@ -225,11 +225,11 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView2pm"
-        android:layout_width="370dp"
-        android:layout_height="80dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="30dp"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_60sdp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="15dp"
         android:clickable="true"
         app:cardBackgroundColor="#FEF7EE"
         app:cardCornerRadius="5dp"
@@ -251,19 +251,6 @@
 
         <TextView
 
-            android:id="@+id/textViewDash2pmResult"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="300dp"
-            android:layout_marginTop="10dp"
-            android:fontFamily="@font/nexa_xbold"
-            android:text="0"
-            android:textAlignment="viewEnd"
-            android:textColor="#F1AB55"
-            android:textSize="24sp" />
-
-        <TextView
-
             android:id="@+id/textViewDash2pmWinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -282,10 +269,33 @@
             app:srcCompat="@drawable/cardview_1" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="35dp">
+
+            <TextView
+
+                android:id="@+id/textViewDash2pmResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/nexa_xbold"
+                android:text="0"
+                android:textAlignment="textEnd"
+                android:textColor="#F1AB55"
+                android:textSize="24sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="190dp"
-            android:layout_marginTop="45dp">
+            android:layout_gravity="end"
+            android:layout_marginTop="45dp"
+            android:layout_marginEnd="35dp">
 
             <TextView
                 android:id="@+id/textViewDash2pmTotalWin"
@@ -324,24 +334,48 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView5pm"
-        android:layout_width="370dp"
-        android:layout_height="80dp"
-        android:layout_marginStart="30dp"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_60sdp"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="15dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginEnd="15dp"
         android:clickable="true"
         app:cardBackgroundColor="#F9FAFE"
         app:cardCornerRadius="5dp"
         app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cardView2pm">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="35dp">
+
+            <TextView
+
+                android:id="@+id/textViewDash5pmResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/nexa_xbold"
+                android:text="0"
+                android:textAlignment="viewEnd"
+                android:textColor="#3D4045"
+                android:textSize="24sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="190dp"
-            android:layout_marginTop="45dp">
+            android:layout_gravity="end"
+            android:layout_marginTop="45dp"
+            android:layout_marginEnd="35dp">
 
             <TextView
                 android:id="@+id/textViewDash5pmTotalWin"
@@ -387,19 +421,6 @@
 
         <TextView
 
-            android:id="@+id/textViewDash5pmResult"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="300dp"
-            android:layout_marginTop="10dp"
-            android:fontFamily="@font/nexa_xbold"
-            android:text="0"
-            android:textAlignment="viewEnd"
-            android:textColor="#3D4045"
-            android:textSize="24sp" />
-
-        <TextView
-
             android:id="@+id/textViewDash5pmWinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -420,24 +441,48 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView9pm"
-        android:layout_width="370dp"
-        android:layout_height="80dp"
-        android:layout_marginStart="30dp"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_60sdp"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="15dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginEnd="15dp"
         android:clickable="true"
         app:cardBackgroundColor="#F1F7FC"
         app:cardCornerRadius="5dp"
         app:cardElevation="0dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cardView5pm">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="35dp">
+
+            <TextView
+                android:id="@+id/textViewDash9pmResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/nexa_xbold"
+                android:text="0"
+                android:textAlignment="viewEnd"
+                android:textColor="#348AB1"
+                android:textSize="24sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="190dp"
-            android:layout_marginTop="45dp">
+            android:layout_gravity="end"
+            android:layout_marginTop="45dp"
+            android:layout_marginEnd="35dp">
 
             <TextView
 
@@ -484,18 +529,6 @@
             android:textSize="16sp" />
 
         <TextView
-            android:id="@+id/textViewDash9pmResult"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="300dp"
-            android:layout_marginTop="10dp"
-            android:fontFamily="@font/nexa_xbold"
-            android:text="0"
-            android:textAlignment="viewEnd"
-            android:textColor="#348AB1"
-            android:textSize="24sp" />
-
-        <TextView
             android:id="@+id/textViewDash9pmWinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -515,9 +548,10 @@
     </androidx.cardview.widget.CardView>
 
     <FrameLayout
-        android:layout_width="411dp"
-        android:layout_height="150dp"
-        android:background="#FFFFFF"
+        android:id="@+id/frameLayout4"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_108sdp"
+        android:background="#00FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -527,7 +561,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="12dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             app:srcCompat="@drawable/big_bet"

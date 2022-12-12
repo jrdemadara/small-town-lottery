@@ -88,10 +88,8 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/frameLayout3"
-        app:layout_constraintVertical_bias="0.108">
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
             android:id="@+id/imageView17"
@@ -197,8 +195,8 @@
 
             <Button
                 android:id="@+id/buttonLogin"
-                android:layout_width="350dp"
-                android:layout_height="63dp"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_48sdp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:fontFamily="@font/nexa_xbold"
@@ -216,8 +214,8 @@
 
         <ImageView
             android:id="@+id/imageViewBiometric"
-            android:layout_width="65dp"
-            android:layout_height="62dp"
+            android:layout_width="@dimen/_58sdp"
+            android:layout_height="@dimen/_58sdp"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="15dp"
             android:src="@drawable/ic_baseline_fingerprint_52" />

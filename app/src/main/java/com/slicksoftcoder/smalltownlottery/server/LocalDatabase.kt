@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import androidx.core.database.getStringOrNull
 import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
 import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
+import com.slicksoftcoder.smalltownlottery.common.model.SoldOutModel
 import com.slicksoftcoder.smalltownlottery.features.bet.BetDetailsModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw2pmModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw5pmModel
@@ -15,6 +16,7 @@ import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw9pmModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.PnlModel
 import com.slicksoftcoder.smalltownlottery.features.history.HistoryBetModel
 import com.slicksoftcoder.smalltownlottery.features.history.HistoryModel
+import com.slicksoftcoder.smalltownlottery.features.result.ResultModel
 
 class LocalDatabase(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -30,6 +32,8 @@ class LocalDatabase(context: Context) :
         private const val TABLE_DRAWS = "draws"
         private const val TABLE_RESULTS = "result"
         private const val TABLE_CONFIG = "config"
+        private const val TABLE_SOLDOUT = "soldout"
+        private const val TABLE_LOWWIN = "lowwin"
 
         /* Table User */
         private const val USER_SERIAL_COL = "serial"
@@ -41,6 +45,12 @@ class LocalDatabase(context: Context) :
 
         /* Table Config */
         private const val CONFIG_BIOMETRIC_COL = "is_biometric"
+
+        /* Table Config */
+        private const val SOLDOUT_NUMBER_COL = "number"
+
+        /* Table Low Win */
+        private const val LOWWIN_NUMBER_COL = "number"
 
         /* Table Headers */
         private const val HEADERS_SERIAL_COL = "serial"
@@ -66,6 +76,7 @@ class LocalDatabase(context: Context) :
         private const val DETAILS_AMOUNT_COL = "amount"
         private const val DETAILS_WIN_COL = "win"
         private const val DETAILS_IS_RAMBOLITO_COL = "is_rambolito"
+        private const val DETAILS_IS_LOWWIN_COL = "is_lowwin"
         private const val DETAILS_BET_STATUS_COL = "bet_status"
         private const val DETAILS_IS_UPLOADED_COL = "is_uploaded"
         private const val DETAILS_DATE_UPLOADED_COL = "date_uploaded"
@@ -105,6 +116,18 @@ class LocalDatabase(context: Context) :
                 CONFIG_BIOMETRIC_COL + " INTEGER)"
             )
 
+        val createSoldOutTable = (
+            "CREATE TABLE " +
+                TABLE_SOLDOUT + " (" +
+                SOLDOUT_NUMBER_COL + " TEXT)"
+            )
+
+        val createLowWinTable = (
+            "CREATE TABLE " +
+                TABLE_LOWWIN + " (" +
+                LOWWIN_NUMBER_COL + " TEXT)"
+            )
+
         val createHeaderTable = (
             "CREATE TABLE " +
                 TABLE_BET_HEADERS + " (" +
@@ -134,6 +157,7 @@ class LocalDatabase(context: Context) :
                 DETAILS_AMOUNT_COL + " TEXT," +
                 DETAILS_WIN_COL + " TEXT," +
                 DETAILS_IS_RAMBOLITO_COL + " INTEGER," +
+                DETAILS_IS_LOWWIN_COL + " INTEGER," +
                 DETAILS_BET_STATUS_COL + " TEXT," +
                 DETAILS_IS_UPLOADED_COL + " INTEGER," +
                 DETAILS_DATE_UPLOADED_COL + " DATETIME)"
@@ -167,12 +191,20 @@ class LocalDatabase(context: Context) :
         db?.execSQL(createDetailsTable)
         db?.execSQL(createDrawsTable)
         db?.execSQL(createResultsTable)
+        db?.execSQL(createSoldOutTable)
+        db?.execSQL(createLowWinTable)
         db?.execSQL("INSERT INTO $TABLE_CONFIG ($CONFIG_BIOMETRIC_COL) VALUES(0)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
         db?.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
         db?.execSQL("DROP TABLE IF EXISTS $TABLE_DRAWS")
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_BET_HEADERS")
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_BET_DETAILS")
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_RESULTS")
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_CONFIG")
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_SOLDOUT")
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_LOWWIN")
         onCreate(db)
     }
 
@@ -192,6 +224,18 @@ class LocalDatabase(context: Context) :
     fun truncateResults() {
         val db = this.writableDatabase
         db.delete(TABLE_RESULTS, null, null)
+        db.close()
+    }
+
+    fun truncateSoldOut() {
+        val db = this.writableDatabase
+        db.delete(TABLE_SOLDOUT, null, null)
+        db.close()
+    }
+
+    fun truncateLowWin() {
+        val db = this.writableDatabase
+        db.delete(TABLE_LOWWIN, null, null)
         db.close()
     }
 
@@ -229,6 +273,22 @@ class LocalDatabase(context: Context) :
         values.put(RESULT_WINNING_NUMBER_COL, winningNumber)
         values.put(RESULT_DATE_CREATED_COL, dateCreated)
         db.insert(TABLE_RESULTS, null, values)
+        db.close()
+    }
+
+    fun updateSoldOut(number: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(SOLDOUT_NUMBER_COL, number)
+        db.insert(TABLE_SOLDOUT, null, values)
+        db.close()
+    }
+
+    fun updateLowWin(number: String?) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(LOWWIN_NUMBER_COL, number)
+        db.insert(TABLE_LOWWIN, null, values)
         db.close()
     }
 
@@ -392,7 +452,7 @@ class LocalDatabase(context: Context) :
         db.close()
     }
 
-    fun insertBetDetails(serial: String?, header: String?, betNumber: String?, amount: String?, win: String?, isRambolito: String?) {
+    fun insertBetDetails(serial: String?, header: String?, betNumber: String?, amount: String?, win: String?, isRambolito: String?, isLowWin: Int?) {
         val db = this.writableDatabase
         val values = ContentValues()
         values.put(DETAILS_SERIAL_COL, serial)
@@ -401,6 +461,7 @@ class LocalDatabase(context: Context) :
         values.put(DETAILS_AMOUNT_COL, amount)
         values.put(DETAILS_WIN_COL, win)
         values.put(DETAILS_IS_RAMBOLITO_COL, isRambolito)
+        values.put(DETAILS_IS_LOWWIN_COL, isLowWin)
         values.put(DETAILS_BET_STATUS_COL, "CANCELLED")
         values.put(DETAILS_IS_UPLOADED_COL, 0)
         db.insert(TABLE_BET_DETAILS, null, values)
@@ -492,7 +553,8 @@ class LocalDatabase(context: Context) :
                         betNumber = cursor.getString(2),
                         amount = cursor.getString(3),
                         win = cursor.getString(4),
-                        isRambolito = cursor.getString(5)
+                        isRambolito = cursor.getString(5),
+                        isLowWin = cursor.getString(6)
 
                     )
                 )
@@ -609,7 +671,8 @@ class LocalDatabase(context: Context) :
                         betNumber = cursor.getString(2),
                         amount = cursor.getString(3),
                         win = cursor.getString(4),
-                        isRambolito = cursor.getString(5)
+                        isRambolito = cursor.getString(5),
+                        isLowWin = cursor.getString(6)
                     )
                 )
             } while (cursor.moveToNext())
@@ -638,42 +701,36 @@ class LocalDatabase(context: Context) :
         db.close()
     }
 
-    fun retrieve2pmDrawResult(date: String, drawTime: String): String {
-        var data: String = String()
-        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = '$date' AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
+    fun retrieveDrawResult(date: String?): ArrayList<ResultModel> {
         val db = this.readableDatabase
-        val cursor = db.rawQuery(selectQuery, null)
+        val query = "SELECT\n" +
+            "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_serial = 'c80c9bc2-bc72-497d-960d-641b1c3df448'),'TBA') '2PM',\n" +
+            "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_serial = '4b1fa592-5930-4157-b850-53348b34bebe'),'TBA') '5PM',\n" +
+            "COALESCE((SELECT e1.winning_number FROM result e1 WHERE e1.draw_serial = 'b87f0522-29bc-443b-9056-4d691ebb49fa'),'TBA') '9PM'\n" +
+            "FROM result t1\n" +
+            "WHERE t1.draw_date = '$date'\n" +
+            "GROUP BY t1.draw_date"
+        val data: ArrayList<ResultModel> = ArrayList()
+        val cursor: Cursor?
+        try {
+            cursor = db.rawQuery(query, null)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            db.execSQL(query)
+            return ArrayList()
+        }
         if (cursor.moveToFirst()) {
-            data = cursor.getString(0)
+            do {
+                data.add(
+                    ResultModel(
+                        result2PM = cursor.getString(0),
+                        result5PM = cursor.getString(1),
+                        result9PM = cursor.getString(2)
+                    )
+                )
+            } while (cursor.moveToNext())
         }
         cursor.close()
-        db.close()
-        return data
-    }
-
-    fun retrieve5pmDrawResult(date: String, drawTime: String): String {
-        var data: String = String()
-        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = '$date' AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
-        val db = this.readableDatabase
-        val cursor = db.rawQuery(selectQuery, null)
-        if (cursor.moveToFirst()) {
-            data = cursor.getString(0)
-        }
-        cursor.close()
-        db.close()
-        return data
-    }
-
-    fun retrieve9pmDrawResult(date: String, drawTime: String): String {
-        var data: String = String()
-        val selectQuery = "SELECT $RESULT_WINNING_NUMBER_COL FROM $TABLE_RESULTS WHERE $RESULT_DATE_CREATED_COL = '$date' AND $RESULT_DRAW_SERIAL_COL = '$drawTime' LIMIT 1"
-        val db = this.readableDatabase
-        val cursor = db.rawQuery(selectQuery, null)
-        if (cursor.moveToFirst()) {
-            data = cursor.getString(0)
-        }
-        cursor.close()
-        db.close()
         return data
     }
 
@@ -1324,5 +1381,29 @@ class LocalDatabase(context: Context) :
         }
         cursor.close()
         return data
+    }
+
+    /* Sold Out Transactions */
+    fun retrieveSoldOut(number: String?): Boolean {
+        val columns = arrayOf(SOLDOUT_NUMBER_COL)
+        val db = this.readableDatabase
+        val selection = "$SOLDOUT_NUMBER_COL = '$number'"
+        val cursor = db.query(TABLE_SOLDOUT, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+    }
+
+    /* Low Win Transactions */
+    fun retrieveLowWin(number: String?): Boolean {
+        val columns = arrayOf(LOWWIN_NUMBER_COL)
+        val db = this.readableDatabase
+        val selection = "$LOWWIN_NUMBER_COL = '$number'"
+        val cursor = db.query(TABLE_LOWWIN, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
     }
 }

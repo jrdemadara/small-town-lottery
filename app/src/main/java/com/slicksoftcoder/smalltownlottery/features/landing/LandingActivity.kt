@@ -25,7 +25,6 @@ class LandingActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         buttonGetStarted = findViewById(R.id.buttonGetStarted)
         buttonGetStarted.setOnClickListener {
-            printReceipt()
             val intent = Intent(this, AuthenticateActivity::class.java)
             startActivity(intent)
             finish()
@@ -46,31 +45,6 @@ class LandingActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, PERMISSION, 1)
         } else if (permission2 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, PERMISSION, 1)
-        }
-    }
-
-    private fun printReceipt() {
-        val bluetoothManager = applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        bluetoothManager.adapter
-        if (!bluetoothManager.adapter.isEnabled) {
-            val toast = Toast.makeText(this@LandingActivity, "Please check your bluetooth connection.", Toast.LENGTH_SHORT)
-            toast.setGravity(Gravity.TOP, 0, 250)
-            toast.show()
-        } else {
-            checkPermissions()
-            val printer = EscPosPrinter(BluetoothPrintersConnections.selectFirstPaired(), 203, 48f, 32)
-            printer
-                .printFormattedText(
-                    "[C]<img>${
-                    PrinterTextParserImg.bitmapToHexadecimalString(
-                        printer,
-                        this.applicationContext.resources.getDrawableForDensity(
-                            android.R.drawable.ic_media_play,
-                            DisplayMetrics.DENSITY_MEDIUM
-                        )
-                    )}</img>\n" +
-                        "[C]Printer is ready!\n".trimIndent()
-                )
         }
     }
 }
