@@ -476,6 +476,39 @@ class LocalDatabase(context: Context) :
         db.close()
     }
 
+    fun checkDuplicateRegular(headerSerial: String?, betNumber: String?): Boolean {
+        val columns = arrayOf(DETAILS_SERIAL_COL)
+        val db = this.readableDatabase
+        val selection = "$DETAILS_HEADER_SERIAL_COL = '$headerSerial' AND $DETAILS_BET_NUMBER_COL = '$betNumber' AND $DETAILS_IS_RAMBOLITO_COL = '0' AND $DETAILS_IS_LOWWIN_COL = '0'"
+        val cursor = db.query(TABLE_BET_DETAILS, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+    }
+
+    fun checkDuplicateLowWin(headerSerial: String?, betNumber: String?): Boolean {
+        val columns = arrayOf(DETAILS_SERIAL_COL)
+        val db = this.readableDatabase
+        val selection = "$DETAILS_HEADER_SERIAL_COL = '$headerSerial' AND $DETAILS_BET_NUMBER_COL = '$betNumber' AND $DETAILS_IS_LOWWIN_COL = '1'"
+        val cursor = db.query(TABLE_BET_DETAILS, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+    }
+
+    fun checkDuplicateRambolito(headerSerial: String?, betNumber: String?): Boolean {
+        val columns = arrayOf(DETAILS_SERIAL_COL)
+        val db = this.readableDatabase
+        val selection = "$DETAILS_HEADER_SERIAL_COL = '$headerSerial' AND $DETAILS_BET_NUMBER_COL = '$betNumber' AND $DETAILS_IS_RAMBOLITO_COL = '1'"
+        val cursor = db.query(TABLE_BET_DETAILS, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+    }
+
     fun deleteCanceledBet() {
         val db = this.writableDatabase
         db.delete(TABLE_BET_DETAILS, "$DETAILS_BET_STATUS_COL = ?", arrayOf("CANCELLED"))

@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class NodeServer {
     companion object {
-        private const val BASE_URL: String = "http://31.187.75.30:3000/api/v1/uri/"
+        private const val BASE_URL: String = "http://192.168.0.254:3000/api/v1/uri/"
         private val interceptor: HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
             this.level = HttpLoggingInterceptor.Level.BODY
         }

@@ -1,5 +1,5 @@
 package com.slicksoftcoder.smalltownlottery.server
-import com.slicksoftcoder.smalltownlottery.common.model.*
+import com.slicksoftcoder.smalltownlottery.common.model.* // ktlint-disable no-wildcard-imports
 import com.slicksoftcoder.smalltownlottery.features.authenticate.UserModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw2pmModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw5pmModel
@@ -13,6 +13,14 @@ interface ApiInterface {
     @Headers("Content-Type:application/json")
     @POST("login")
     fun signin(@Body info: UserModel): Call<ResponseBody>
+
+    @Headers("Content-Type:application/json")
+    @GET("checkAvailability")
+    fun checkAvailability(@Query("username") username: String?, @Query("password") password: String?): Call<ResponseBody>
+
+    @Headers("Content-Type:application/json")
+    @GET("deviceMatcher")
+    fun deviceMatcher(@Query("username") username: String?, @Query("password") password: String?, @Query("deviceid") deviceid: String?): Call<ResponseBody>
 
     @Headers("Content-Type:application/json")
     @POST("updateUserDevice")
