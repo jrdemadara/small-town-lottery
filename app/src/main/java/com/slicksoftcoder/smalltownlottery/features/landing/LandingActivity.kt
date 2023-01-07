@@ -1,29 +1,27 @@
 package com.slicksoftcoder.smalltownlottery.features.landing
 
 import android.Manifest
-import android.bluetooth.BluetoothManager
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.DisplayMetrics
-import android.view.Gravity
 import android.widget.Button
-import android.widget.Toast
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.khairo.escposprinter.EscPosPrinter
-import com.khairo.escposprinter.connection.bluetooth.BluetoothPrintersConnections
-import com.khairo.escposprinter.textparser.PrinterTextParserImg
+import com.slicksoftcoder.smalltownlottery.BuildConfig
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.features.authenticate.AuthenticateActivity
 
 class LandingActivity : AppCompatActivity() {
     private lateinit var buttonGetStarted: Button
+    private lateinit var textViewVersion: TextView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         buttonGetStarted = findViewById(R.id.buttonGetStarted)
+        textViewVersion = findViewById(R.id.textViewVersionMain)
+        textViewVersion.text = "v"+BuildConfig.VERSION_NAME
+        checkPermissions()
         buttonGetStarted.setOnClickListener {
             val intent = Intent(this, AuthenticateActivity::class.java)
             startActivity(intent)

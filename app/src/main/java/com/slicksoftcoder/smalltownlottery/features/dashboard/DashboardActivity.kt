@@ -145,7 +145,13 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
 
+        val isUploadNeeded: Boolean = localDatabase.retrieveUnupload()
+        if (isUploadNeeded) {
+            val iconUploadAlert: Int = R.drawable.menu_upload_alert
+            textViewMenuTransmit.setCompoundDrawablesWithIntrinsicBounds(0, iconUploadAlert, 0, 0)
+        }
         lifecycleScope.launch(Dispatchers.IO) {
+
             val pnl = async { localDatabase.retrievePNL(dateUtil.dateFormat()) }
             val result2pm = async { localDatabase.retrieve2pmResult(dateUtil.dateFormat()) }
             val result5pm = async { localDatabase.retrieve5pmResult(dateUtil.dateFormat()) }
@@ -401,7 +407,7 @@ class DashboardActivity : AppCompatActivity() {
         } else {
             textViewPNL.setTextColor(Color.parseColor("#41B134"))
         }
-        delay(200L)
+        delay(300L)
         textViewTotalBet.text = formatter.format(totalBet).toString() + ".00"
         textViewTotalHits.text = formatter.format(totalHit).toString() + ".00"
         textViewPNL.text = formatter.format(pnl).toString() + ".00"

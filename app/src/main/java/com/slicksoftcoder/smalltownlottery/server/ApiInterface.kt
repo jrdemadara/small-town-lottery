@@ -15,6 +15,14 @@ interface ApiInterface {
     fun signin(@Body info: UserModel): Call<ResponseBody>
 
     @Headers("Content-Type:application/json")
+    @GET("checkState")
+    fun checkState(): Call<ResponseBody>
+
+    @Headers("Content-Type:application/json")
+    @GET("checkVersion")
+    fun checkVersion(): Call<List<versionModel>>
+
+    @Headers("Content-Type:application/json")
     @GET("checkAvailability")
     fun checkAvailability(@Query("username") username: String?, @Query("password") password: String?): Call<ResponseBody>
 

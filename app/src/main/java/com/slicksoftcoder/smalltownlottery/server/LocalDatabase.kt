@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteOpenHelper
 import androidx.core.database.getStringOrNull
 import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
 import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
-import com.slicksoftcoder.smalltownlottery.common.model.SoldOutModel
 import com.slicksoftcoder.smalltownlottery.features.bet.BetDetailsModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw2pmModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.Draw5pmModel
@@ -597,13 +596,30 @@ class LocalDatabase(context: Context) :
         return data
     }
 
-    fun retrieveBetQuota(drawDate: String?, drawName: String?, betNumber: String?): String {
+    fun retrieveBetQuotaRegular(drawDate: String?, drawName: String?, betNumber: String?): String {
         var data: String = String()
         val selectQuery = "SELECT t2.draw_date, t3.draw_name, t1.bet_number, SUM(t1.amount) total_bet\n" +
             "FROM bet_details t1\n" +
             "INNER JOIN bet_headers t2 on t1.header_serial = t2.serial\n" +
             "INNER JOIN draws t3 on t2.draw_time = t3.serial\n" +
             "WHERE t2.draw_date = '$drawDate' AND t3.draw_name = '$drawName' AND t1.bet_number = '$betNumber' AND t1.is_rambolito = 0"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        if (cursor.moveToFirst()) {
+            data = cursor.getStringOrNull(3).toString()
+        }
+        cursor.close()
+        db.close()
+        return data
+    }
+
+    fun retrieveBetQuotaRambolito(drawDate: String?, drawName: String?, betNumber: String?): String {
+        var data: String = String()
+        val selectQuery = "SELECT t2.draw_date, t3.draw_name, t1.bet_number, SUM(t1.amount) total_bet\n" +
+            "FROM bet_details t1\n" +
+            "INNER JOIN bet_headers t2 on t1.header_serial = t2.serial\n" +
+            "INNER JOIN draws t3 on t2.draw_time = t3.serial\n" +
+            "WHERE t2.draw_date = '$drawDate' AND t3.draw_name = '$drawName' AND t1.bet_number = '$betNumber' AND t1.is_rambolito = 1"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
         if (cursor.moveToFirst()) {
@@ -768,6 +784,17 @@ class LocalDatabase(context: Context) :
     }
 
     /* Bet Transmit Transactions */
+
+    fun retrieveUnupload(): Boolean {
+        val columns = arrayOf(HEADERS_SERIAL_COL)
+        val db = this.readableDatabase
+        val selection = "$HEADERS_IS_UPLOADED_COL = 0"
+        val cursor = db.query(TABLE_BET_HEADERS, columns, selection, null, null, null, null)
+        val cursorCount = cursor.count
+        cursor.close()
+        db.close()
+        return cursorCount > 0
+    }
 
     fun transmitBetHeaders(): ArrayList<BetHeaderTransmitModel> {
         val db = this.readableDatabase

@@ -22,7 +22,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.*
+import android.widget.* // ktlint-disable no-wildcard-imports
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -46,14 +46,17 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
+import java.util.HashMap
 import kotlin.properties.Delegates
 
 class BetActivity : AppCompatActivity() {
     private lateinit var localDatabase: LocalDatabase
     private lateinit var sharedPreferences: SharedPreferences
     private var prefname = "USERPREF"
-    private var prefquota = "BETQUOTA"
-    private var quota: String? = null
+    private var prefQuotaRegular = "QUOTAREGULAR"
+    private var prefQuotaRambolito = "QUOTARAMBOLITO"
+    private var quotaRegular: String? = null
+    private var quotaRambolito: String? = null
     private lateinit var dateUtil: DateUtil
     private lateinit var recyclerView: RecyclerView
     private var adapter: BetAdapter? = null
@@ -76,7 +79,8 @@ class BetActivity : AppCompatActivity() {
         dateUtil = DateUtil()
         localDatabase = LocalDatabase(this)
         sharedPreferences = getSharedPreferences(prefname, MODE_PRIVATE)
-        quota = sharedPreferences.getString(prefquota, null).toString()
+        quotaRegular = sharedPreferences.getString(prefQuotaRegular, null).toString()
+        quotaRambolito = sharedPreferences.getString(prefQuotaRambolito, null).toString()
         recyclerView = findViewById(R.id.recyclerViewBets)
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = BetAdapter()
@@ -177,17 +181,17 @@ class BetActivity : AppCompatActivity() {
                                 /* Check bet type */
                                 if (isRambolito == 0) {
                                     /* Validate quota */
-                                    val totalBetQuota = localDatabase.retrieveBetQuota(dateUtil.dateFormat(), drawTime, editTextBetNumber.text.toString())
-                                    if (editTextBetAmount.text.toString().toInt() > quota!!.toInt()) {
-                                        resultStatus("Warning", "Bet amount should not be greater than $quota.", 0)
+                                    val totalBetQuota = localDatabase.retrieveBetQuotaRegular(dateUtil.dateFormat(), drawTime, editTextBetNumber.text.toString())
+                                    if (editTextBetAmount.text.toString().toInt() > quotaRegular!!.toInt()) {
+                                        resultStatus("Warning", "Bet amount should not be greater than $quotaRegular.", 0)
                                     } else {
                                         /* Check if divisible by 5 */
                                         val isDivisibleBy5 = amount.toInt() % 5 === 0
                                         if (isDivisibleBy5) {
                                             /* Validate quota */
                                             if (totalBetQuota != "null") {
-                                                val bettableAmount = quota!!.toInt() - totalBetQuota.toInt()
-                                                if (totalBetQuota.toInt() >= quota!!.toInt()) {
+                                                val bettableAmount = quotaRegular!!.toInt() - totalBetQuota.toInt()
+                                                if (totalBetQuota.toInt() >= quotaRegular!!.toInt()) {
                                                     resultStatus("Warning", "Bet quota has been reach.", 0)
                                                 } else if (editTextBetAmount.text.toString().toInt() > bettableAmount) {
                                                     resultStatus("Warning", "Only $bettableAmount pesos are available to reach the limit.", 0)
@@ -217,19 +221,102 @@ class BetActivity : AppCompatActivity() {
 
                                 /* Rambolito Bet */
                                 if (isRambolito == 1) {
-                                    /* Check if amount is divisible by 30 */
-                                    val isDivisibleBy30 = amount.toInt() % 30 === 0
-                                    if (isDivisibleBy30) {
-                                        /* Check if amount is >= 30 */
-                                        if (amount >= 30) {
-                                            rambolitoBet(amount, serial.toString(), headerSerial.toString(), isRambolito.toString(), dialog)
+                                    /* Validate quota */
+                                    val totalBetQuota = localDatabase.retrieveBetQuotaRambolito(dateUtil.dateFormat(), drawTime, editTextBetNumber.text.toString())
+                                    if (totalBetQuota != "null") {
+                                        val bettableAmount = quotaRambolito!!.toInt() - totalBetQuota.toInt()
+                                        if (totalBetQuota.toInt() >= quotaRambolito!!.toInt()) {
+                                            resultStatus("Warning", "Bet quota has been reach.", 0)
+                                        } else if (editTextBetAmount.text.toString().toInt() > bettableAmount) {
+                                            resultStatus("Warning", "Only $bettableAmount pesos are available to reach the limit.", 0)
                                         } else {
-                                            resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
-                                            editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
-                                            dialog.dismiss()
+                                            if (editTextBetAmount.text.toString().toInt() > quotaRambolito!!.toInt()) {
+                                                resultStatus("Warning", "Bet amount should not be greater than $quotaRambolito.", 0)
+                                            } else {
+                                                /* Check if number contains identical */
+                                                val isIdentical: Boolean = duplicateNumber(editTextBetNumber.text.toString())
+                                                if (isIdentical) {
+                                                    /* Check if amount is divisible by 15 */
+                                                    val isDivisibleBy15 = amount.toInt() % 15 === 0
+                                                    if (isDivisibleBy15) {
+                                                        /* Check if amount is >= 15 */
+                                                        if (amount >= 15) {
+                                                            rambolitoIdenticalBet(amount, serial.toString(), headerSerial.toString(), isRambolito.toString(), dialog)
+                                                        } else {
+                                                            resultStatus("Warning", "Amount for rambolito should not be less than 15.", 0)
+                                                            editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
+                                                            dialog.dismiss()
+                                                        }
+                                                    } else {
+                                                        resultStatus("Oops!", "Amount should be divisible by 15.", 0)
+                                                    }
+                                                } else {
+                                                    val bettableAmount = quotaRambolito!!.toInt() - totalBetQuota.toInt()
+                                                    if (totalBetQuota.toInt() >= quotaRambolito!!.toInt()) {
+                                                        resultStatus("Warning", "Bet quota has been reach.", 0)
+                                                    } else if (editTextBetAmount.text.toString().toInt() > bettableAmount) {
+                                                        resultStatus("Warning", "Only $bettableAmount pesos are available to reach the limit.", 0)
+                                                    } else {
+                                                        if (editTextBetAmount.text.toString().toInt() > quotaRambolito!!.toInt()) {
+                                                            resultStatus("Warning", "Bet amount should not be greater than $quotaRambolito.", 0)
+                                                        } else {
+                                                            /* Check if amount is divisible by 30 */
+                                                            val isDivisibleBy30 = amount.toInt() % 30 === 0
+                                                            if (isDivisibleBy30) {
+                                                                /* Check if amount is >= 30 */
+                                                                if (amount >= 30) {
+                                                                    rambolitoRegularBet(amount, serial.toString(), headerSerial.toString(), isRambolito.toString(), dialog)
+                                                                } else {
+                                                                    resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
+                                                                    editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
+                                                                    dialog.dismiss()
+                                                                }
+                                                            } else {
+                                                                resultStatus("Oops!", "Amount should be divisible by 30.", 0)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     } else {
-                                        resultStatus("Oops!", "Amount should be divisible by 30.", 0)
+                                        if (editTextBetAmount.text.toString().toInt() > quotaRambolito!!.toInt()) {
+                                            resultStatus("Warning", "Bet amount should not be greater than $quotaRambolito.", 0)
+                                        } else {
+                                            /* Check if number contains identical */
+                                            val isIdentical: Boolean = duplicateNumber(editTextBetNumber.text.toString())
+                                            if (isIdentical) {
+                                                /* Check if amount is divisible by 15 */
+                                                val isDivisibleBy15 = amount.toInt() % 15 === 0
+                                                if (isDivisibleBy15) {
+                                                    /* Check if amount is >= 15 */
+                                                    if (amount >= 15) {
+                                                        rambolitoIdenticalBet(amount, serial.toString(), headerSerial.toString(), isRambolito.toString(), dialog)
+                                                    } else {
+                                                        resultStatus("Warning", "Amount for rambolito should not be less than 15.", 0)
+                                                        editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
+                                                        dialog.dismiss()
+                                                    }
+                                                } else {
+                                                    resultStatus("Oops!", "Amount should be divisible by 15.", 0)
+                                                }
+                                            } else {
+                                                /* Check if amount is divisible by 30 */
+                                                val isDivisibleBy30 = amount.toInt() % 30 === 0
+                                                if (isDivisibleBy30) {
+                                                    /* Check if amount is >= 30 */
+                                                    if (amount >= 30) {
+                                                        rambolitoRegularBet(amount, serial.toString(), headerSerial.toString(), isRambolito.toString(), dialog)
+                                                    } else {
+                                                        resultStatus("Warning", "Amount for rambolito should not be less than 30.", 0)
+                                                        editTextBetAmount.setTextColor(Color.parseColor("#F15555"))
+                                                        dialog.dismiss()
+                                                    }
+                                                } else {
+                                                    resultStatus("Oops!", "Amount should be divisible by 30.", 0)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -363,6 +450,24 @@ class BetActivity : AppCompatActivity() {
         }
     }
 
+    private fun duplicateNumber(bet: String): Boolean {
+        val identical = ArrayList<Char>()
+        for (i in bet.indices) {
+            val c = bet[i]
+            if (identical.contains(c)) {
+                continue
+            }
+
+            for (j in i + 1 until bet.length) {
+                if (c == bet[j]) {
+                    identical.add(c)
+                    break
+                }
+            }
+        }
+        return identical.size != 0
+    }
+
     private fun regularBet(
         amount: Double,
         serial: String,
@@ -437,7 +542,7 @@ class BetActivity : AppCompatActivity() {
         }
     }
 
-    private fun rambolitoBet(
+    private fun rambolitoRegularBet(
         amount: Double,
         serial: String,
         headerSerial: String,
@@ -450,6 +555,44 @@ class BetActivity : AppCompatActivity() {
             resultStatus("Oops!", "${editTextBetNumber.text} is already added.", 1)
         } else {
             winAmount = 2750 * (amount / 30)
+            editTextBetAmount.setTextColor(Color.parseColor("#000000"))
+            /* Save Bet */
+            localDatabase.insertBetDetails(
+                serial,
+                headerSerial,
+                editTextBetNumber.text.toString(),
+                editTextBetAmount.text.toString(),
+                winAmount.toString(),
+                isRambolito,
+                0
+            )
+            val list = localDatabase.retrieveBetDetails(headerSerial)
+            /* Retrieve Bet */
+            adapter?.addItems(list)
+            /* Update UI */
+            totalAmount += amount
+            textViewTotal.text = formatter.format(totalAmount).toString() + ".00"
+            editTextBetNumber.setText("")
+            editTextBetAmount.setText("")
+            winAmount = 0.0
+            resultStatus("Success", "Bet has been added.", 1)
+            dialog.dismiss()
+        }
+    }
+
+    private fun rambolitoIdenticalBet(
+        amount: Double,
+        serial: String,
+        headerSerial: String,
+        isRambolito: String,
+        dialog: Dialog
+    ) {
+        /* Check Duplicate Bet */
+        val isDuplicate: Boolean = localDatabase.checkDuplicateRambolito(headerSerial, editTextBetNumber.text.toString())
+        if (isDuplicate) {
+            resultStatus("Oops!", "${editTextBetNumber.text} is already added.", 1)
+        } else {
+            winAmount = 2750 * (amount / 15)
             editTextBetAmount.setTextColor(Color.parseColor("#000000"))
             /* Save Bet */
             localDatabase.insertBetDetails(

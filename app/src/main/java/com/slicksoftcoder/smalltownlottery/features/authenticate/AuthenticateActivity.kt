@@ -20,8 +20,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isGone
-import com.muddassir.connection_checker.ConnectionState
-import com.muddassir.connection_checker.checkConnection
+import com.slicksoftcoder.smalltownlottery.BuildConfig
 import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.UserUpdateModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
@@ -51,8 +50,10 @@ class AuthenticateActivity : AppCompatActivity() {
     private lateinit var imageViewBoimetric: ImageView
     private lateinit var device: String
     private lateinit var deviceId: UUID
+    private lateinit var textViewVersion: TextView
     private var cancellationSignal: CancellationSignal? = null
     private val authenticationCallback: BiometricPrompt.AuthenticationCallback
+
         get() =
             @RequiresApi(Build.VERSION_CODES.P)
             object : BiometricPrompt.AuthenticationCallback() {
@@ -96,7 +97,9 @@ class AuthenticateActivity : AppCompatActivity() {
         remember = findViewById(R.id.checkBoxRemember)
         textViewForgotPassword = findViewById(R.id.textViewForgotPassword)
         imageViewBoimetric = findViewById(R.id.imageViewBiometric)
+        textViewVersion = findViewById(R.id.textViewVersionAuth)
         deviceId = UUID.randomUUID()
+        textViewVersion.text = "v"+BuildConfig.VERSION_NAME
         if (prefusername.toString().isBlank() || prefpassword.toString().isBlank()) {
             remember.isChecked = false
         } else {

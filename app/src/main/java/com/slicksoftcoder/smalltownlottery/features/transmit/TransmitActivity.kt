@@ -3,7 +3,7 @@ package com.slicksoftcoder.smalltownlottery.features.transmit
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.widget.*
+import android.widget.* // ktlint-disable no-wildcard-imports
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible

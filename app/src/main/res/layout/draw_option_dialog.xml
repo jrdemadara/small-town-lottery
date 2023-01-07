@@ -55,6 +55,12 @@
         android:text="5 PM"
         android:textSize="16dp" />
 
+    <View
+        android:id="@+id/divider9"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+
     <RadioButton
         android:id="@+id/radioButtonBet9PM"
         android:layout_width="match_parent"

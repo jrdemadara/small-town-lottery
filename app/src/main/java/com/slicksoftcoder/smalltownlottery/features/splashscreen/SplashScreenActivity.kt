@@ -9,16 +9,19 @@ import android.os.Looper
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.slicksoftcoder.smalltownlottery.BuildConfig
 import com.slicksoftcoder.smalltownlottery.R
-import com.slicksoftcoder.smalltownlottery.common.model.DrawUpdateModel
-import com.slicksoftcoder.smalltownlottery.common.model.LowWinModel
-import com.slicksoftcoder.smalltownlottery.common.model.QuotaUpdateModel
-import com.slicksoftcoder.smalltownlottery.common.model.SoldOutModel
+import com.slicksoftcoder.smalltownlottery.common.model.*
 import com.slicksoftcoder.smalltownlottery.features.landing.LandingActivity
+import com.slicksoftcoder.smalltownlottery.features.outdated.OutdatedActivity
+import com.slicksoftcoder.smalltownlottery.features.undermaintenance.UnderMaintenanceActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
+import com.slicksoftcoder.smalltownlottery.util.DateUtil
+import com.slicksoftcoder.smalltownlottery.util.LoadingScreen
 import com.slicksoftcoder.smalltownlottery.util.NetworkChecker
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,23 +32,20 @@ class SplashScreenActivity : AppCompatActivity() {
     private lateinit var localDatabase: LocalDatabase
     private lateinit var sharedPreferences: SharedPreferences
     private var prefname = "USERPREF"
-    private var prefquota = "BETQUOTA"
+    private var prefQuotaRegular = "QUOTAREGULAR"
+    private var prefQuotaRambolito = "QUOTARAMBOLITO"
+    private var prefVersion = "APPVERSION"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash_screen)
         localDatabase = LocalDatabase(this)
         sharedPreferences = getSharedPreferences(prefname, MODE_PRIVATE)
-        networkConnection()
         @Suppress("DEPRECATION")
         window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
-        Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this, LandingActivity::class.java)
-            startActivity(intent)
-            finish()
-        }, 3000)
+        checkState()
     }
 
     private fun networkConnection() {
@@ -56,6 +56,7 @@ class SplashScreenActivity : AppCompatActivity() {
                 updateQuota()
                 updateSoldOut()
                 updateLowWin()
+                updateVersion()
                 localDatabase.deleteCanceledBet()
             }
         }
@@ -104,7 +105,7 @@ class SplashScreenActivity : AppCompatActivity() {
                 assert(list != null)
                 if (list != null) {
                     for (x in list) {
-                        updateQuota(x.amount)
+                        updateQuota(x.regular, x.rambolito)
                     }
                 }
             }
@@ -160,10 +161,72 @@ class SplashScreenActivity : AppCompatActivity() {
         })
     }
 
-    private fun updateQuota(quota: String?) {
+    private fun updateVersion() {
+        val retrofit = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        retrofit.checkVersion().enqueue(object : Callback<List<versionModel>?> {
+            override fun onResponse(
+                call: Call<List<versionModel>?>,
+                response: Response<List<versionModel>?>
+            ) {
+                val list: List<versionModel?>?
+                list = response.body()
+                assert(list != null)
+                if (list != null) {
+                    for (x in list) {
+                        updateVersion(x.major, x.minor, x.patch, x.tag)
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<List<versionModel>?>, t: Throwable) {
+            }
+        })
+    }
+
+    private fun updateQuota(regular: String?, rambolito: String?) {
         getSharedPreferences(prefname, MODE_PRIVATE)
             .edit()
-            .putString(prefquota, quota)
+            .putString(prefQuotaRegular, regular)
+            .putString(prefQuotaRambolito, rambolito)
             .apply()
+    }
+
+    private fun updateVersion(major: String?, minor: String?, patch: String?, tag: String?) {
+        val version = "$major.$minor.$patch-$tag"
+        getSharedPreferences(prefname, MODE_PRIVATE)
+            .edit()
+            .putString(prefVersion, version)
+            .apply()
+    }
+
+    private fun checkState() {
+        sharedPreferences = getSharedPreferences(prefname, MODE_PRIVATE)
+        val prefVersion = sharedPreferences.getString(prefVersion, null)
+        val retIn = NodeServer.getRetrofitInstance().create(ApiInterface::class.java)
+        retIn.checkState().enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                LoadingScreen.displayLoadingWithText(applicationContext, "Logging in...", false)
+                if (response.code() == 200) {
+                    networkConnection()
+                    if (prefVersion == BuildConfig.VERSION_NAME) {
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            val intent = Intent(applicationContext, LandingActivity::class.java)
+                            startActivity(intent)
+                            finish()
+                        }, 3000)
+                    } else {
+                        val intent = Intent(applicationContext, OutdatedActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                } else if (response.code() == 201) {
+                    val intent = Intent(applicationContext, UnderMaintenanceActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
+            }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+            }
+        })
     }
 }

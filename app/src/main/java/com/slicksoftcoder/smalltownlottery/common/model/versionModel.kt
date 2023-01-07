@@ -1,5 +1,8 @@
 package com.slicksoftcoder.smalltownlottery.common.model
 
-data class SoldOutModel(
-    val number: String
+data class versionModel(
+    val major: String,
+    val minor: String,
+    val patch: String,
+    val tag: String
 )

@@ -1,5 +1,6 @@
 package com.slicksoftcoder.smalltownlottery.common.model
 
 data class QuotaUpdateModel(
-    val amount: String
+    val regular: String,
+    val rambolito: String,
 )
