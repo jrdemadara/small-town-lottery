@@ -1,24 +1,27 @@
 package com.slicksoftcoder.smalltownlottery.features.splashscreen
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.slicksoftcoder.smalltownlottery.BuildConfig
 import com.slicksoftcoder.smalltownlottery.R
-import com.slicksoftcoder.smalltownlottery.common.model.*
+import com.slicksoftcoder.smalltownlottery.common.model.* // ktlint-disable no-wildcard-imports
 import com.slicksoftcoder.smalltownlottery.features.landing.LandingActivity
 import com.slicksoftcoder.smalltownlottery.features.outdated.OutdatedActivity
+import com.slicksoftcoder.smalltownlottery.features.timeauto.TimeAutoActivity
 import com.slicksoftcoder.smalltownlottery.features.undermaintenance.UnderMaintenanceActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
-import com.slicksoftcoder.smalltownlottery.util.DateUtil
 import com.slicksoftcoder.smalltownlottery.util.LoadingScreen
 import com.slicksoftcoder.smalltownlottery.util.NetworkChecker
 import okhttp3.ResponseBody
@@ -45,7 +48,21 @@ class SplashScreenActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
-        checkState()
+        if (isTimeAutomatic(this.applicationContext)) {
+            checkState()
+        } else {
+            val intent = Intent(applicationContext, TimeAutoActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+    }
+
+    private fun isTimeAutomatic(c: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            Settings.Global.getInt(c.contentResolver, Settings.Global.AUTO_TIME, 0) == 1
+        } else {
+            Settings.System.getInt(c.contentResolver, Settings.System.AUTO_TIME, 0) == 1
+        }
     }
 
     private fun networkConnection() {

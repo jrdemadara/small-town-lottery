@@ -12,9 +12,11 @@ import android.graphics.drawable.ColorDrawable
 import android.icu.text.DecimalFormat
 import android.icu.text.NumberFormat
 import android.net.ConnectivityManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.DisplayMetrics
@@ -37,6 +39,7 @@ import com.slicksoftcoder.smalltownlottery.R
 import com.slicksoftcoder.smalltownlottery.common.model.BetDetailsTransmitModel
 import com.slicksoftcoder.smalltownlottery.common.model.BetHeaderTransmitModel
 import com.slicksoftcoder.smalltownlottery.features.dashboard.DashboardActivity
+import com.slicksoftcoder.smalltownlottery.features.timeauto.TimeAutoActivity
 import com.slicksoftcoder.smalltownlottery.server.ApiInterface
 import com.slicksoftcoder.smalltownlottery.server.LocalDatabase
 import com.slicksoftcoder.smalltownlottery.server.NodeServer
@@ -99,7 +102,7 @@ class BetActivity : AppCompatActivity() {
         winAmount = 0.0
         drawTime = ""
 
-        // * Check Internet Connection
+        // Check Internet Connection
         val connection = this.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connection.activeNetworkInfo
         if (activeNetwork != null) {
@@ -382,44 +385,48 @@ class BetActivity : AppCompatActivity() {
         }
 
         buttonBetConfirm.setOnClickListener {
-            if (totalAmount <= 0) {
-                resultStatus("Warning", "Please place a bet first.", 0)
-            } else {
-                val builder = AlertDialog.Builder(this)
-                builder.setTitle("Confirm")
-                builder.setMessage("Do you wish to continue?")
-                builder.setIcon(R.drawable.ic_round_check_circle_24)
-                builder.setPositiveButton("Yes") { dialogInterface, _ ->
-                    val agent = localDatabase.retrieveAgent()
-                    val draw = localDatabase.retrieveDrawSerial(drawTime)
-                    val transCode: String = "B" + dateUtil.dateShort() + dateUtil.currentTimeComplete() + agent.take(2)
-                        .uppercase(Locale.ROOT)
-                    val transCodeDash = transCode.replace("-", "")
-                    val transCodeCol = transCodeDash.replace(":", "")
-                    localDatabase.insertBetHeader(
-                        headerSerial.toString(),
-                        agent,
-                        dateUtil.dateFormat(),
-                        draw,
-                        transCodeCol,
-                        totalAmount.toString(),
-                        dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete()
-                    )
-                    localDatabase.confirmBetDetails(headerSerial.toString())
-                    transmitBetHeader(headerSerial.toString())
-                    transmitBetDetails(headerSerial.toString())
-                    printReceipt(headerSerial.toString(), dateUtil.dateFormat(), drawTime, dateUtil.currentTime(), transCodeCol, formatter.format(totalAmount).toString() + ".00")
-                    showSuccess()
-                    Handler(Looper.getMainLooper()).postDelayed({
+            if (isTimeAutomatic(this.applicationContext)) {
+                if (totalAmount <= 0) {
+                    resultStatus("Warning", "Please place a bet first.", 0)
+                } else {
+                    val builder = AlertDialog.Builder(this)
+                    builder.setTitle("Confirm")
+                    builder.setMessage("Do you wish to continue?")
+                    builder.setIcon(R.drawable.ic_round_check_circle_24)
+                    builder.setPositiveButton("Yes") { dialogInterface, _ ->
+                        val agent = localDatabase.retrieveAgent()
+                        val draw = localDatabase.retrieveDrawSerial(drawTime)
+                        val transCode: String = "B" + dateUtil.dateShort() + dateUtil.currentTimeComplete() + agent.take(2)
+                            .uppercase(Locale.ROOT)
+                        val transCodeDash = transCode.replace("-", "")
+                        val transCodeCol = transCodeDash.replace(":", "")
+                        localDatabase.insertBetHeader(
+                            headerSerial.toString(),
+                            agent,
+                            dateUtil.dateFormat(),
+                            draw,
+                            transCodeCol,
+                            totalAmount.toString(),
+                            dateUtil.dateFormat() + " " + dateUtil.currentTimeComplete()
+                        )
+                        localDatabase.confirmBetDetails(headerSerial.toString())
+                        transmitBetHeader(headerSerial.toString())
+                        transmitBetDetails(headerSerial.toString())
+                        printReceipt(headerSerial.toString(), dateUtil.dateFormat(), drawTime, dateUtil.currentTime(), transCodeCol, formatter.format(totalAmount).toString() + ".00")
+                        showSuccess()
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            dialogInterface.dismiss()
+                        }, 2000)
+                    }
+                    builder.setNeutralButton("Cancel") { dialogInterface, _ ->
                         dialogInterface.dismiss()
-                    }, 2000)
+                    }
+                    val alertDialog: AlertDialog = builder.create()
+                    alertDialog.setCancelable(false)
+                    alertDialog.show()
                 }
-                builder.setNeutralButton("Cancel") { dialogInterface, _ ->
-                    dialogInterface.dismiss()
-                }
-                val alertDialog: AlertDialog = builder.create()
-                alertDialog.setCancelable(false)
-                alertDialog.show()
+            } else {
+                startActivity(Intent(applicationContext, TimeAutoActivity::class.java))
             }
         }
         buttonBetCancel.setOnClickListener {
@@ -447,6 +454,14 @@ class BetActivity : AppCompatActivity() {
                 alertDialog.setCancelable(false)
                 alertDialog.show()
             }
+        }
+    }
+
+    private fun isTimeAutomatic(c: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            Settings.Global.getInt(c.contentResolver, Settings.Global.AUTO_TIME, 0) == 1
+        } else {
+            Settings.System.getInt(c.contentResolver, Settings.System.AUTO_TIME, 0) == 1
         }
     }
 

@@ -26,6 +26,13 @@
         android:theme="@style/Theme.SmallTownLottery"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".features.timeauto.TimeAutoActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".features.outdated.OutdatedActivity"
             android:exported="false">
             <meta-data

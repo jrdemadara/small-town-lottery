@@ -20,7 +20,7 @@ class LandingActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         buttonGetStarted = findViewById(R.id.buttonGetStarted)
         textViewVersion = findViewById(R.id.textViewVersionMain)
-        textViewVersion.text = "v"+BuildConfig.VERSION_NAME
+        textViewVersion.text = "v" + BuildConfig.VERSION_NAME
         checkPermissions()
         buttonGetStarted.setOnClickListener {
             val intent = Intent(this, AuthenticateActivity::class.java)
